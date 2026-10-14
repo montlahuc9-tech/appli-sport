@@ -264,7 +264,7 @@
     if (c.type === "circuit") {
       c.tours = (c.tours || 3) + 1;
       if (!c.exos.some(e => e.duree)) { c.travail = Math.min(900, (c.travail || 40) + 5); if (c.repos > 10) c.repos = Math.max(10, c.repos - 5); }
-      else c.exos.forEach((e, i) => { if (i === 0) e.duree = Math.round(e.duree * 1.15); });   // l'effort un peu plus long
+      else c.exos.forEach(e => { if (/rapide/i.test(e.nom)) e.duree = Math.round(e.duree * 1.15); });   // la partie rapide un peu plus longue
     } else c.exos.forEach(e => { if ((+e.series || 3) < 5) e.series = (+e.series || 3) + 1; else e.repos = Math.max(30, (+e.repos || 60) - 15); });
     return c;
   }
