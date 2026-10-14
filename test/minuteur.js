@@ -38,7 +38,7 @@ window.Minuteur = (() => {
         continue;
       }
       exos.forEach((e, i) => {
-        etapes.push({ phase: "travail", duree: r.travail, round: t, exo: e, i });
+        etapes.push({ phase: "travail", duree: +e.duree || r.travail, round: t, exo: e, i });
         const dernier = i === exos.length - 1;
         if (!dernier && r.repos > 0) etapes.push({ phase: "repos", duree: r.repos, round: t, exo: exos[i + 1], i: i + 1 });
         if (dernier && t < r.tours) { const p = r.pause || r.repos; if (p > 0) etapes.push({ phase: "pause", duree: p, round: t + 1, exo: exos[0], i: 0 }); }
@@ -53,7 +53,7 @@ window.Minuteur = (() => {
     z.innerHTML = exos.map((e, i) => `<div class="ligne-exo">
         <span class="num">${i + 1}</span>
         <input data-i="${i}" data-k="nom" value="${esc(e.nom)}" aria-label="Nom de l'exercice ${i + 1}">
-        <select data-i="${i}" data-k="muscle" aria-label="Muscle de l'exercice ${i + 1}">${optionsMuscles(exoInfo(e).muscle)}</select>
+        ${e.duree ? `<span class="total">${dureeTexte(+e.duree)}</span>` : `<select data-i="${i}" data-k="muscle" aria-label="Muscle de l'exercice ${i + 1}">${optionsMuscles(exoInfo(e).muscle)}</select>`}
         <button class="x" type="button" data-suppr="${i}" aria-label="Retirer l'exercice ${i + 1}">×</button></div>`).join("")
       || '<div class="total">Aucun exercice : intervalles simples.</div>';
     z.querySelectorAll("[data-k]").forEach(el => el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
@@ -79,7 +79,7 @@ window.Minuteur = (() => {
     $("total").innerHTML = `Durée totale : <b>${fmt(total)}</b> · ${r.tours} round${r.tours > 1 ? "s" : ""}` + (exos.length ? ` · ${exos.length} exercices` : "");
     $("seance-titre").hidden = !(series || (mode === "intervalles" && titreSeance)); $("seance-titre").textContent = series ? series.titre : titreSeance;
     if (etat === "arret" && mode === "intervalles") {
-      $("temps").textContent = fmt(r.travail);
+      $("temps").textContent = fmt((exos[0] && +exos[0].duree) || r.travail);
       $("round").innerHTML = `Round 1 <small>/ ${r.tours}</small>`;
       $("info").textContent = exos.length ? `Exercice 1 / ${exos.length}` : `${r.travail} s / ${r.repos} s`;
       montrerExo(exos[0] || null);
@@ -521,7 +521,7 @@ window.Minuteur = (() => {
     chargerCircuit(f) {
       clearInterval(minuterie); reposFiche = null; series = null; dessinerSeries(); Compte.donnees.encours = null;
       ["travail", "repos", "tours", "pause"].forEach(kk => { if (f[kk] != null) $(kk).value = f[kk]; });
-      exos = f.exos.map(e => ({ nom: e.nom, muscle: e.muscle })); titreSeance = f.titre;
+      exos = f.exos.map(e => e.duree ? { nom: e.nom, muscle: e.muscle, duree: e.duree } : { nom: e.nom, muscle: e.muscle }); titreSeance = f.titre;
       choisirMode("intervalles"); dessinerExos(); resumeSeance(); sauver();
     },
     chargerSeries(f) {

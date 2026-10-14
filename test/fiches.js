@@ -5,11 +5,12 @@ const GROUPES = {
   bras:   { nom: "Bras",               muscles: ["biceps", "triceps", "avbras"] },
   bas:    { nom: "Bas du corps",       muscles: ["quadri", "ischios", "fessiers", "mollets"] },
   abdos:  { nom: "Abdos et lombaires", muscles: ["abdos", "lombaires"] },
-  cardio: { nom: "Cardio",             muscles: ["cardio"] }
+  cardio: { nom: "Cardio",             muscles: ["cardio"] },
+  etirements: { nom: "Étirements",     muscles: ["etirements"] }
 };
 const MUSCLES = {
   pecs: "Pectoraux", epaules: "Épaules", dos: "Dos", biceps: "Biceps", triceps: "Triceps", avbras: "Avant-bras",
-  quadri: "Quadriceps", ischios: "Ischios", fessiers: "Fessiers", mollets: "Mollets", abdos: "Abdos", lombaires: "Lombaires", cardio: "Cardio"
+  quadri: "Quadriceps", ischios: "Ischios", fessiers: "Fessiers", mollets: "Mollets", abdos: "Abdos", lombaires: "Lombaires", cardio: "Cardio", etirements: "Étirements"
 };
 const groupeDuMuscle = (m) => Object.keys(GROUPES).find(g => GROUPES[g].muscles.includes(m)) || "cardio";
 
@@ -151,4 +152,61 @@ FICHES.push(
   { id: "f-s-cardio", public: "femmes", lieu: "salle", groupe: "cardio", type: "circuit", titre: "Cardio brûle-calories",
     note: "2 minutes par poste, à un rythme soutenu mais où vous pouvez encore parler.", travail: 120, repos: 30, tours: 3, pause: 60,
     exos: [circ_("Vélo elliptique"), circ_("Rameur"), circ_("Kettlebell swing"), circ_("Tapis de course"), circ_("Step-up sur banc (haltères)")] }
+);
+
+// ---------------- RUNNING et MARCHE SPORTIVE (espaces à part, pour tout le monde) ----------------
+// Dans un circuit, « duree » sur un exercice remplace le temps d'effort commun (ex. 3 min de marche, 1 min rapide).
+const UNIVERS = {
+  running: { nom: "Running", categories: [["fractionne", "Fractionné et endurance"], ["echauffement", "Échauffement"], ["renfo", "Renforcement du coureur"], ["etirements", "Étirements"]] },
+  marche:  { nom: "Marche sportive", categories: [["marche", "Marche active"], ["renfo", "Renforcement et équilibre"], ["etirements", "Étirements"]] }
+};
+const d_ = (nom, duree) => ({ nom, duree });
+FICHES.push(
+  // ---- Running ----
+  { id: "r-frac-1", univers: "running", cat: "fractionne", lieu: "exterieur", type: "circuit", titre: "Fractionné débutant",
+    note: "30 secondes de course rapide, 1 minute de footing lent pour récupérer. Téléphone en poche : la voix annonce chaque changement.", travail: 30, repos: 0, tours: 8, pause: 0,
+    exos: [d_("Course rapide", 30), d_("Footing lent (récupération)", 60)] },
+  { id: "r-frac-2", univers: "running", cat: "fractionne", lieu: "exterieur", type: "circuit", titre: "Fractionné 30/30",
+    note: "Le classique pour progresser en vitesse : 30 s vite, 30 s lent, 10 fois. Échauffez-vous 10 minutes avant.", travail: 30, repos: 0, tours: 10, pause: 0,
+    exos: [d_("Course rapide", 30), d_("Footing lent (récupération)", 30)] },
+  { id: "r-frac-3", univers: "running", cat: "fractionne", lieu: "exterieur", type: "circuit", titre: "Fractionné long (confirmé)",
+    note: "3 minutes à allure soutenue, 1 min 30 de récupération, 5 fois.", travail: 180, repos: 0, tours: 5, pause: 0,
+    exos: [d_("Course rapide", 180), d_("Footing lent (récupération)", 90)] },
+  { id: "r-endurance", univers: "running", cat: "fractionne", lieu: "exterieur", type: "circuit", titre: "Footing + accélérations",
+    note: "4 minutes de footing tranquille puis 20 secondes d'accélération, 6 fois. Idéal pour améliorer l'endurance.", travail: 240, repos: 0, tours: 6, pause: 0,
+    exos: [d_("Footing (allure tranquille)", 240), d_("Course rapide", 20)] },
+  { id: "r-echauffement", univers: "running", cat: "echauffement", lieu: "exterieur", type: "circuit", titre: "Échauffement avant course",
+    note: "5 minutes pour réveiller chevilles, hanches et jambes avant de courir.", travail: 30, repos: 10, tours: 1, pause: 0,
+    exos: [circ_("Cercles de chevilles"), circ_("Cercles de hanches"), circ_("Montées de genoux"), circ_("Talons-fesses"), circ_("Skipping (genoux hauts rapides)"), circ_("Pas croisés (carioca)"), circ_("Marche des mains (inchworm)")] },
+  { id: "r-renfo", univers: "running", cat: "renfo", lieu: "maison", type: "circuit", titre: "Renforcement du coureur",
+    note: "2 fois par semaine, à la maison : protège les genoux et les chevilles et rend la foulée plus efficace.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Squats"), circ_("Fentes alternées"), circ_("Mollets debout"), circ_("Pont fessier sur une jambe"), circ_("Planche"), circ_("Gainage latéral"), circ_("Montées sur une chaise")] },
+  { id: "r-pieds", univers: "running", cat: "renfo", lieu: "maison", type: "series", titre: "Mollets, chevilles et pieds",
+    note: "Pour éviter les petites blessures du coureur (tendons, chevilles).",
+    exos: [serie_("Mollets debout", 3, "20", 30), serie_("Mollets sur une jambe (haltère)", 3, "12 / jambe", 30), serie_("Cercles de chevilles", 2, "30 s", 15),
+           serie_("Chaise contre le mur", 3, "45 s", 45), serie_("Élévation latérale de jambe (debout)", 3, "15 / jambe", 30)] },
+  { id: "r-etirements", univers: "running", cat: "etirements", lieu: "exterieur", type: "circuit", titre: "Étirements après la course",
+    note: "Doucement, sans forcer ni donner d'à-coups. Respirez calmement.", travail: 30, repos: 5, tours: 1, pause: 0,
+    exos: [circ_("Étirement des mollets (contre un mur)"), circ_("Étirement des quadriceps (allongé sur le côté)"), circ_("Étirement des ischios (debout)"),
+           circ_("Étirement des hanches (fente au sol)"), circ_("Étirement des fessiers (allongé)"), circ_("Posture de l'enfant (dos)")] },
+  // ---- Marche sportive ----
+  { id: "w-debutant", univers: "marche", cat: "marche", lieu: "exterieur", type: "circuit", titre: "Marche active débutant",
+    note: "20 minutes : 3 minutes de marche normale, 1 minute de marche rapide, 5 fois.", travail: 180, repos: 0, tours: 5, pause: 0,
+    exos: [d_("Marche normale", 180), d_("Marche rapide", 60)] },
+  { id: "w-30", univers: "marche", cat: "marche", lieu: "exterieur", type: "circuit", titre: "Marche rapide 30 minutes",
+    note: "2 minutes de marche normale, 3 minutes de marche rapide, 6 fois. On doit pouvoir parler, mais pas chanter.", travail: 180, repos: 0, tours: 6, pause: 0,
+    exos: [d_("Marche normale", 120), d_("Marche rapide", 180)] },
+  { id: "w-sportive", univers: "marche", cat: "marche", lieu: "exterieur", type: "circuit", titre: "Marche sportive (intervalles)",
+    note: "Pour les marcheurs réguliers : grands pas, bras qui balancent.", travail: 120, repos: 0, tours: 6, pause: 0,
+    exos: [d_("Marche rapide", 120), d_("Marche très rapide", 60)] },
+  { id: "w-equilibre", univers: "marche", cat: "renfo", lieu: "maison", type: "circuit", titre: "Jambes et équilibre",
+    note: "À la maison, avec une chaise pour se tenir. Doux pour les articulations.", travail: 30, repos: 30, tours: 2, pause: 60,
+    exos: [circ_("Squats"), circ_("Montées sur une chaise"), circ_("Mollets debout"), circ_("Élévation latérale de jambe (debout)"), circ_("Élévation de jambe arrière debout"), circ_("Pont fessier")] },
+  { id: "w-dos", univers: "marche", cat: "renfo", lieu: "maison", type: "circuit", titre: "Dos et posture du marcheur",
+    note: "Pour marcher bien droit et soulager le bas du dos.", travail: 30, repos: 20, tours: 2, pause: 45,
+    exos: [circ_("Superman (allongé sur le ventre)"), circ_("Dos rond, dos creux (chat)"), circ_("Planche"), circ_("Pont fessier"), circ_("Genoux contre la poitrine")] },
+  { id: "w-etirements", univers: "marche", cat: "etirements", lieu: "exterieur", type: "circuit", titre: "Étirements après la marche",
+    note: "5 minutes pour finir en douceur.", travail: 30, repos: 5, tours: 1, pause: 0,
+    exos: [circ_("Étirement des mollets (contre un mur)"), circ_("Étirement des quadriceps (allongé sur le côté)"), circ_("Étirement des ischios (debout)"),
+           circ_("Étirement des hanches (fente au sol)"), circ_("Dos rond, dos creux (chat)"), circ_("Genoux contre la poitrine")] }
 );

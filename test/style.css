@@ -327,3 +327,15 @@ details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 .publics button[aria-pressed="true"][data-public="homme"] { border-color: #4da3ff; color: var(--texte); background: rgba(77, 163, 255, .14); }
 .publics button[aria-pressed="true"][data-public="femme"] { border-color: #ff8cc6; color: var(--texte); background: rgba(255, 140, 198, .14); }
 #auth-l-public { gap: 8px; }
+
+/* ---------- Fitness / Running / Marche sportive ---------- */
+.univers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--panneau); border: 1px solid var(--trait); border-radius: 18px; padding: 5px; }
+.univers button { border: 0; background: none; color: var(--doux); border-radius: 14px; padding: 10px 4px; display: grid; justify-items: center; gap: 2px;
+  font: 800 15px var(--f-chiffres); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.univers button span { font-size: 22px; }
+.univers button[aria-pressed="true"] { background: var(--texte); color: var(--sol); }
+.lieux.trois { grid-template-columns: repeat(3, 1fr); }
+.lieux.trois button { font-size: 16px; padding: 12px 4px; }
+.lieux button[aria-pressed="true"][data-lieu="exterieur"] { border-color: #8fd14f; color: var(--texte); background: rgba(143, 209, 79, .12); }
+.badge.exterieur, .badge.partout { background: rgba(143, 209, 79, .16); color: #8fd14f; }
+.badge.univers { background: var(--texte); color: var(--sol); }

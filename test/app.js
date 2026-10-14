@@ -113,11 +113,18 @@
     });
   }
 
+  const NOM_LIEU = { maison: "Maison", salle: "Salle", exterieur: "Dehors", partout: "Partout" };
+  const dureesDifferentes = (f) => f.exos.some(e => e.duree);
+
   // ---------- Écran Séances ----------
-  const resumeFiche = (f) => f.type === "circuit"
+  const resumeFiche = (f) => f.type === "circuit" && dureesDifferentes(f)
+    ? `${f.exos.map(e => dureeTexte(+e.duree || f.travail)).join(" / ")} × ${f.tours}`
+    : f.type === "circuit"
     ? `Circuit · ${f.exos.length} exercices · ${f.travail} s / ${f.repos} s × ${f.tours}`
     : `Séries · ${f.exos.length} exercices`;
   function dureeFiche(f) {
+    if (f.type === "circuit" && dureesDifferentes(f)) { const t = f.tours || 1;
+      return 10 + t * f.exos.reduce((a, e) => a + (+e.duree || f.travail || 40), 0) + t * (f.exos.length - 1) * (f.repos || 0) + (t - 1) * (f.pause || 0); }
     if (f.type === "circuit") { const n = f.exos.length || 1, t = f.tours || 1;
       return (10 + t * n * (f.travail || 40) + t * (n - 1) * (f.repos || 0) + (t - 1) * (f.pause || f.repos || 0)); }
     return f.exos.reduce((a, e) => a + (+e.series || 3) * (40 + (+e.repos || 60)), 0);
@@ -130,7 +137,13 @@
     lieu = D().reglages.lieu || lieu;
     $("bonjour").textContent = `Bonjour ${Compte.utilisateur.prenom}`;
     brancherLieux($("v-seances"), dessinerSeances);
-    const miennes = mesSeances().filter(f => f.lieu === lieu);
+    // Fitness / Running / Marche sportive : trois espaces séparés
+    const univers = UNIVERS[D().reglages.univers] ? D().reglages.univers : "fitness";
+    $("v-seances").querySelectorAll("[data-univers]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.univers === univers));
+      b.onclick = () => { D().reglages.univers = b.dataset.univers; Compte.sauver(); dessinerSeances(); }; });
+    $("v-seances").querySelectorAll(".publics, .lieux:not(.publics)").forEach(z => z.hidden = univers !== "fitness");
+    if (univers !== "fitness") return dessinerUnivers(univers);
+    const miennes = mesSeances().filter(f => f.lieu === lieu && !f.univers);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance ${lieu === "salle" ? "de salle" : "à la maison"} : choisissez les exercices dans la liste, c'est tout.</div>`;
     // Homme / Femme : chacun voit ses séances toutes prêtes (tous les exercices restent dans « Créer ma séance »)
@@ -149,20 +162,30 @@
     $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelectorAll("[data-voir-exos]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.voirExos, muscle: "tout" }; aller("exercices"); }));
   }
+  function dessinerUnivers(u) {
+    const U = UNIVERS[u];
+    const miennes = mesSeances().filter(f => f.univers === u);
+    $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
+      || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
+    $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
+      const fiches = FICHES.filter(f => f.univers === u && f.cat === cat); if (!fiches.length) return "";
+      return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(carteFiche).join("")}</div></section>`; }).join("");
+    $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
+  }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
 
   // ---------- Détail d'une fiche ----------
   function dessinerFiche(id) {
     const f = trouverFiche(id), perso = estPerso(f);
     let h = `<div class="tete-fiche">
-        <div class="infos-fiche"><span class="badge ${f.lieu}">${f.lieu === "salle" ? "Salle" : "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
+        <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>
         ${f.note ? `<p class="doux">${esc(f.note)}</p>` : ""}
-        <p class="total">${f.type === "circuit" ? `<b>${f.travail} s</b> d'effort · <b>${f.repos} s</b> de repos · <b>${f.tours}</b> rounds` : `<b>${f.exos.reduce((a, e) => a + (+e.series || 0), 0)}</b> séries au total`} · <b>${minutes(dureeFiche(f))}</b></p>
+        <p class="total">${f.type === "circuit" && dureesDifferentes(f) ? `<b>${f.tours}</b> fois : ${f.exos.map(e => `${esc(e.nom)} <b>${dureeTexte(+e.duree || f.travail)}</b>`).join(" → ")}` : f.type === "circuit" ? `<b>${f.travail} s</b> d'effort · <b>${f.repos} s</b> de repos · <b>${f.tours}</b> rounds` : `<b>${f.exos.reduce((a, e) => a + (+e.series || 0), 0)}</b> séries au total`} · <b>${minutes(dureeFiche(f))}</b></p>
       </div>
       <button class="principal" type="button" id="lancer-fiche">▶ Lancer la séance</button>
       <div class="exos-fiche">${f.exos.map((e, i) => { const ex = infoExo(e.nom, e.muscle);
-        return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex) + materiel(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
+        return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex) + materiel(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : e.duree ? ` · ${dureeTexte(+e.duree)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
       <div class="actions">${perso
         ? `<button class="ajout" type="button" id="modifier-fiche">Modifier</button><button class="lien danger" type="button" id="supprimer-fiche">Supprimer la séance</button>`
         : `<button class="ajout" type="button" id="copier-fiche">Copier dans mes séances pour la modifier</button>`}</div>`;
@@ -192,7 +215,7 @@
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerFeuille(); });
   function ouvrirExo(ex) {
     ouvrirFeuille(`<div class="fiche-exo">
-      <div class="infos-fiche">${ex.libre ? "" : `<span class="badge ${ex.lieu}">${ex.lieu === "salle" ? "Salle" : "Maison"}</span>`}<span class="badge type">${GROUPES[groupeDuMuscle(ex.muscle)].nom}</span></div>
+      <div class="infos-fiche">${ex.libre ? "" : `<span class="badge ${ex.lieu}">${NOM_LIEU[ex.lieu] || "Maison"}</span>`}<span class="badge type">${GROUPES[groupeDuMuscle(ex.muscle)].nom}</span></div>
       <h2>${esc(ex.nom)}</h2>
       ${photosGrandes(ex)}
       <div class="corps-muscles">${CORPS_SVG}</div>
@@ -210,7 +233,10 @@
     $("biblio-muscles").hidden = !muscles.length;
     $("biblio-muscles").innerHTML = [["tout", "Tous"], ...muscles.map(m => [m, MUSCLES[m]])]
       .map(([m, n]) => `<button type="button" data-m="${m}" aria-pressed="${biblio.muscle === m}">${n}</button>`).join("");
-    const liste = EXERCICES.filter(e => e.lieu === lieu && (biblio.groupe === "tout" || groupeDuMuscle(e.muscle) === biblio.groupe) && (biblio.muscle === "tout" || e.muscle === biblio.muscle));
+    const lieuBiblio = D().reglages.lieuBiblio || lieu;
+    $("v-exercices").querySelectorAll(".lieux button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.lieu === lieuBiblio));
+      b.onclick = () => { D().reglages.lieuBiblio = b.dataset.lieu; if (b.dataset.lieu !== "exterieur") { lieu = b.dataset.lieu; D().reglages.lieu = lieu; } Compte.sauver(); dessinerBiblio(); }; });
+    const liste = EXERCICES.filter(e => (e.lieu === lieuBiblio || e.lieu === "partout") && (biblio.groupe === "tout" || groupeDuMuscle(e.muscle) === biblio.groupe) && (biblio.muscle === "tout" || e.muscle === biblio.muscle));
     let html = "";
     for (const [g, G] of Object.entries(GROUPES)) {
       if (biblio.groupe !== "tout" && g !== biblio.groupe) continue;
@@ -227,7 +253,8 @@
   // ---------- Créer / modifier une séance ----------
   let brouillon = null, nouvelle = false, choix = null;
   function ouvrirEdition(f) {
-    brouillon = f ? JSON.parse(JSON.stringify(f)) : { id: "p" + Date.now(), titre: "", lieu, type: lieu === "salle" ? "series" : "circuit",
+    const u = UNIVERS[D().reglages.univers] ? D().reglages.univers : null;
+    brouillon = f ? JSON.parse(JSON.stringify(f)) : { id: "p" + Date.now(), titre: "", lieu: u ? "exterieur" : lieu, type: lieu === "salle" && !u ? "series" : "circuit", ...(u ? { univers: u } : {}),
       note: "", travail: 40, repos: 20, tours: 3, pause: 60, exos: [] };
     nouvelle = !f; choix = null; dessinerEdition(); aller("edition");
   }
@@ -240,12 +267,12 @@
   }
   function dessinerEdition() {
     if (choix) return dessinerChoix();
-    const b = brouillon, lieuB = (l) => `<button type="button" data-ed-lieu="${l}" data-lieu="${l}" aria-pressed="${b.lieu === l}">${l === "salle" ? "🏋️ Salle" : "🏠 Maison"}</button>`;
+    const b = brouillon, lieuB = (l) => `<button type="button" data-ed-lieu="${l}" data-lieu="${l}" aria-pressed="${b.lieu === l}">${{ salle: "🏋️ Salle", maison: "🏠 Maison", exterieur: "🌳 Dehors" }[l]}</button>`;
     $("edition-corps").innerHTML = `<div class="edition ${b.type === "circuit" ? "circuit" : ""}">
       <button class="lien" type="button" data-annuler>← Annuler</button>
       <h2>${nouvelle ? "Nouvelle séance" : "Modifier la séance"}</h2>
       <label class="champ">Nom de la séance<input id="ed-titre" value="${esc(b.titre)}" placeholder="Ex. : Mon full body du lundi"></label>
-      <div class="lieux" role="group" aria-label="Lieu">${lieuB("maison")}${lieuB("salle")}</div>
+      <div class="lieux trois" role="group" aria-label="Lieu">${lieuB("maison")}${lieuB("salle")}${lieuB("exterieur")}</div>
       <div class="filtres" role="group" aria-label="Type de séance">
         <button type="button" data-ed-type="series" aria-pressed="${b.type === "series"}">Séries (muscu)</button>
         <button type="button" data-ed-type="circuit" aria-pressed="${b.type === "circuit"}">Circuit chrono</button></div>
@@ -297,12 +324,12 @@
   // Choisir des exercices dans la bibliothèque : Maison / Salle, groupe, muscle, on coche
   function dessinerChoix() {
     const c = choix, b = brouillon;
-    const liste = EXERCICES.filter(x => (c.lieu === "tout" || x.lieu === c.lieu) && (c.groupe === "tout" || groupeDuMuscle(x.muscle) === c.groupe) && (c.muscle === "tout" || x.muscle === c.muscle));
+    const liste = EXERCICES.filter(x => (c.lieu === "tout" || x.lieu === c.lieu || x.lieu === "partout") && (c.groupe === "tout" || groupeDuMuscle(x.muscle) === c.groupe) && (c.muscle === "tout" || x.muscle === c.muscle));
     const muscles = c.groupe !== "tout" && GROUPES[c.groupe].muscles.length > 1 ? GROUPES[c.groupe].muscles : [];
     $("edition-corps").innerHTML = `<div class="edition">
       <button class="lien" type="button" data-retour-ed>← Retour à la séance</button>
       <h2>${c.mode === "remplacer" ? `Remplacer « ${esc(b.exos[c.index].nom)} »` : "Choisir des exercices"}</h2>
-      <div class="filtres" role="group" aria-label="Lieu">${[["maison", "Maison"], ["salle", "Salle"], ["tout", "Les deux"]].map(([k, n]) =>
+      <div class="filtres" role="group" aria-label="Lieu">${[["maison", "Maison"], ["salle", "Salle"], ["exterieur", "Dehors"], ["tout", "Tout"]].map(([k, n]) =>
         `<button type="button" data-c-lieu="${k}" aria-pressed="${c.lieu === k}">${n}</button>`).join("")}</div>
       <div class="puces defilant" role="group" aria-label="Groupe">${[["tout", "Tous"], ...Object.entries(GROUPES).map(([g, G]) => [g, G.nom])].map(([g, n]) =>
         `<button type="button" data-c-groupe="${g}" aria-pressed="${c.groupe === g}">${n}</button>`).join("")}</div>
