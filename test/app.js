@@ -97,7 +97,7 @@
 
   function entrer(nouveau) {
     if (!Compte.acces.ok) { dessinerAcces(); return aller("acces", null, true); }
-    Minuteur.init();
+    Minuteur.init(); dessinerPlaylists();
     aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
   }
@@ -428,6 +428,34 @@
     else if (ios) z.innerHTML = `<ol class="etapes-install"><li>Ouvrez ce lien dans <b>Safari</b>.</li><li>Touchez le bouton <b>Partager</b> (le carré avec une flèche vers le haut).</li><li>Choisissez <b>« Sur l'écran d'accueil »</b>, puis <b>Ajouter</b>.</li></ol>`;
     else z.innerHTML = `<ol class="etapes-install"><li>Ouvrez ce lien dans <b>Chrome</b>.</li><li>Touchez le menu <b>⋮</b> en haut à droite.</li><li>Choisissez <b>« Installer l'application »</b> ou <b>« Ajouter à l'écran d'accueil »</b>.</li></ol>`;
   }
+
+  // ---------- Playlists Spotify : un bouton ouvre la playlist dans l'appli Spotify ----------
+  const PLAYLISTS_DEPART = [["Pirates des Caraïbes", "Pirates des Caraïbes"], ["Rocky", "Rocky"], ["Eye of the Tiger", "Eye of the Tiger"], ["Workout motivation", "Workout motivation"]]
+    .map(([nom, lien]) => ({ nom, lien }));
+  const mesPlaylists = () => { const r = D().reglages; if (!Array.isArray(r.playlists)) r.playlists = PLAYLISTS_DEPART.map(p => ({ ...p })); return r.playlists; };
+  function lienSpotify(t) {
+    t = (t || "").trim();
+    const uri = t.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]+)/);
+    if (uri) return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+    const url = t.match(/https?:\/\/(open\.)?spotify\.(com|link)\/[^\s]+/);
+    if (url) return url[0];
+    return "https://open.spotify.com/search/" + encodeURIComponent(t);
+  }
+  function dessinerPlaylists() {
+    const z = $("playlists"); if (!z || !Compte.utilisateur) return;
+    z.classList.toggle("edition-pl", $("gerer-playlists").open);
+    z.innerHTML = mesPlaylists().map((p, i) => `<span class="playlist"><a href="${esc(lienSpotify(p.lien))}" target="_blank" rel="noopener">${esc(p.nom)}</a>` +
+      `<button class="x" type="button" data-pl-suppr="${i}" aria-label="Retirer ${esc(p.nom)}">×</button></span>`).join("")
+      || '<span class="total">Aucune playlist : ajoutez-en une ci-dessous.</span>';
+    z.querySelectorAll("[data-pl-suppr]").forEach(b => b.addEventListener("click", () => { mesPlaylists().splice(+b.dataset.plSuppr, 1); Compte.sauver(); dessinerPlaylists(); }));
+  }
+  $("gerer-playlists").addEventListener("toggle", dessinerPlaylists);
+  $("pl-ajouter").addEventListener("click", () => {
+    const lien = $("pl-lien").value.trim(); let nom = $("pl-nom").value.trim();
+    if (!lien) { toast("Collez un lien Spotify ou écrivez ce qu'il faut chercher"); return $("pl-lien").focus(); }
+    if (!nom) nom = /spotify/i.test(lien) ? "Ma playlist " + (mesPlaylists().length + 1) : lien.slice(0, 40);
+    mesPlaylists().push({ nom, lien }); Compte.sauver(); $("pl-nom").value = ""; $("pl-lien").value = ""; dessinerPlaylists(); toast("Playlist ajoutée");
+  });
 
   // ---------- Démarrage ----------
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

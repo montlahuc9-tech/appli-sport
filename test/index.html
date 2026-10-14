@@ -138,6 +138,21 @@
   </div>
   <div class="bilan" id="bilan"></div>
 
+  <section class="bloc" id="bloc-spotify">
+    <h2>Ma musique Spotify</h2>
+    <div class="playlists" id="playlists"></div>
+    <div class="total">Touchez une playlist : elle s'ouvre dans Spotify. Lancez la lecture, revenez ici et appuyez sur <b>Démarrer</b>. La voix et le sifflet passent par-dessus la musique.</div>
+    <details class="gerer" id="gerer-playlists">
+      <summary>+ Ajouter ou retirer une playlist</summary>
+      <div class="pile">
+        <label class="champ">Nom du bouton<input id="pl-nom" placeholder="Ex. : Ma playlist muscu" maxlength="40"></label>
+        <label class="champ">Lien Spotify ou mots à chercher<input id="pl-lien" placeholder="Collez le lien, ou écrivez : Rocky" autocomplete="off"></label>
+        <button class="principal" type="button" id="pl-ajouter">Ajouter</button>
+        <p class="total">Pour avoir le lien d'une de vos playlists : dans Spotify, ouvrez la playlist, touchez <b>⋮</b> (ou <b>…</b>), puis <b>Partager → Copier le lien</b>, et collez-le ici. Pour retirer un bouton, touchez sa croix <b>×</b>.</p>
+      </div>
+    </details>
+  </section>
+
   <section class="bloc" id="bloc-series" hidden>
     <h2 id="series-titre">Séries</h2>
     <div class="doux petit-texte">Touchez un numéro quand la série est finie : le repos se lance tout seul.</div>
