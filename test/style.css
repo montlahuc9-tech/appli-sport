@@ -311,6 +311,7 @@ details.gerer > summary { cursor: pointer; color: var(--doux); font: 600 14px va
 details.gerer > summary::-webkit-details-marker { display: none; }
 details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 
+#ajout-mp3-rapide { width: auto; flex: 1; font-size: 17px; padding: 14px 16px; }
 /* ---------- Liste des musiques ---------- */
 .liste-musiques { display: grid; gap: 6px; }
 .musique-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; border: 1px solid var(--trait); border-radius: 12px; padding: 4px 6px 4px 4px; background: var(--sol); }

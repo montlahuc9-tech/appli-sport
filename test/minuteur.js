@@ -257,7 +257,7 @@ window.Minuteur = (() => {
   function chargerMorceau(id, jouer) {
     const m = tousMorceaux().find(x => x.id === id) || tousMorceaux()[0]; if (!m) return;
     morceauNom = m.id; if (!lecteur.src.endsWith(m.url)) lecteur.src = m.url;
-    $("nomfichier").textContent = "♪ " + m.nom; majDecoupe(); dessinerMusiques();
+    $("nomfichier").textContent = "♪ " + m.nom; majDecoupe(); dessinerMusiques(); majMusiqueActuelle();
     if (jouer) { const go = () => { lecteur.currentTime = dec().debut; lecteur.play().catch(() => {}); };
       if (lecteur.readyState >= 1) go(); else lecteur.addEventListener("loadedmetadata", go, { once: true }); }
   }
@@ -292,6 +292,13 @@ window.Minuteur = (() => {
       mesMorceaux = mesMorceaux.filter(x => x.id !== id); if (morceauNom === id) { lecteur.pause(); chargerMorceau(MUSIQUES_APPLI[0].id); } dessinerMusiques(); toast("Musique retirée"); }));
   }
   lecteur.addEventListener("play", dessinerMusiques); lecteur.addEventListener("pause", dessinerMusiques);
+  // Raccourci bien visible dans le Minuteur : ajouter ses musiques du téléphone
+  $("ajout-mp3-rapide").addEventListener("click", () => { if ($("source").value !== "fichier") { $("source").value = "fichier"; majSource(); } $("morceau").click(); });
+  $("voir-musiques").addEventListener("click", () => { if ($("source").value !== "fichier") { $("source").value = "fichier"; majSource(); }
+    const d = document.querySelector("details.musique"); d.open = true; $("liste-musiques").scrollIntoView({ behavior: "smooth", block: "center" }); });
+  function majMusiqueActuelle() { const m = morceauChoisi(), s = $("source").value;
+    $("musique-actuelle").innerHTML = s === "fichier" && m ? `Musique choisie : <b>♪ ${esc(m.nom)}</b>${mesMorceaux.length ? ` · ${mesMorceaux.length} musique${mesMorceaux.length > 1 ? "s" : ""} à vous` : ""}`
+      : s === "rythme" ? "Musique choisie : <b>rythme intégré</b>" : "Pas de musique de l'appli (vous pouvez garder la vôtre ou Spotify)."; }
   $("morceau").addEventListener("change", async () => {
     const fichiers = [...$("morceau").files]; if (!fichiers.length) return; let dernier = null;
     for (const f of fichiers) {
@@ -324,7 +331,7 @@ window.Minuteur = (() => {
 
   function majSource() { const s = $("source").value;
     $("ecouter").hidden = s !== "rythme"; $("bloc-fichier").hidden = s !== "fichier"; $("style").hidden = s !== "rythme"; $("ligne-tempo").hidden = s !== "rythme";
-    $("ligne-volume").hidden = s === "aucune"; $("info-musique").hidden = s !== "aucune";
+    $("ligne-volume").hidden = s === "aucune"; $("info-musique").hidden = s !== "aucune"; try { majMusiqueActuelle(); } catch {}
     sauver(); if (etat === "marche") { arreterMusique(); lancerMusique(); } }
   $("source").addEventListener("change", majSource);
   const relancerRythme = () => { $("bpm").textContent = $("tempo").value + " bpm"; sauver(); if ((etat === "marche" || rythme) && $("source").value === "rythme") demarrerRythme(); };

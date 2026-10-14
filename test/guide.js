@@ -43,7 +43,8 @@ const GUIDE = [
     "L'onglet Exercices montre tous les exercices avec photos, classés par lieu (Maison, Salle, Dehors), par groupe et par muscle.",
     "Rouge vif = muscle principal, rouge pâle = muscle secondaire."] },
   { titre: "12. La musique", img: "12-musique", texte: [
-    "Minuteur → « Son, voix et musique » : 2 musiques sont fournies, et vous pouvez ajouter vos propres MP3 (ils restent sur votre téléphone).",
+    "Vos propres musiques : dans le Minuteur, touchez « + Ajouter mes musiques du téléphone » et choisissez vos MP3. Ils restent dans l'appli (rien n'est envoyé) et se lancent avec « Démarrer ».",
+    "2 musiques sont aussi fournies avec l'appli. Pour choisir la musique : Minuteur → « Son, voix et musique ».",
     "La musique baisse pendant les repos et quand la voix parle. Vous pouvez aussi garder votre musique habituelle : choisissez « Sans musique »."] },
   { titre: "13. Spotify", img: "13-spotify", texte: [
     "Dans le Minuteur, les boutons verts ouvrent une playlist dans Spotify. Lancez la musique, revenez dans l'appli et touchez « Démarrer ».",
