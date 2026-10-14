@@ -466,6 +466,35 @@
     mesPlaylists().push({ nom, lien }); Compte.sauver(); $("pl-nom").value = ""; $("pl-lien").value = ""; dessinerPlaylists(); toast("Playlist ajoutée");
   });
 
+  // ---------- Mise à jour automatique ----------
+  // Quand une nouvelle version est en ligne, l'appli se recharge toute seule, au bon moment :
+  // jamais pendant une séance, ni pendant qu'on crée une séance. Les données sont déjà sauvegardées.
+  let majPrete = false;
+  const vueActuelle = () => VUES.find(v => !$("v-" + v).hidden);
+  const peutRecharger = () => !Minuteur.occupe() && vueActuelle() !== "edition" && $("feuille").hidden && document.activeElement?.tagName !== "INPUT";
+  function appliquerMaj() {
+    if (!majPrete || !peutRecharger()) return;
+    try { sessionStorage.setItem("ms-maj", "1"); } catch {}
+    location.reload();
+  }
+  async function verifierMaj() {
+    if (majPrete || window.VERSION_APPLI === "dev" || !navigator.onLine) return appliquerMaj();
+    try {
+      const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return;
+      const { v } = await r.json();
+      if (v && v !== window.VERSION_APPLI) {
+        majPrete = true;
+        try { const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch {}
+        appliquerMaj();
+      }
+    } catch {}
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") verifierMaj(); });
+  setInterval(verifierMaj, 5 * 60 * 1000);
+  // Si une mise à jour attend la fin d'une séance : on la fait dès qu'on change d'écran
+  document.querySelectorAll("#barre button, [data-retour]").forEach(b => b.addEventListener("click", () => setTimeout(appliquerMaj, 300)));
+  try { if (sessionStorage.getItem("ms-maj")) { sessionStorage.removeItem("ms-maj"); setTimeout(() => toast("✓ Appli mise à jour"), 800); } } catch {}
+
   // ---------- Démarrage ----------
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
   if (Compte.env === "test") { $("bandeau-test").hidden = false; document.body.classList.add("test"); document.title = "Sport TEST"; }
@@ -474,5 +503,6 @@
     const u = await Compte.init();
     if (u) { lieu = D().reglages.lieu || "maison"; entrer(false); }
     else aller("auth", null, true);
+    setTimeout(verifierMaj, 3000);
   })();
 })();

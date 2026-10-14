@@ -1,8 +1,8 @@
 // Fait marcher l'appli même sans réseau (à la salle, au sous-sol…).
 // Changer VERSION à chaque mise à jour pour que les téléphones prennent la nouvelle version.
-const VERSION = "20261014193504";
+const VERSION = "20261014193809";
 const COQUILLE = ["./", "index.html", "style.css", "config.js", "lib/supabase.js", "lib/591.supabase.js", "lib/qrcode.js", "exercices.js", "fiches.js",
-  "compte.js", "commun.js", "minuteur.js", "app.js", "manifest.webmanifest", "icones/icone-192.png", "icones/icone-512.png"];
+  "compte.js", "commun.js", "minuteur.js", "app.js", "version.js", "manifest.webmanifest", "icones/icone-192.png", "icones/icone-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open("appli-" + VERSION).then(c => c.addAll(COQUILLE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(n => n !== "appli-" + VERSION && n !== "photos").map(n => caches.delete(n)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {
@@ -18,6 +18,7 @@ self.addEventListener("fetch", (e) => {
   }
   if (url.origin !== location.origin) return;   // comptes en ligne : toujours le réseau
   // L'appli : d'abord le réseau (pour avoir la dernière version), sinon la copie gardée
-  e.respondWith(fetch(e.request).then(r => { if (r.ok) { const copie = r.clone(); caches.open("appli-" + VERSION).then(c => c.put(e.request, copie)); } return r; })
+  // cache: "no-cache" = on demande toujours au serveur s'il y a du nouveau (sinon le navigateur garde l'ancienne version 10 minutes)
+  e.respondWith(fetch(e.request, { cache: "no-cache" }).then(r => { if (r.ok) { const copie = r.clone(); caches.open("appli-" + VERSION).then(c => c.put(e.request, copie)); } return r; })
     .catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match("index.html"))));
 });
