@@ -233,7 +233,8 @@
       <p class="total">Ensuite, votre séance se lance en un seul appui.</p>
       <button class="lien" type="button" data-ech-non>Je suis déjà échauffé(e), lancer la séance</button></div>`, (fe) => {
       fe.querySelector("[data-ech-oui]").onclick = () => { fermerFeuille(); seanceApres = f.id; chargerDansMinuteur(e); toast("Échauffement prêt : appuyez sur Démarrer"); };
-      fe.querySelector("[data-ech-non]").onclick = () => { fermerFeuille(); seanceApres = null; chargerDansMinuteur(f); };
+      // « Déjà échauffé(e) » : on le note, l'appli ne redemande plus pendant 45 minutes
+      fe.querySelector("[data-ech-non]").onclick = () => { fermerFeuille(); seanceApres = null; D().dernierEchauffement = Date.now(); Compte.sauver(); chargerDansMinuteur(f); };
     });
   }
   // Fin d'une séance : après l'échauffement, on propose de passer à la vraie séance
