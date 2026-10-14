@@ -322,4 +322,8 @@ details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 .musique-ligne .mini { min-width: 44px; min-height: 40px; font-size: 15px; }
 
 .badge.femmes { background: rgba(255, 105, 180, .16); color: #ff8cc6; }
-.programmes-femmes .groupe-tete h2 { color: #ff8cc6; }
+
+.publics button { font-size: 18px; padding: 11px 10px; }
+.publics button[aria-pressed="true"][data-public="homme"] { border-color: #4da3ff; color: var(--texte); background: rgba(77, 163, 255, .14); }
+.publics button[aria-pressed="true"][data-public="femme"] { border-color: #ff8cc6; color: var(--texte); background: rgba(255, 140, 198, .14); }
+#auth-l-public { gap: 8px; }

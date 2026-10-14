@@ -34,6 +34,11 @@
     </div>
     <form id="auth-form" class="formulaire" novalidate>
       <label class="champ" id="auth-l-prenom">Prénom<input id="auth-prenom" autocomplete="given-name" required></label>
+      <div class="champ" id="auth-l-public">Vous êtes
+        <div class="filtres" role="group" aria-label="Vous êtes">
+          <button type="button" data-auth-public="homme" aria-pressed="true">Un homme</button>
+          <button type="button" data-auth-public="femme" aria-pressed="false">Une femme</button>
+        </div></div>
       <label class="champ">E-mail<input id="auth-email" type="email" autocomplete="email" inputmode="email" required></label>
       <label class="champ" id="auth-l-mdp">Mot de passe<input id="auth-mdp" type="password" autocomplete="new-password" minlength="6"></label>
       <p class="erreur" id="auth-erreur" role="alert"></p>
@@ -70,6 +75,10 @@
   <header class="entete">
     <div><p class="doux bonjour" id="bonjour">Bonjour</p><h1>Mes <span>séances</span></h1></div>
   </header>
+  <div class="lieux publics" role="group" aria-label="Séances pour">
+    <button type="button" data-public="homme" aria-pressed="true">Homme</button>
+    <button type="button" data-public="femme" aria-pressed="false">Femme</button>
+  </div>
   <div class="lieux" role="group" aria-label="Lieu">
     <button type="button" data-lieu="maison" aria-pressed="true"><span aria-hidden="true">🏠</span> Maison</button>
     <button type="button" data-lieu="salle" aria-pressed="false"><span aria-hidden="true">🏋️</span> Salle</button>

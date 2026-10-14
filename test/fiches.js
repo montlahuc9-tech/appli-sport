@@ -101,7 +101,7 @@ const FICHES = [
     exos: [circ_("Rameur"), circ_("Vélo"), circ_("Tapis de course"), circ_("Vélo elliptique")] }
 ];
 
-// ---------------- PROGRAMMES FEMMES (affichés dans leur propre partie, maison et salle) ----------------
+// ---------------- SÉANCES FEMMES (choix « Femme » en haut de l'écran Séances) ----------------
 FICHES.push(
   { id: "f-m-fessiers", public: "femmes", lieu: "maison", groupe: "bas", type: "circuit", titre: "Fessiers galbés",
     note: "Sans matériel, juste une chaise pour se tenir. Serrez bien les fessiers en haut de chaque mouvement.", travail: 40, repos: 20, tours: 3, pause: 60,
@@ -123,6 +123,11 @@ FICHES.push(
     note: "Pour (re)commencer en douceur : 30 secondes d'effort, 30 secondes de repos.", travail: 30, repos: 30, tours: 3, pause: 60,
     exos: [circ_("Squats"), circ_("Pompes inclinées (mains sur une chaise)"), circ_("Pont fessier"), circ_("Superman (allongé sur le ventre)"), circ_("Planche"), circ_("Jumping jacks")] },
 
+  { id: "f-m-haut", public: "femmes", lieu: "maison", groupe: "haut", type: "series", titre: "Dos et épaules (posture)",
+    note: "Pour se tenir droite et avoir de jolies épaules. Deux haltères légers.",
+    exos: [serie_("Rowing deux haltères", 3, "12", 45), serie_("Oiseau haltères (buste penché)", 3, "15", 45), serie_("Développé épaules haltères", 3, "12", 45),
+           serie_("Élévations latérales haltères", 3, "15", 45), serie_("Superman (allongé sur le ventre)", 3, "12", 30), serie_("Pompes inclinées (mains sur une chaise)", 3, "10", 45)] },
+
   { id: "f-s-fessiers", public: "femmes", lieu: "salle", groupe: "bas", type: "series", titre: "Fessiers (salle)",
     note: "La séance fessiers complète. Commencez léger au hip thrust pour bien sentir le mouvement.",
     exos: [serie_("Hip thrust à la barre", 4, "10", 90), serie_("Pull-through à la poulie", 3, "12", 60), serie_("Kickback fessier à la poulie", 3, "12 / jambe", 60),
@@ -135,6 +140,10 @@ FICHES.push(
     note: "Dos, épaules et bras, pour une jolie posture. Charges modérées, 12 à 15 répétitions.",
     exos: [serie_("Tirage vertical", 3, "12", 60), serie_("Tirage horizontal", 3, "12", 60), serie_("Développé incliné haltères", 3, "12", 60),
            serie_("Élévations latérales à la poulie", 3, "15", 45), serie_("Extension triceps poulie", 3, "15", 45), serie_("Curl à la poulie", 3, "15", 45)] },
+  { id: "f-s-bras", public: "femmes", lieu: "salle", groupe: "bras", type: "series", titre: "Bras toniques (salle)",
+    note: "Charges légères, 15 répétitions. Idéal en fin de séance.",
+    exos: [serie_("Curl à la poulie", 3, "15", 45), serie_("Extension triceps poulie", 3, "15", 45), serie_("Curl biceps haltères", 3, "12", 45),
+           serie_("Kickback triceps haltère", 3, "12 / bras", 45), serie_("Dips (buste droit)", 3, "8", 60)] },
   { id: "f-s-abdos", public: "femmes", lieu: "salle", groupe: "abdos", type: "series", titre: "Abdos et taille",
     note: "Ventre, côtés et bas du dos.",
     exos: [serie_("Relevés de jambes suspendu", 3, "10", 60), serie_("Crunch à la poulie", 3, "15", 45), serie_("Russian twist", 3, "20", 30),
