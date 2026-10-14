@@ -5,7 +5,8 @@ const GUIDE = [
     "Fitness à la maison ou à la salle, Running ou Marche sportive : tout est dans l'appli. Voici comment vous en servir en quelques minutes."] },
   { titre: "1. Mettre l'appli sur votre téléphone", img: "16-profil", texte: [
     "Ouvrez le lien de l'appli dans Chrome (Android) ou Safari (iPhone).",
-    "Android : menu ⋮ en haut à droite → « Installer l'application ». iPhone : bouton Partager → « Sur l'écran d'accueil ».",
+    "Android : menu ⋮ en haut à droite → « Installer l'application ».",
+    "iPhone : ouvrez le lien dans Safari, touchez le bouton Partager (carré avec une flèche), puis « Sur l'écran d'accueil » et « Ajouter ».",
     "L'appli se met ensuite à jour toute seule : vous n'avez jamais rien à réinstaller."] },
   { titre: "2. Créer votre compte", img: "01-inscription", texte: [
     "Indiquez votre prénom, si vous êtes un homme ou une femme, et votre e-mail.",
