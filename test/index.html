@@ -200,9 +200,9 @@
     <div class="ligne"><span class="total etiquette">🗣 Voix</span><input type="range" id="volvoix" min="0" max="100" value="100" aria-label="Volume de la voix"><button class="fichier" id="test-voix" type="button">Tester</button></div>
     <div class="ligne">
       <select id="source" aria-label="Musique de fond">
-        <option value="aucune">Sans musique (gardez la vôtre)</option>
+        <option value="fichier">Musiques (de l'appli ou les miennes)</option>
+        <option value="aucune">Sans musique (Spotify ou la vôtre)</option>
         <option value="rythme">Rythme intégré</option>
-        <option value="fichier">Un morceau de mon téléphone</option>
       </select>
       <select id="style" aria-label="Style du rythme">
         <option value="popfit">Pop fitness</option>
@@ -216,22 +216,28 @@
       </select>
       <button class="fichier" id="ecouter" type="button">▶ Écouter</button>
     </div>
+    <div class="ligne" id="ligne-volume"><span class="total etiquette">🎵 Musique</span><input type="range" id="volume" min="0" max="100" value="60" aria-label="Volume de la musique"></div>
     <div class="total" id="info-musique">Lancez votre musique habituelle (Spotify, Deezer…) avant la séance : la voix et le sifflet passent par-dessus.</div>
     <div id="bloc-fichier" class="pile" hidden>
-      <div class="ligne"><label class="fichier" id="choisir">♪ Choisir un morceau<input type="file" id="morceau" accept="audio/*"></label><span class="nom-fichier" id="nomfichier"></span></div>
-      <div id="decoupe" class="pile" hidden>
-        <div class="ligne"><button class="fichier" id="ecoute-extrait" type="button">▶ Écouter le passage</button><span class="total" id="pos">0:00 / 0:00</span></div>
-        <input type="range" id="position" min="0" max="100" step="0.1" value="0" aria-label="Position dans le morceau">
-        <div class="ligne">
-          <button class="fichier" id="mettre-debut" type="button">Début ici</button><span class="total" id="val-debut">0:00</span>
-          <button class="fichier" id="mettre-fin" type="button">Fin ici</button><span class="total" id="val-fin">fin du morceau</span>
-          <button class="lien" id="raz-decoupe" type="button">Tout le morceau</button>
+      <div id="liste-musiques" class="liste-musiques"></div>
+      <div class="coches"><label><input type="checkbox" id="enchainer" checked> Enchaîner les musiques (décoché : la musique choisie tourne en boucle)</label></div>
+      <label class="ajout">+ Ajouter mes musiques (MP3 du téléphone)<input type="file" id="morceau" accept="audio/*" multiple hidden></label>
+      <p class="total">Vos musiques restent sur votre téléphone, elles ne sont envoyées nulle part. <span class="nom-fichier" id="nomfichier"></span></p>
+      <details class="gerer" id="decoupe-details">
+        <summary>✂ Couper le début ou la fin de la musique choisie</summary>
+        <div id="decoupe" class="pile">
+          <div class="ligne"><button class="fichier" id="ecoute-extrait" type="button">▶ Écouter le passage</button><span class="total" id="pos">0:00 / 0:00</span></div>
+          <input type="range" id="position" min="0" max="100" step="0.1" value="0" aria-label="Position dans le morceau">
+          <div class="ligne">
+            <button class="fichier" id="mettre-debut" type="button">Début ici</button><span class="total" id="val-debut">0:00</span>
+            <button class="fichier" id="mettre-fin" type="button">Fin ici</button><span class="total" id="val-fin">fin du morceau</span>
+            <button class="lien" id="raz-decoupe" type="button">Tout le morceau</button>
+          </div>
+          <div class="total"><b id="extrait"></b></div>
         </div>
-        <div class="total"><b id="extrait"></b><br>Le minuteur joue seulement ce passage, en boucle.</div>
-      </div>
+      </details>
     </div>
     <div class="ligne" id="ligne-tempo"><span class="total etiquette">Tempo</span><input type="range" id="tempo" min="70" max="180" value="124" aria-label="Tempo du rythme"><span class="total" id="bpm">124 bpm</span></div>
-    <div class="ligne" id="ligne-volume"><span class="total etiquette">🎵 Musique</span><input type="range" id="volume" min="0" max="100" value="60" aria-label="Volume de la musique"></div>
   </details>
 </main>
 

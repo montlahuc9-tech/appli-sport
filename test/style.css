@@ -310,3 +310,13 @@ body.test .vue { padding-top: 14px; }
 details.gerer > summary { cursor: pointer; color: var(--doux); font: 600 14px var(--f-texte); list-style: none; padding: 4px 0; }
 details.gerer > summary::-webkit-details-marker { display: none; }
 details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
+
+/* ---------- Liste des musiques ---------- */
+.liste-musiques { display: grid; gap: 6px; }
+.musique-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; border: 1px solid var(--trait); border-radius: 12px; padding: 4px 6px 4px 4px; background: var(--sol); }
+.musique-ligne.choisie { border-color: var(--travail); }
+.musique-nom { background: none; border: 0; color: var(--texte); text-align: left; padding: 8px; cursor: pointer; min-width: 0; }
+.musique-nom b { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.musique-nom span { color: var(--doux); font-size: 12px; }
+.musique-ligne.choisie .musique-nom b::before { content: "♪ "; color: var(--travail); }
+.musique-ligne .mini { min-width: 44px; min-height: 40px; font-size: 15px; }

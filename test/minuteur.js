@@ -13,16 +13,17 @@ window.Minuteur = (() => {
   const reglages = () => ({ travail: Math.max(5, lireNb("travail", 40)), repos: Math.max(0, lireNb("repos", 20)), tours: Math.max(1, lireNb("tours", 3)),
                             pause: Math.max(0, lireNb("pause", 0)), prepa: Math.max(0, lireNb("prepa", 10)) });
   const CHAMPS = ["travail", "repos", "tours", "pause", "prepa", "rmin", "rsec", "source", "style", "tempo", "volume", "volvoix"];
-  const COCHES = ["voix", "depart-sifflet", "bips", "baisse"];
+  const COCHES = ["voix", "depart-sifflet", "bips", "baisse", "enchainer"];
   let sauverAttente = null;
   const sauver = () => { clearTimeout(sauverAttente); sauverAttente = setTimeout(() => {
-    const r = Compte.donnees.reglages; CHAMPS.forEach(k => r[k] = $(k).value); COCHES.forEach(k => r[k] = $(k).checked);
+    const r = Compte.donnees.reglages; CHAMPS.forEach(k => r[k] = $(k).value); COCHES.forEach(k => r[k] = $(k).checked); r.morceau = morceauNom;
     r.exos = exos; r.titre = titreSeance; Compte.sauver(); }, 400); };
   function chargerReglages() {
     const r = Compte.donnees.reglages || {};
     CHAMPS.forEach(k => { if (r[k] != null) $(k).value = r[k]; }); COCHES.forEach(k => { if (r[k] != null) $(k).checked = !!r[k]; });
     exos = Array.isArray(r.exos) ? r.exos.filter(e => e && typeof e.nom === "string") : [{ nom: "Squats" }, { nom: "Pompes" }, { nom: "Fentes alternées" }, { nom: "Planche" }, { nom: "Jumping jacks" }];
     titreSeance = r.titre || "";
+    if (r.morceau == null && (r.source == null || r.source === "aucune")) $("source").value = "fichier";  // nouveauté : les musiques de l'appli par défaut
   }
   const exoInfo = (e) => e ? infoExo(e.nom, e.muscle) : null;
 
@@ -202,9 +203,24 @@ window.Minuteur = (() => {
   }
   function arreterRythme() { if (rythme) { clearInterval(rythme.minuterie); try { rythme.sortie.disconnect(); } catch {} rythme = null; } }
 
-  // ---------- Un morceau du téléphone, découpé (début / fin) et joué en boucle ----------
-  const lecteur = new Audio(); lecteur.loop = false; let urlMorceau = null, morceauNom = "", apercu = false;
-  let decoupes = {};
+  // ---------- Musiques : celles de l'appli + celles que chacun ajoute (gardées sur son téléphone) ----------
+  const MUSIQUES_APPLI = [
+    { id: "app-workout", nom: "Workout", auteur: "Gr0za", url: "musique/workout-gr0za.mp3" },
+    { id: "app-pop", nom: "Background Pop", auteur: "Kulakovka", url: "musique/background-pop-kulakovka.mp3" }
+  ];
+  // Petite base sur le téléphone (IndexedDB) pour garder les MP3 ajoutés
+  const Base = (() => { let p = null;
+    const ouvrir = () => p || (p = new Promise((ok, ko) => { const r = indexedDB.open(Compte.env + "-musiques", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("morceaux", { keyPath: "id" }); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }));
+    const tx = async (mode, f) => { const db = await ouvrir(); return new Promise((ok, ko) => { const t = db.transaction("morceaux", mode), r = f(t.objectStore("morceaux"));
+      t.oncomplete = () => ok(r && r.result); t.onerror = () => ko(t.error); }); };
+    return { tous: () => tx("readonly", s => s.getAll()), ajouter: (m) => tx("readwrite", s => s.put(m)), supprimer: (id) => tx("readwrite", s => s.delete(id)) }; })();
+  let mesMorceaux = [];   // [{ id, nom, blob, url }]
+  const tousMorceaux = () => [...MUSIQUES_APPLI, ...mesMorceaux];
+  const morceauChoisi = () => tousMorceaux().find(m => m.id === morceauNom) || tousMorceaux()[0];
+
+  const lecteur = new Audio(); lecteur.loop = false; lecteur.preload = "auto"; let morceauNom = "", apercu = false;
+  let decoupes = {}; try { decoupes = JSON.parse(localStorage.getItem(Compte.env + "-decoupes") || "{}") || {}; } catch {}
   const dec = () => decoupes[morceauNom] || { debut: 0, fin: 0 };
   const mn = (t) => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   function majDecoupe() {
@@ -212,19 +228,58 @@ window.Minuteur = (() => {
     $("val-debut").textContent = mn(d.debut); $("val-fin").textContent = d.fin > d.debut ? mn(d.fin) : "fin du morceau";
     $("extrait").textContent = `Passage joué : ${mn(d.debut)} → ${d.fin > d.debut ? mn(d.fin) : mn(duree)}` + (duree ? ` (${mn((d.fin > d.debut ? d.fin : duree) - d.debut)})` : "");
   }
+  function chargerMorceau(id, jouer) {
+    const m = tousMorceaux().find(x => x.id === id) || tousMorceaux()[0]; if (!m) return;
+    morceauNom = m.id; if (!lecteur.src.endsWith(m.url)) lecteur.src = m.url;
+    $("nomfichier").textContent = "♪ " + m.nom; majDecoupe(); dessinerMusiques();
+    if (jouer) { const go = () => { lecteur.currentTime = dec().debut; lecteur.play().catch(() => {}); };
+      if (lecteur.readyState >= 1) go(); else lecteur.addEventListener("loadedmetadata", go, { once: true }); }
+  }
+  // Fin du passage : on enchaîne sur la musique suivante, ou on repart au début
+  function finDuPassage() {
+    const enMarche = etat === "marche" || etat === "decompte" || apercu;
+    if ($("enchainer").checked && !apercu && tousMorceaux().length > 1) {
+      const l = tousMorceaux(), i = l.findIndex(x => x.id === morceauNom); chargerMorceau(l[(i + 1) % l.length].id, enMarche); sauver();
+    } else { lecteur.currentTime = dec().debut; if (enMarche) lecteur.play().catch(() => {}); }
+  }
   lecteur.addEventListener("loadedmetadata", () => { $("position").max = lecteur.duration || 0; if (lecteur.currentTime < dec().debut) lecteur.currentTime = dec().debut; majDecoupe(); });
-  lecteur.addEventListener("ended", () => { lecteur.currentTime = dec().debut; if (etat === "marche" || apercu) lecteur.play().catch(() => {}); });
+  lecteur.addEventListener("ended", finDuPassage);
   setInterval(() => {
     const d = dec();
-    if (!lecteur.paused && d.fin > d.debut && lecteur.currentTime >= d.fin) lecteur.currentTime = d.debut;
-    if (!$("decoupe").hidden) { if (document.activeElement !== $("position")) $("position").value = lecteur.currentTime; $("pos").textContent = `${mn(lecteur.currentTime)} / ${mn(lecteur.duration)}`; }
+    if (!lecteur.paused && d.fin > d.debut && lecteur.currentTime >= d.fin) finDuPassage();
+    if ($("decoupe-details").open) { if (document.activeElement !== $("position")) $("position").value = lecteur.currentTime; $("pos").textContent = `${mn(lecteur.currentTime)} / ${mn(lecteur.duration)}`; }
   }, 150);
-  $("morceau").addEventListener("change", () => {
-    const f = $("morceau").files[0]; if (!f) return; if (urlMorceau) URL.revokeObjectURL(urlMorceau);
-    urlMorceau = URL.createObjectURL(f); morceauNom = f.name; lecteur.src = urlMorceau; $("decoupe").hidden = false; $("nomfichier").textContent = "♪ " + f.name;
-    try { decoupes = JSON.parse(localStorage.getItem(Compte.env + "-decoupes") || "{}") || {}; } catch { decoupes = {}; }
-    majDecoupe(); apercu = false; $("ecoute-extrait").textContent = "▶ Écouter le passage";
+  function dessinerMusiques() {
+    const z = $("liste-musiques"); if (!z) return;
+    z.innerHTML = tousMorceaux().map(m => { const choisi = m.id === morceauNom, joue = choisi && !lecteur.paused;
+      return `<div class="musique-ligne${choisi ? " choisie" : ""}">
+        <button class="musique-nom" type="button" data-mus-choisir="${esc(m.id)}" aria-pressed="${choisi}"><b>${esc(m.nom)}</b><span>${m.auteur ? esc(m.auteur) + " · musique de l'appli" : "ma musique"}</span></button>
+        <button class="mini" type="button" data-mus-ecouter="${esc(m.id)}" aria-label="${joue ? "Arrêter" : "Écouter"} ${esc(m.nom)}">${joue && apercu ? "■" : "▶"}</button>
+        ${m.blob ? `<button class="x" type="button" data-mus-suppr="${esc(m.id)}" aria-label="Retirer ${esc(m.nom)}">×</button>` : ""}</div>`; }).join("");
+    z.querySelectorAll("[data-mus-choisir]").forEach(b => b.addEventListener("click", () => { const enCours = !lecteur.paused; chargerMorceau(b.dataset.musChoisir, enCours); sauver(); }));
+    z.querySelectorAll("[data-mus-ecouter]").forEach(b => b.addEventListener("click", () => { audioCtx();
+      if (apercu && b.dataset.musEcouter === morceauNom) { apercu = false; lecteur.pause(); return dessinerMusiques(); }
+      if (etat === "marche") return chargerMorceau(b.dataset.musEcouter, true);
+      apercu = true; lecteur.volume = $("volume").value / 100; chargerMorceau(b.dataset.musEcouter, true); sauver(); }));
+    z.querySelectorAll("[data-mus-suppr]").forEach(b => deuxClics(b, "Sûr ?", async () => {
+      const id = b.dataset.musSuppr; await Base.supprimer(id).catch(() => {}); const m = mesMorceaux.find(x => x.id === id); if (m) URL.revokeObjectURL(m.url);
+      mesMorceaux = mesMorceaux.filter(x => x.id !== id); if (morceauNom === id) { lecteur.pause(); chargerMorceau(MUSIQUES_APPLI[0].id); } dessinerMusiques(); toast("Musique retirée"); }));
+  }
+  lecteur.addEventListener("play", dessinerMusiques); lecteur.addEventListener("pause", dessinerMusiques);
+  $("morceau").addEventListener("change", async () => {
+    const fichiers = [...$("morceau").files]; if (!fichiers.length) return; let dernier = null;
+    for (const f of fichiers) {
+      const m = { id: "perso-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7), nom: f.name.replace(/\.[a-z0-9]+$/i, "").slice(0, 60), blob: f };
+      try { await Base.ajouter(m); } catch { toast("Impossible de garder cette musique sur le téléphone"); }
+      m.url = URL.createObjectURL(f); mesMorceaux.push(m); dernier = m;
+    }
+    $("morceau").value = ""; if (dernier) chargerMorceau(dernier.id); sauver();
+    toast(fichiers.length > 1 ? `${fichiers.length} musiques ajoutées` : "Musique ajoutée");
   });
+  async function chargerMesMorceaux() {
+    try { mesMorceaux = ((await Base.tous()) || []).map(m => ({ ...m, url: URL.createObjectURL(m.blob) })); } catch { mesMorceaux = []; }
+    chargerMorceau(Compte.donnees.reglages.morceau || MUSIQUES_APPLI[0].id);
+  }
   $("position").addEventListener("input", () => { lecteur.currentTime = +$("position").value; });
   $("ecoute-extrait").addEventListener("click", () => {
     if (!lecteur.src) return; audioCtx();
@@ -239,6 +294,7 @@ window.Minuteur = (() => {
   $("mettre-debut").addEventListener("click", () => poserBorne("debut"));
   $("mettre-fin").addEventListener("click", () => poserBorne("fin"));
   $("raz-decoupe").addEventListener("click", () => { delete decoupes[morceauNom]; sauverDecoupes(); majDecoupe(); });
+  $("enchainer").addEventListener("change", sauver);
 
   function majSource() { const s = $("source").value;
     $("ecouter").hidden = s !== "rythme"; $("bloc-fichier").hidden = s !== "fichier"; $("style").hidden = s !== "rythme"; $("ligne-tempo").hidden = s !== "rythme";
@@ -261,9 +317,9 @@ window.Minuteur = (() => {
   $("test-voix").addEventListener("click", () => { audioCtx(); direEn("three, two, one"); setTimeout(() => sifflet(0.6), 1600); });
   function lancerMusique() { const s = $("source").value; appliquerVolume();
     if (s === "rythme") demarrerRythme();
-    else if (s === "fichier" && lecteur.src) { const d = dec(); apercu = false; $("ecoute-extrait").textContent = "▶ Écouter le passage";
+    else if (s === "fichier") { if (!lecteur.src) chargerMorceau(morceauNom); const d = dec(); apercu = false; $("ecoute-extrait").textContent = "▶ Écouter le passage";
       if (lecteur.currentTime < d.debut || (d.fin > d.debut && lecteur.currentTime >= d.fin)) lecteur.currentTime = d.debut; lecteur.play().catch(() => {}); } }
-  function arreterMusique() { arreterRythme(); lecteur.pause(); }
+  function arreterMusique() { arreterRythme(); apercu = false; lecteur.pause(); }
 
   // ---------- Moteur ----------
   let etapes = [], k = 0, reste = 0, dureePhase = 1, ecoule = 0, dernier = 0, minuterie = null, debut = 0, dernierEntier = null, verrou = null;
@@ -456,7 +512,7 @@ window.Minuteur = (() => {
   // ---------- Ce que le reste de l'appli utilise ----------
   return {
     init() {
-      chargerReglages(); $("bpm").textContent = $("tempo").value + " bpm"; dessinerExos(); majSource();
+      chargerReglages(); $("bpm").textContent = $("tempo").value + " bpm"; dessinerExos(); majSource(); chargerMesMorceaux();
       const enc = Compte.donnees.encours;
       if (enc && Array.isArray(enc.exos) && !enc.terminee) { series = enc; dessinerSeries(); choisirMode("rebours"); }
       else { series = null; dessinerSeries(); choisirMode("intervalles"); }

@@ -1,6 +1,6 @@
 // Fait marcher l'appli même sans réseau (à la salle, au sous-sol…).
 // Changer VERSION à chaque mise à jour pour que les téléphones prennent la nouvelle version.
-const VERSION = "20261014185322";
+const VERSION = "20261014191051";
 const COQUILLE = ["./", "index.html", "style.css", "config.js", "lib/supabase.js", "lib/591.supabase.js", "lib/qrcode.js", "exercices.js", "fiches.js",
   "compte.js", "commun.js", "minuteur.js", "app.js", "manifest.webmanifest", "icones/icone-192.png", "icones/icone-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open("appli-" + VERSION).then(c => c.addAll(COQUILLE)).then(() => self.skipWaiting())); });
@@ -9,9 +9,11 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET") return;
   // Photos et polices : gardées une fois vues (elles ne changent pas)
-  if (url.pathname.includes("/photos/") || url.hostname.includes("fonts.g")) {
-    e.respondWith(caches.open("photos").then(async c => { const r = await c.match(e.request); if (r) return r;
-      const n = await fetch(e.request); if (n.ok || n.type === "opaque") c.put(e.request, n.clone()); return n; }));
+  if (url.pathname.includes("/photos/") || url.pathname.includes("/musique/") || url.hostname.includes("fonts.g")) {
+    // Musiques : on garde le fichier entier (le lecteur demande parfois juste un morceau du fichier)
+    const req = url.pathname.includes("/musique/") ? new Request(url.href) : e.request;
+    e.respondWith(caches.open("photos").then(async c => { const r = await c.match(req); if (r) return r;
+      const n = await fetch(req); if (n.status === 200 || n.type === "opaque") c.put(req, n.clone()); return n; }));
     return;
   }
   if (url.origin !== location.origin) return;   // comptes en ligne : toujours le réseau
