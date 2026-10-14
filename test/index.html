@@ -163,7 +163,7 @@
     <p class="total">Ajoutez vos propres musiques (MP3) depuis votre téléphone : elles restent dans l'appli, et se lancent toutes seules quand vous appuyez sur <b>Démarrer</b>. Elles ne sont envoyées nulle part.</p>
     <p class="total" id="musique-actuelle"></p>
     <div class="ligne"><button class="principal" type="button" id="ajout-mp3-rapide">+ Ajouter mes musiques du téléphone</button></div>
-    <button class="lien" type="button" id="voir-musiques">Choisir la musique, ou utiliser les 2 musiques de l'appli →</button>
+    <button class="lien" type="button" id="voir-musiques">Choisir la musique, régler son tempo (BPM), ou utiliser les 2 musiques de l'appli →</button>
     <h3 class="sous-titre">Spotify</h3>
     <div class="playlists" id="playlists"></div>
     <div class="total">Touchez une playlist : elle s'ouvre dans Spotify. Lancez la lecture, revenez ici et appuyez sur <b>Démarrer</b>. La voix et le sifflet passent par-dessus la musique.</div>
@@ -245,6 +245,20 @@
     <div class="total" id="info-musique">Lancez votre musique habituelle (Spotify, Deezer…) avant la séance : la voix et le sifflet passent par-dessus.</div>
     <div id="bloc-fichier" class="pile" hidden>
       <div id="liste-musiques" class="liste-musiques"></div>
+      <div class="tempo-musique pile" id="tempo-musique">
+        <div class="ligne"><span class="total etiquette">⏱ Tempo</span><b id="bpm-musique">—</b>
+          <button class="mini" type="button" id="bpm-moitie" title="La détection a trouvé le double">÷2</button><button class="mini" type="button" id="bpm-double" title="La détection a trouvé la moitié">×2</button>
+          <button class="lien" type="button" id="bpm-detecter">Recalculer</button></div>
+        <div class="puces" id="cibles-tempo" role="group" aria-label="Tempo voulu">
+          <button type="button" data-cible="0">Vitesse normale</button>
+          <button type="button" data-cible="120">🚶 Marche · 120</button>
+          <button type="button" data-cible="130">💪 Muscu / HIIT · 130</button>
+          <button type="button" data-cible="160">🏃 Footing · 160</button>
+          <button type="button" data-cible="175">⚡ Course rapide · 175</button>
+        </div>
+        <div class="ligne"><span class="total etiquette">Vitesse</span><input type="range" id="vitesse-musique" min="75" max="135" value="100" aria-label="Vitesse de la musique"><b id="vitesse-val">100 %</b></div>
+        <p class="total" id="tempo-info">Choisissez un tempo : l'appli accélère ou ralentit la musique toute seule (la voix du chanteur ne devient pas aiguë).</p>
+      </div>
       <div class="coches"><label><input type="checkbox" id="enchainer" checked> Enchaîner les musiques (décoché : la musique choisie tourne en boucle)</label></div>
       <label class="ajout">+ Ajouter mes musiques (MP3 du téléphone)<input type="file" id="morceau" accept="audio/*" multiple hidden></label>
       <p class="total">Vos musiques restent sur votre téléphone, elles ne sont envoyées nulle part. <span class="nom-fichier" id="nomfichier"></span></p>

@@ -231,8 +231,8 @@ window.Minuteur = (() => {
 
   // ---------- Musiques : celles de l'appli + celles que chacun ajoute (gardées sur son téléphone) ----------
   const MUSIQUES_APPLI = [
-    { id: "app-workout", nom: "Workout", auteur: "Gr0za", url: "musique/workout-gr0za.mp3" },
-    { id: "app-pop", nom: "Background Pop", auteur: "Kulakovka", url: "musique/background-pop-kulakovka.mp3" }
+    { id: "app-workout", nom: "Workout", auteur: "Gr0za", url: "musique/workout-gr0za.mp3", bpm: 141 },
+    { id: "app-pop", nom: "Background Pop", auteur: "Kulakovka", url: "musique/background-pop-kulakovka.mp3", bpm: 118 }
   ];
   // Petite base sur le téléphone (IndexedDB) pour garder les MP3 ajoutés
   const Base = (() => { let p = null;
@@ -257,7 +257,7 @@ window.Minuteur = (() => {
   function chargerMorceau(id, jouer) {
     const m = tousMorceaux().find(x => x.id === id) || tousMorceaux()[0]; if (!m) return;
     morceauNom = m.id; if (!lecteur.src.endsWith(m.url)) lecteur.src = m.url;
-    $("nomfichier").textContent = "♪ " + m.nom; majDecoupe(); dessinerMusiques(); majMusiqueActuelle();
+    $("nomfichier").textContent = "♪ " + m.nom; majDecoupe(); dessinerMusiques(); majMusiqueActuelle(); appliquerTempo(); verifierBpm();
     if (jouer) { const go = () => { lecteur.currentTime = dec().debut; lecteur.play().catch(() => {}); };
       if (lecteur.readyState >= 1) go(); else lecteur.addEventListener("loadedmetadata", go, { once: true }); }
   }
@@ -292,12 +292,68 @@ window.Minuteur = (() => {
       mesMorceaux = mesMorceaux.filter(x => x.id !== id); if (morceauNom === id) { lecteur.pause(); chargerMorceau(MUSIQUES_APPLI[0].id); } dessinerMusiques(); toast("Musique retirée"); }));
   }
   lecteur.addEventListener("play", dessinerMusiques); lecteur.addEventListener("pause", dessinerMusiques);
+
+  // ---------- Tempo de la musique : vitesse réglable et tempo (BPM) détecté automatiquement ----------
+  const tempos = () => Compte.donnees.reglages.tempos || (Compte.donnees.reglages.tempos = {});   // { idMusique: { bpm, cible, vitesse } }
+  const regTempo = () => tempos()[morceauNom] || (tempos()[morceauNom] = {});
+  const bpmDe = () => regTempo().bpm || (morceauChoisi() || {}).bpm || 0;
+  try { lecteur.preservesPitch = true; lecteur.webkitPreservesPitch = true; } catch {}
+  // Détection du tempo : on écoute 30 s au milieu du morceau, on garde les basses, et on cherche la pulsation qui revient le plus
+  async function detecterBpm(url) {
+    const brut = await (await fetch(url)).arrayBuffer();
+    const tmp = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100);
+    const son = await new Promise((ok, ko) => tmp.decodeAudioData(brut, ok, ko));
+    const sr = son.sampleRate, duree = son.duration, debut = Math.min(duree * 0.3, Math.max(0, duree - 40)), long = Math.min(30, duree - debut);
+    const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, Math.floor(long * sr), sr);
+    const src = off.createBufferSource(), lp = off.createBiquadFilter(); src.buffer = son; lp.type = "lowpass"; lp.frequency.value = 180;
+    src.connect(lp).connect(off.destination); src.start(0, debut, long);
+    const x = (await off.startRendering()).getChannelData(0), pas = Math.round(sr * 0.005), n = Math.floor(x.length / pas), env = new Float32Array(n);
+    for (let i = 0; i < n; i++) { let s = 0; for (let j = i * pas; j < (i + 1) * pas; j++) s += x[j] * x[j]; env[i] = Math.sqrt(s / pas); }
+    const on = new Float32Array(n); let moy = 0; for (let i = 1; i < n; i++) { on[i] = Math.max(0, env[i] - env[i - 1]); moy += on[i]; } moy /= n; for (let i = 0; i < n; i++) on[i] -= moy;
+    const lo = Math.floor(60 / 180 / 0.005), hi = Math.ceil(60 / 70 / 0.005), r = [];
+    for (let l = lo; l <= hi; l++) { let s = 0; for (let i = 0; i + l < n; i++) s += on[i] * on[i + l]; r.push(s); }
+    let k = 0; r.forEach((v, i) => { if (v > r[k]) k = i; }); let lag = lo + k;
+    if (k > 0 && k < r.length - 1) { const a = r[k - 1], b = r[k], c = r[k + 1]; lag += 0.5 * (a - c) / (a - 2 * b + c); }
+    let bpm = 60 / (lag * 0.005); while (bpm < 80) bpm *= 2; while (bpm > 170) bpm /= 2;
+    return Math.round(bpm);
+  }
+  // Vitesse pour atteindre le tempo voulu (on accepte aussi la moitié ou le double du tempo, pour rester entre 75 et 135 %)
+  function vitessePour(cible, bpm) {
+    if (!cible || !bpm) return 1;
+    const c = [bpm, bpm * 2, bpm / 2].map(b => cible / b).sort((a, b) => Math.abs(Math.log(a)) - Math.abs(Math.log(b)))[0];
+    return Math.min(1.35, Math.max(0.75, c));
+  }
+  function appliquerTempo() {
+    const t = regTempo(), v = t.cible ? vitessePour(t.cible, bpmDe()) : (t.vitesse || 1);
+    lecteur.playbackRate = v; lecteur.defaultPlaybackRate = v;
+    $("vitesse-musique").value = Math.round(v * 100); $("vitesse-val").textContent = Math.round(v * 100) + " %";
+    const b = bpmDe(); $("bpm-musique").textContent = b ? `${b} BPM` : "calcul…";
+    $("cibles-tempo").querySelectorAll("[data-cible]").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.cible ? +x.dataset.cible === t.cible : !t.cible && Math.abs(v - 1) < 0.01)));
+    $("tempo-info").textContent = b ? (Math.abs(v - 1) < 0.01 ? `Joue à son tempo d'origine : ${b} BPM.` : `Joue à ${Math.round(b * v)} BPM (vitesse ${Math.round(v * 100)} %).` + (t.cible && Math.abs(vitessePour(t.cible, b) * b - t.cible) > 3 && Math.abs(vitessePour(t.cible, b) * b * 2 - t.cible) > 3 && Math.abs(vitessePour(t.cible, b) * b / 2 - t.cible) > 3 ? " Le tempo voulu est trop loin de cette musique : on s'en approche au mieux." : ""))
+      : "Calcul du tempo de la musique…";
+    try { majMusiqueActuelle(); } catch {}
+  }
+  async function verifierBpm(forcer) {
+    const m = morceauChoisi(); if (!m) return; const t = regTempo();
+    if (!forcer && (t.bpm || m.bpm)) return appliquerTempo();
+    $("bpm-musique").textContent = "calcul…";
+    try { const id = m.id, b = await detecterBpm(m.url); tempos()[id] = { ...(tempos()[id] || {}), bpm: b }; sauver(); if (id === morceauNom) appliquerTempo(); }
+    catch { $("bpm-musique").textContent = "inconnu"; $("tempo-info").textContent = "Impossible de calculer le tempo de ce fichier : réglez la vitesse à la main."; }
+  }
+  $("cibles-tempo").querySelectorAll("[data-cible]").forEach(b => b.addEventListener("click", () => { const t = regTempo(); t.cible = +b.dataset.cible || 0; if (!t.cible) t.vitesse = 1; sauver(); appliquerTempo();
+    if (t.cible) toast(`Musique réglée sur ${t.cible} BPM`); }));
+  $("vitesse-musique").addEventListener("input", () => { const t = regTempo(); t.cible = 0; t.vitesse = +$("vitesse-musique").value / 100; appliquerTempo(); });
+  $("vitesse-musique").addEventListener("change", sauver);
+  $("bpm-detecter").addEventListener("click", () => verifierBpm(true));
+  $("bpm-moitie").addEventListener("click", () => { const t = regTempo(), b = bpmDe(); if (b) { t.bpm = Math.round(b / 2); sauver(); appliquerTempo(); } });
+  $("bpm-double").addEventListener("click", () => { const t = regTempo(), b = bpmDe(); if (b) { t.bpm = Math.round(b * 2); sauver(); appliquerTempo(); } });
   // Raccourci bien visible dans le Minuteur : ajouter ses musiques du téléphone
   $("ajout-mp3-rapide").addEventListener("click", () => { if ($("source").value !== "fichier") { $("source").value = "fichier"; majSource(); } $("morceau").click(); });
   $("voir-musiques").addEventListener("click", () => { if ($("source").value !== "fichier") { $("source").value = "fichier"; majSource(); }
     const d = document.querySelector("details.musique"); d.open = true; $("liste-musiques").scrollIntoView({ behavior: "smooth", block: "center" }); });
   function majMusiqueActuelle() { const m = morceauChoisi(), s = $("source").value;
-    $("musique-actuelle").innerHTML = s === "fichier" && m ? `Musique choisie : <b>♪ ${esc(m.nom)}</b>${mesMorceaux.length ? ` · ${mesMorceaux.length} musique${mesMorceaux.length > 1 ? "s" : ""} à vous` : ""}`
+    const tp = m && tempos()[m.id], bp = m && ((tp && tp.bpm) || m.bpm), vv = lecteur.playbackRate || 1;
+    $("musique-actuelle").innerHTML = s === "fichier" && m ? `Musique choisie : <b>♪ ${esc(m.nom)}</b>${bp ? ` · ${Math.round(bp * vv)} BPM` : ""}${mesMorceaux.length ? ` · ${mesMorceaux.length} musique${mesMorceaux.length > 1 ? "s" : ""} à vous` : ""}`
       : s === "rythme" ? "Musique choisie : <b>rythme intégré</b>" : "Pas de musique de l'appli (vous pouvez garder la vôtre ou Spotify)."; }
   $("morceau").addEventListener("change", async () => {
     const fichiers = [...$("morceau").files]; if (!fichiers.length) return; let dernier = null;

@@ -399,3 +399,7 @@ body.tv .commandes .gros { font-size: min(2.4vw, 4vh); padding: 1.6vh 3vw; }
 .guide-etape h2 { color: var(--texte) !important; font-size: 20px !important; letter-spacing: .04em !important; }
 .guide-etape p { margin: 0; line-height: 1.5; }
 .guide-etape img { width: min(100%, 360px); justify-self: center; border-radius: 16px; border: 1px solid var(--trait); display: block; }
+
+.tempo-musique { border: 1px solid var(--trait); border-radius: 12px; padding: 10px; background: var(--sol); }
+#bpm-musique, #vitesse-val { font: 800 18px var(--f-chiffres); min-width: 64px; }
+#cibles-tempo button[aria-pressed="true"] { background: var(--travail); border-color: var(--travail); color: var(--sol); }
