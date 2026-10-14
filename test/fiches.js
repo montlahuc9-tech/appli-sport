@@ -20,8 +20,8 @@ const circ_ = (nom) => ({ nom });
 const FICHES = [
   // ---------------- MAISON ----------------
   { id: "m-haut-1", lieu: "maison", groupe: "haut", type: "circuit", titre: "Haut du corps sans matériel",
-    note: "Aucun matériel, juste une chaise et une table solide.", travail: 40, repos: 20, tours: 3, pause: 60,
-    exos: [circ_("Pompes"), circ_("Rowing inversé (sous une table)"), circ_("Pompes larges"), circ_("Pompes déclinées (pieds sur une chaise)"), circ_("Pompes inclinées (mains sur une chaise)")] },
+    note: "Aucun matériel, juste une chaise.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Pompes"), circ_("Superman (allongé sur le ventre)"), circ_("Pompes larges"), circ_("Pompes déclinées (pieds sur une chaise)"), circ_("Pompes inclinées (mains sur une chaise)")] },
   { id: "m-haut-2", lieu: "maison", groupe: "haut", type: "series", titre: "Pecs, épaules et dos (haltères)",
     note: "Deux haltères. Notez vos poids pour progresser.",
     exos: [serie_("Développé haltères au sol", 4, "12", 60), serie_("Rowing haltère", 4, "10 / bras", 60), serie_("Développé épaules haltères", 3, "12", 60),
