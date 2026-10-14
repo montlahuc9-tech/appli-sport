@@ -440,7 +440,7 @@ window.Minuteur = (() => {
     if (entier !== dernierEntier) { dernierEntier = entier; if (entier <= 3 && entier >= 1 && dureePhase > 4) {
       bip(entier === 1 ? 990 : 660, .08, .2); direEn(["one", "two", "three"][entier - 1]); } }
   }
-  let ficheId = null;
+  let ficheId = null, surFinCb = null;
   function noterHistorique(titre, duree, detail, id) {
     const h = Compte.donnees.historique; h.unshift({ date: new Date().toISOString(), titre: titre || "Séance libre", duree: Math.round(duree), detail: detail || "", id: id || null });
     if (h.length > 200) h.length = 200; Compte.sauver();
@@ -463,6 +463,7 @@ window.Minuteur = (() => {
     const duree = (performance.now() - debut) / 1000, reps = +$("nreps").textContent;
     $("bilan").innerHTML = `Séance terminée en <b>${fmt(duree)}</b>` + (mode === "intervalles" ? ` · <b>${reglages().tours}</b> round${reglages().tours > 1 ? "s" : ""}` : "") + (reps ? ` · <b>${reps}</b> répétitions` : "");
     if (mode === "intervalles") noterHistorique(titreSeance || "Circuit", duree, `${reglages().tours} rounds · ${exos.length} exercices`, ficheId);
+    if (mode === "intervalles" && surFinCb) { try { surFinCb(ficheId); } catch {} }
   }
   function tic() {
     const maintenant = performance.now(), dt = (maintenant - dernier) / 1000; dernier = maintenant;
@@ -628,10 +629,11 @@ window.Minuteur = (() => {
       if (enc && Array.isArray(enc.exos) && !enc.terminee) { series = enc; dessinerSeries(); choisirMode("rebours"); }
       else { series = null; dessinerSeries(); choisirMode("intervalles"); }
     },
+    surFin(f) { surFinCb = f; },
     occupe: () => etat === "marche" || etat === "decompte",
     chargerCircuit(f) {
       clearInterval(minuterie); reposFiche = null; series = null; dessinerSeries(); Compte.donnees.encours = null;
-      ["travail", "repos", "tours", "pause"].forEach(kk => { if (f[kk] != null) $(kk).value = f[kk]; });
+      ["travail", "repos", "tours", "pause", "prepa"].forEach(kk => { if (f[kk] != null) $(kk).value = f[kk]; else if (kk === "prepa") $(kk).value = 10; });
       exos = f.exos.map(e => e.duree ? { nom: e.nom, muscle: e.muscle, duree: e.duree } : { nom: e.nom, muscle: e.muscle }); titreSeance = f.titre; ficheId = f.id;
       choisirMode("intervalles"); dessinerExos(); resumeSeance(); sauver();
     },

@@ -89,6 +89,7 @@
     <button type="button" data-lieu="salle" aria-pressed="false"><span aria-hidden="true">🏋️</span> Salle</button>
   </div>
   <div class="puces niveaux defilant" id="filtre-niveau" role="group" aria-label="Niveau"></div>
+  <section class="echauffement" id="bloc-echauffement"></section>
   <section class="bloc">
     <h2>Mes séances</h2>
     <div id="mes-seances" class="liste-fiches"></div>
@@ -146,6 +147,8 @@
     <button class="gros go" id="go" type="button">Démarrer</button>
     <button class="gros sec" id="stop" type="button">Remise à zéro</button>
   </div>
+  <div class="tv-ligne"><button class="mini" type="button" id="mode-tv">📺 Mode télé / plein écran</button><button class="lien" type="button" id="aide-tv">Comment l'afficher sur la télé ?</button></div>
+  <button class="sortir-tv" type="button" id="sortir-tv" hidden>✕ Quitter le mode télé</button>
   <div class="reps" aria-label="Compteur de répétitions">
     <button id="moins" type="button" aria-label="Retirer une répétition">−</button>
     <div class="n"><span id="nreps">0</span><small>répétitions</small></div>

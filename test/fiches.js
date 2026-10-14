@@ -224,3 +224,25 @@ const NIVEAUX = { 1: "Débutant", 2: "Intermédiaire", 3: "Confirmé" };
   };
   FICHES.forEach(f => { f.niveau = n[f.id] || 2; });
 })();
+
+// ---------------- ÉCHAUFFEMENTS (proposés avant chaque séance, pour éviter les blessures) ----------------
+FICHES.push(
+  { id: "e-general", echauffement: true, lieu: "partout", type: "circuit", niveau: 1, titre: "Échauffement complet (5 min)",
+    note: "À faire avant chaque séance : réveille les articulations, monte doucement le cardio et prépare les muscles. C'est le meilleur moyen d'éviter les blessures.",
+    travail: 30, repos: 5, tours: 1, pause: 0, prepa: 5,
+    exos: [circ_("Marche rapide sur place (sans sauter)"), circ_("Moulinets des bras"), circ_("Cercles d'épaules"), circ_("Cercles de hanches"),
+           circ_("Cercles de chevilles"), circ_("Montées de genoux"), circ_("Talons-fesses"), circ_("Squats"), circ_("Jumping jacks")] },
+  { id: "e-haut", echauffement: true, lieu: "partout", type: "circuit", niveau: 1, titre: "Échauffement haut du corps (5 min)",
+    note: "Avant une séance pecs, épaules, dos ou bras : épaules, coudes et poignets bien chauds avant de soulever.",
+    travail: 30, repos: 5, tours: 1, pause: 0, prepa: 5,
+    exos: [circ_("Marche rapide sur place (sans sauter)"), circ_("Moulinets des bras"), circ_("Cercles d'épaules"), circ_("Rotations de poignets"),
+           circ_("Pompes inclinées (mains sur une chaise)"), circ_("Rotation du bassin (allongé)"), circ_("Superman (allongé sur le ventre)"), circ_("Jumping jacks")] },
+  { id: "e-bas", echauffement: true, lieu: "partout", type: "circuit", niveau: 1, titre: "Échauffement jambes (5 min)",
+    note: "Avant une séance jambes ou fessiers : chevilles, genoux et hanches prêts à travailler.",
+    travail: 30, repos: 5, tours: 1, pause: 0, prepa: 5,
+    exos: [circ_("Marche rapide sur place (sans sauter)"), circ_("Cercles de chevilles"), circ_("Cercles de hanches"), circ_("Talons-fesses"),
+           circ_("Montées de genoux"), circ_("Squats"), circ_("Fentes alternées"), circ_("Pont fessier")] }
+);
+// Quel échauffement pour quelle séance
+const echauffementPour = (f) => f.univers === "running" ? "r-echauffement"
+  : (f.groupe === "haut" || f.groupe === "bras") ? "e-haut" : f.groupe === "bas" ? "e-bas" : "e-general";

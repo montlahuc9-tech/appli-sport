@@ -150,7 +150,7 @@
     $("v-seances").querySelectorAll("[data-univers]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.univers === univers));
       b.onclick = () => { D().reglages.univers = b.dataset.univers; Compte.sauver(); dessinerSeances(); }; });
     $("v-seances").querySelectorAll(".publics, .lieux:not(.publics)").forEach(z => z.hidden = univers !== "fitness");
-    dessinerFiltreNiveau(dessinerSeances);
+    dessinerFiltreNiveau(dessinerSeances); dessinerEchauffement(univers);
     if (univers !== "fitness") return dessinerUnivers(univers);
     const miennes = mesSeances().filter(f => f.lieu === lieu && !f.univers);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
@@ -201,11 +201,7 @@
         : `<button class="ajout" type="button" id="copier-fiche">Copier dans mes séances pour la modifier</button>`}</div>`;
     $("fiche-corps").innerHTML = h;
     $("fiche-corps").querySelectorAll("[data-exo]").forEach(b => b.addEventListener("click", () => { const e = f.exos[+b.dataset.exo]; ouvrirExo(infoExo(e.nom, e.muscle)); }));
-    $("lancer-fiche").addEventListener("click", () => {
-      if (Minuteur.occupe()) { toast("Une séance tourne déjà : remettez le minuteur à zéro d'abord."); return aller("minuteur"); }
-      if (f.type === "circuit") Minuteur.chargerCircuit(f); else Minuteur.chargerSeries(f);
-      aller("minuteur"); toast(f.type === "circuit" ? "Prêt : appuyez sur Démarrer" : "Faites votre série, puis touchez son numéro");
-    });
+    $("lancer-fiche").addEventListener("click", () => lancerFiche(f));
     const monter = $("fiche-corps").querySelector("[data-monter]");
     if (monter) monter.addEventListener("click", () => { const c = versionPlusDure(f); mesSeances().push(c); Compte.sauver(); toast("Version plus dure créée dans vos séances"); aller("fiche", c.id, true); });
     $("fiche-corps").querySelectorAll("[data-voir-fiche]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.voirFiche)));
@@ -216,6 +212,44 @@
       const copie = JSON.parse(JSON.stringify(f)); copie.id = "p" + Date.now(); copie.titre = f.titre + " (à moi)"; delete copie.groupe;
       mesSeances().push(copie); Compte.sauver(); toast("Copiée dans vos séances"); ouvrirEdition(copie);
     });
+  }
+
+  // ---------- Échauffement : proposé avant chaque séance pour éviter les blessures ----------
+  let seanceApres = null;   // la séance à lancer une fois l'échauffement fini
+  const sansEchauffement = (f) => f.echauffement || f.cat === "echauffement" || f.cat === "etirements";
+  const dejaEchauffe = () => Date.now() - (D().dernierEchauffement || 0) < 45 * 60 * 1000;
+  function chargerDansMinuteur(f) {
+    if (f.type === "circuit") Minuteur.chargerCircuit(f); else Minuteur.chargerSeries(f);
+    aller("minuteur"); toast(f.type === "circuit" ? "Prêt : appuyez sur Démarrer" : "Faites votre série, puis touchez son numéro");
+  }
+  function lancerFiche(f, passer) {
+    if (Minuteur.occupe()) { toast("Une séance tourne déjà : remettez le minuteur à zéro d'abord."); return aller("minuteur"); }
+    if (passer || sansEchauffement(f) || dejaEchauffe()) { seanceApres = null; return chargerDansMinuteur(f); }
+    const e = trouverFiche(echauffementPour(f));
+    ouvrirFeuille(`<div class="fiche-exo"><h2>🔥 Échauffement d'abord ?</h2>
+      <p>Pour éviter les blessures, faites <b>5 minutes d'échauffement</b> avant « ${esc(f.titre)} ». Muscles et articulations chauds = moins de risques et de meilleures performances.</p>
+      <button class="principal" type="button" data-ech-oui>🔥 Oui : ${esc(e.titre)}</button>
+      <p class="total">Ensuite, votre séance se lance en un seul appui.</p>
+      <button class="lien" type="button" data-ech-non>Je suis déjà échauffé(e), lancer la séance</button></div>`, (fe) => {
+      fe.querySelector("[data-ech-oui]").onclick = () => { fermerFeuille(); seanceApres = f.id; chargerDansMinuteur(e); toast("Échauffement prêt : appuyez sur Démarrer"); };
+      fe.querySelector("[data-ech-non]").onclick = () => { fermerFeuille(); seanceApres = null; chargerDansMinuteur(f); };
+    });
+  }
+  // Fin d'une séance : après l'échauffement, on propose de passer à la vraie séance
+  Minuteur.surFin((id) => {
+    const f = trouverFiche(id); if (!f) return;
+    if (f.echauffement || f.cat === "echauffement") {
+      D().dernierEchauffement = Date.now(); Compte.sauver();
+      const suite = seanceApres && trouverFiche(seanceApres); seanceApres = null;
+      if (suite) { const b = document.createElement("button"); b.className = "principal"; b.type = "button"; b.textContent = "▶ Passer à ma séance : " + suite.titre;
+        b.onclick = () => lancerFiche(suite, true); $("bilan").appendChild(document.createElement("br")); $("bilan").appendChild(b); }
+    }
+  });
+  function dessinerEchauffement(univers) {
+    const ids = univers === "running" ? ["r-echauffement"] : univers === "marche" ? ["e-general"] : ["e-general", "e-haut", "e-bas"];
+    $("bloc-echauffement").innerHTML = `<div class="ech-tete"><b>🔥 Échauffez-vous d'abord</b><span>5 minutes pour éviter les blessures</span></div>
+      <div class="ech-boutons">${ids.map(id => { const f = trouverFiche(id); return `<button type="button" data-ech="${id}">${esc(f.titre.replace(/ \(5 min\)/, "").replace("Échauffement ", "").replace(/^./, c => c.toUpperCase()))}</button>`; }).join("")}</div>`;
+    $("bloc-echauffement").querySelectorAll("[data-ech]").forEach(b => b.onclick = () => aller("fiche", b.dataset.ech));
   }
 
   // ---------- Progression : au bout de 3 séances réussies, on propose plus dur ----------
@@ -528,6 +562,25 @@
     if (!nom) nom = /spotify/i.test(lien) ? "Ma playlist " + (mesPlaylists().length + 1) : lien.slice(0, 40);
     mesPlaylists().push({ nom, lien }); Compte.sauver(); $("pl-nom").value = ""; $("pl-lien").value = ""; dessinerPlaylists(); toast("Playlist ajoutée");
   });
+
+  // ---------- Mode télé : le minuteur en très grand (à afficher sur la télé en « Caster l'écran ») ----------
+  function modeTele(oui) {
+    document.body.classList.toggle("tv", oui); $("sortir-tv").hidden = !oui;
+    if (oui) { aller("minuteur"); try { document.documentElement.requestFullscreen?.().then(() => screen.orientation?.lock?.("landscape").catch(() => {})).catch(() => {}); } catch {} }
+    else { try { if (document.fullscreenElement) document.exitFullscreen(); screen.orientation?.unlock?.(); } catch {} }
+  }
+  $("mode-tv").addEventListener("click", () => modeTele(true));
+  $("sortir-tv").addEventListener("click", () => modeTele(false));
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("tv")) modeTele(false); });
+  $("aide-tv").addEventListener("click", () => ouvrirFeuille(`<div class="fiche-exo"><h2>📺 Afficher sur la télé</h2>
+    <p>Votre téléphone peut copier son écran sur la télé, sans câble. Il faut une <b>télé connectée</b> (Samsung, LG, Android TV…) ou une clé <b>Chromecast</b>, sur le même Wi-Fi que le téléphone.</p>
+    <ol class="etapes-install">
+      <li>Sur le téléphone, faites glisser le haut de l'écran vers le bas (les réglages rapides).</li>
+      <li>Touchez <b>« Caster l'écran »</b>, <b>« Smart View »</b>, <b>« Projection »</b> ou <b>« Diffusion »</b> selon votre téléphone. Sur iPhone : <b>« Recopie de l'écran »</b> (télé compatible AirPlay).</li>
+      <li>Choisissez votre télé.</li>
+      <li>Revenez dans l'appli, touchez <b>📺 Mode télé</b> et tournez le téléphone : le minuteur s'affiche en grand.</li>
+    </ol>
+    <p class="total">Le son (voix, sifflet, musique) passe aussi par la télé.</p></div>`));
 
   // ---------- Mise à jour automatique ----------
   // Quand une nouvelle version est en ligne, l'appli se recharge toute seule, au bon moment :

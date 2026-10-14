@@ -350,3 +350,42 @@ details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 .niveaux button { display: inline-flex; align-items: center; gap: 6px; }
 .progression { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--prepa); border-radius: 14px; background: rgba(242, 194, 48, .08); }
 .exo-serie .conseil span { color: var(--prepa) !important; font-weight: 600; }
+
+/* ---------- Échauffement mis en avant ---------- */
+.echauffement { display: grid; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid rgba(255, 140, 50, .55);
+  background: linear-gradient(135deg, rgba(255, 120, 40, .16), rgba(255, 75, 43, .06)); }
+.ech-tete { display: grid; gap: 2px; }
+.ech-tete b { font: 900 20px var(--f-chiffres); letter-spacing: .04em; text-transform: uppercase; }
+.ech-tete span { color: var(--doux); font-size: 14px; }
+.ech-boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.ech-boutons button { flex: 1 1 auto; border: 1px solid rgba(255, 140, 50, .7); background: rgba(0, 0, 0, .25); color: var(--texte); border-radius: 12px; padding: 11px 12px; font: 700 14px var(--f-texte); cursor: pointer; }
+.bilan .principal { margin-top: 10px; }
+
+/* ---------- Écran tourné (paysage) ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  .vue { padding-top: 10px; }
+  .scene { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+  .cadran { width: min(100%, 250px); }
+  .temps { font-size: 72px; }
+  .round { font-size: 26px; min-height: 26px; }
+  .scene .exo { grid-template-columns: minmax(0, 1fr) auto; text-align: left; justify-items: stretch; }
+  .photos { max-width: 360px; }
+}
+/* ---------- Mode télé ---------- */
+.tv-ligne { display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.sortir-tv { position: fixed; top: 10px; right: 10px; z-index: 50; background: rgba(0,0,0,.6); color: var(--texte); border: 1px solid var(--trait); border-radius: 999px; padding: 8px 14px; font: 600 14px var(--f-texte); cursor: pointer; }
+body.tv .barre, body.tv .bandeau-test, body.tv #v-minuteur > .entete, body.tv #v-minuteur > .bloc, body.tv #v-minuteur > details, body.tv .reps, body.tv .tv-ligne, body.tv #seance-titre { display: none !important; }
+body.tv #v-minuteur { max-width: none; min-height: 100dvh; padding: 2vh 3vw; align-content: center; gap: 2vh; }
+body.tv .scene { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 4vw; }
+body.tv .cadran { width: min(40vw, 62vh); }
+body.tv .temps { font-size: min(12vw, 17vh); }
+body.tv .phase { font-size: min(3vw, 5vh); }
+body.tv .info { font-size: min(2vw, 3.5vh); }
+body.tv .round { font-size: min(4.5vw, 7vh); min-height: 0; }
+body.tv .exo { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 3vh 2vw; }
+body.tv .exo .nom { font-size: min(4.5vw, 8vh); }
+body.tv .exo .grp { font-size: min(2vw, 3.5vh); }
+body.tv .photos { max-width: none; width: 100%; }
+body.tv .corps-muscles { display: none; }
+body.tv .suivant { font-size: min(2.6vw, 4.5vh); }
+body.tv .commandes .gros { font-size: min(2.4vw, 4vh); padding: 1.6vh 3vw; }
