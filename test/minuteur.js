@@ -101,17 +101,20 @@ window.Minuteur = (() => {
   let etat = "arret", phase = "pret";
   // ---------- Son : bips, sifflet, voix, musique ----------
   let ctx = null, gainMusique = null;
-  const audioCtx = () => { if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); gainMusique = ctx.createGain(); gainMusique.connect(ctx.destination); } if (ctx.state === "suspended") ctx.resume(); return ctx; };
-  function bip(freq = 880, duree = 0.12, fort = 0.35) {
-    if (!$("bips").checked) return; const c = audioCtx(), o = c.createOscillator(), g = c.createGain();
-    o.type = "square"; o.frequency.value = freq; g.gain.setValueAtTime(fort, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duree);
-    o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + duree);
+  let busSeance = null;   // tous les sons programmés d'une séance passent par ici (on coupe tout d'un coup à la remise à zéro)
+  const audioCtx = () => { if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); gainMusique = ctx.createGain(); gainMusique.connect(ctx.destination); }
+    if (ctx.state !== "running" && etat !== "pause") ctx.resume(); return ctx; };
+  const nouveauBus = () => { try { busSeance && busSeance.disconnect(); } catch {} const c = audioCtx(); busSeance = c.createGain(); busSeance.connect(c.destination); return busSeance; };
+  function bip(freq = 880, duree = 0.12, fort = 0.35, quand, sortieSon) {
+    if (!$("bips").checked) return; const c = audioCtx(), o = c.createOscillator(), g = c.createGain(), t = quand ?? c.currentTime;
+    o.type = "square"; o.frequency.value = freq; g.gain.setValueAtTime(fort, t); g.gain.exponentialRampToValueAtTime(0.001, t + duree);
+    o.connect(g).connect(sortieSon || c.destination); o.start(t); o.stop(t + duree);
   }
   // Coup de sifflet d'arbitre (fabriqué par le téléphone, pas besoin de fichier son)
-  function sifflet(duree = 0.7) {
-    if (!$("bips").checked) return; const c = audioCtx(), t = c.currentTime;
+  function sifflet(duree = 0.7, quand, sortieSon) {
+    if (!$("bips").checked) return; const c = audioCtx(), t = quand ?? c.currentTime;
     const sortie = c.createGain(); sortie.gain.setValueAtTime(0.0001, t); sortie.gain.exponentialRampToValueAtTime(0.32, t + 0.03);
-    sortie.gain.setValueAtTime(0.32, t + duree - 0.08); sortie.gain.exponentialRampToValueAtTime(0.0001, t + duree); sortie.connect(c.destination);
+    sortie.gain.setValueAtTime(0.32, t + duree - 0.08); sortie.gain.exponentialRampToValueAtTime(0.0001, t + duree); sortie.connect(sortieSon || c.destination);
     const roulement = c.createOscillator(), prof = c.createGain(); roulement.frequency.value = 28; prof.gain.value = 180;
     roulement.connect(prof);
     [2850, 3250].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = f; prof.connect(o.frequency);
@@ -138,7 +141,30 @@ window.Minuteur = (() => {
       speechSynthesis.speak(u);
     } catch {}
   }
-  const direEn = (t) => dire(t, "en");
+  const direEn = (t) => { const k = { one: ["en-one"], two: ["en-two"], three: ["en-three"], "three, two, one": ["en-three", "en-two", "en-one"] }[t];
+    if (k && clipsPrets(k)) return jouerClips(k); dire(t, "en"); };
+
+  // ---------- Annonces enregistrées (fichiers MP3 de l'appli) : programmables à l'avance, marchent écran verrouillé ----------
+  const tampons = {};
+  const parle = (nom) => (nom || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+  const clipNom = (nom) => VOIX.noms[parle(nom)] || null;
+  const clipsPrets = (k) => k.every(f => tampons[f]);
+  function prechargerClips(liste) {
+    const c = audioCtx();
+    return Promise.all([...new Set(liste.filter(Boolean))].filter(f => !tampons[f]).map(f => fetch("voix/" + f + ".mp3").then(r => r.arrayBuffer())
+      .then(b => new Promise((ok, ko) => c.decodeAudioData(b, ok, ko))).then(buf => { tampons[f] = buf; }).catch(() => {})));
+  }
+  const clipsFixes = () => [...Object.values(VOIX.fr), ...Object.values(VOIX.en)];
+  let gainVoixNode = null;
+  function sortieVoix(bus) { const c = audioCtx(), g = c.createGain(); g.gain.value = 0.25 + 1.5 * (+$("volvoix").value / 100); g.connect(bus || c.destination); return g; }
+  // Joue une suite d'annonces à partir de « quand » ; renvoie l'heure de fin
+  function jouerClips(liste, quand, bus) {
+    const c = audioCtx(); let t = quand ?? c.currentTime + 0.02; if (!$("voix").checked) return t;
+    const g = sortieVoix(bus);
+    for (const f of liste) { const b = tampons[f]; if (!b) continue; const src = c.createBufferSource(); src.buffer = b; src.connect(g); src.start(t); t += b.duration + 0.08; }
+    if (quand == null) { voixParle = true; appliquerVolume(); clearTimeout(voixRemonte); voixRemonte = setTimeout(() => { voixParle = false; appliquerVolume(); }, (t - c.currentTime) * 1000 + 1000); }
+    return t;
+  }
 
   // Rythmes intégrés : grille de 16 pas (grosse caisse, caisse claire, charleston…) + basse, joués par le téléphone (aucun droit d'auteur)
   const STYLES = {
@@ -330,8 +356,60 @@ window.Minuteur = (() => {
     document.documentElement.style.setProperty("--phase", `var(${couleurs[p]})`);
     $("phase").textContent = NOMS[p]; appliquerVolume();
   }
-  function entrerEtape(n) {
+  // Toutes les annonces, bips et sifflets d'une séance en circuit, programmés d'un coup (ils continuent écran verrouillé)
+  let t0 = 0, plages = [], aDire = {};
+  function annoncesEtape(e, n) {
+    const nom = e.exo ? e.exo.nom : "", cn = nom ? clipNom(nom) : null;
+    if (e.phase === "travail") { const debutRound = e.i === 0 && e.round > 1 && VOIX.fr["round" + e.round];
+      return { delai: 0, clips: [debutRound ? VOIX.fr["round" + e.round] : null, cn || (n === etapes.length - 1 ? VOIX.fr.dernier : VOIX.fr.effort)].filter(Boolean),
+        secours: (e.i === 0 && e.round > 1 ? `Round ${e.round}. ` : "") + (nom ? nom + " !" : "Effort !"), parfait: !nom || !!cn }; }
+    if (e.phase === "repos") return { delai: 0.85, clips: nom ? [VOIX.fr.rep, VOIX.fr.prochain, cn].filter(Boolean) : [VOIX.fr.rep], secours: nom ? `Repos. Prochain exercice : ${nom}` : "Repos", parfait: !nom || !!cn };
+    if (e.phase === "pause") return { delai: 0.85, clips: [VOIX.fr.pause], secours: "Bravo, round terminé. Pause.", parfait: true };
+    if (e.phase === "prepa") return { delai: 0, clips: nom ? [VOIX.fr.prepa, VOIX.fr.premier, cn].filter(Boolean) : [VOIX.fr.prepa], secours: nom ? `Préparez-vous. Premier exercice : ${nom}` : "Préparez-vous", parfait: !nom || !!cn };
+    return { delai: 0, clips: [], secours: "", parfait: true };
+  }
+  function programmerSeance(depart) {
+    const bus = nouveauBus(); plages = []; aDire = {}; let t = 0;
+    etapes.forEach((e, n) => { e.debut = t; t += e.duree; });
+    etapes.forEach((e, n) => {
+      if (n < depart) return;
+      const S = t0 + e.debut - (etapes[depart].debut), D = e.duree;
+      if (e.phase === "travail" && n > depart) sifflet(0.4, S, bus);
+      if (e.phase === "repos" || e.phase === "pause") sifflet(0.8, S, bus);
+      const a = annoncesEtape(e, n);
+      if (a.clips.length && clipsPrets(a.clips) && a.parfait) { const fin = jouerClips(a.clips, S + a.delai, bus); plages.push([S + a.delai, fin]); }
+      else if (a.secours) aDire[n] = a.secours;   // pas enregistré (exercice libre) : la voix du téléphone le dira, écran allumé
+      if (D > 4) [3, 2, 1].forEach(x => { bip(x === 1 ? 990 : 660, .08, .2, S + D - x, bus);
+        const f = VOIX.en[["one", "two", "three"][x - 1]]; if (tampons[f]) plages.push([S + D - x, jouerClips([f], S + D - x + 0.02, bus)]); });
+    });
+    const fin = t0 + t - etapes[depart].debut;
+    sifflet(1.1, fin, bus); if (tampons[VOIX.fr.fin]) plages.push([fin + 1.2, jouerClips([VOIX.fr.fin], fin + 1.2, bus)]);
+    return fin;
+  }
+  function majEcranVerrouille(e) {
+    if (!("mediaSession" in navigator) || !e) return;
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: (e.phase === "travail" && e.exo ? e.exo.nom : NOMS[e.phase]) || "Minuteur Sport",
+      artist: `${titreSeance || "Circuit"} · round ${e.round} / ${reglages().tours}`, album: "Minuteur Sport", artwork: [{ src: "icones/icone-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
+  }
+  // Petit son quasi inaudible qui garde l'appli éveillée quand l'écran est verrouillé (et affiche le minuteur sur l'écran verrouillé)
+  let veille = null;
+  function demarrerVeille() {
+    if (!veille) { const n = 8000, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, s) => [...s].forEach((ch, i) => v.setUint8(o + i, ch.charCodeAt(0)));
+      w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+      for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.round((Math.random() * 2 - 1) * 20), true);
+      veille = new Audio(URL.createObjectURL(new Blob([b], { type: "audio/wav" }))); veille.loop = true;
+      if ("mediaSession" in navigator) { try { navigator.mediaSession.setActionHandler("pause", () => { if (etat === "marche") lancer(); });
+        navigator.mediaSession.setActionHandler("play", () => { if (etat === "pause") lancer(); }); } catch {} } }
+    veille.play().catch(() => {});
+  }
+  const arreterVeille = () => { try { veille && veille.pause(); } catch {} };
+
+  function entrerEtape(n, silencieux) {
     k = n; const e = etapes[k], r = reglages(); setPhase(e.phase, e.duree);
+    majEcranVerrouille(e);
+    if (mode === "intervalles" && etapesProgrammees) { $("round").innerHTML = `Round ${e.round} <small>/ ${r.tours}</small>`; montrerExo(e.exo, e.phase !== "travail");
+      if (aDire[k] && !silencieux) dire(aDire[k]); return; }
     $("round").innerHTML = `Round ${e.round} <small>/ ${r.tours}</small>`;
     montrerExo(e.exo, e.phase !== "travail");
     const nomExo = e.exo ? e.exo.nom : "";
@@ -355,7 +433,9 @@ window.Minuteur = (() => {
       : e.phase === "travail" ? (suiv.exo ? `Ensuite : <b>${esc(suiv.exo.nom)}</b>` + (suiv.round !== e.round ? ` (round ${suiv.round})` : "") : `Ensuite : repos`)
       : `Prochain : <b>${esc(suiv.exo ? suiv.exo.nom : "effort")}</b>`;
   }
+  let etapesProgrammees = false, finSeance = 0, departEtape = 0;
   function compteARebours() {
+    if (mode === "intervalles" && etapesProgrammees) return;   // déjà programmé sur l'horloge du son
     const entier = Math.ceil(reste);
     if (entier !== dernierEntier) { dernierEntier = entier; if (entier <= 3 && entier >= 1 && dureePhase > 4) {
       bip(entier === 1 ? 990 : 660, .08, .2); direEn(["one", "two", "three"][entier - 1]); } }
@@ -364,16 +444,20 @@ window.Minuteur = (() => {
     const h = Compte.donnees.historique; h.unshift({ date: new Date().toISOString(), titre: titre || "Séance libre", duree: Math.round(duree), detail: detail || "" });
     if (h.length > 200) h.length = 200; Compte.sauver();
   }
-  function terminer() {
-    if (reposFiche) { // fin du repos entre deux séries : on repart
+  function finRepos() {
+    { // fin du repos entre deux séries : on repart
       const r = reposFiche; reposFiche = null; etat = "arret"; clearInterval(minuterie); libererEcran(); setPhase("travail", 1); reste = 0;
       $("temps").textContent = "GO"; $("arc").style.strokeDashoffset = 0; $("info").textContent = "Repos terminé"; $("go").textContent = "Démarrer";
       montrerExo(r.exo); $("suivant").innerHTML = `À vous : <b>${esc(r.exo.nom)}</b> · ${esc(r.texte)}`;
-      sifflet(0.45); setTimeout(() => dire("C'est reparti ! " + r.exo.nom), 500); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); return;
+      sifflet(0.45); const cn = clipNom(r.exo.nom);
+      setTimeout(() => cn && tampons[cn] && tampons[VOIX.fr.reparti] ? jouerClips([VOIX.fr.reparti, cn]) : dire("C'est reparti ! " + r.exo.nom), 500); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); return;
     }
-    etat = "fini"; clearInterval(minuterie); setPhase("fini", 1); reste = 0; finirMusiqueEnDouceur();
+  }
+  function terminer(dejaProgramme) {
+    if (reposFiche) return finRepos();
+    etat = "fini"; clearInterval(minuterie); setPhase("fini", 1); reste = 0; finirMusiqueEnDouceur(); etapesProgrammees = false; setTimeout(arreterVeille, 4000);
     $("temps").textContent = "00:00"; $("arc").style.strokeDashoffset = 0; $("suivant").textContent = ""; $("info").textContent = "Séance terminée";
-    sifflet(1.1); setTimeout(() => dire(`Séance terminée, bravo ${prenom()} !`), 1200);
+    if (!dejaProgramme) { sifflet(1.1); setTimeout(() => tampons[VOIX.fr.fin] ? jouerClips([VOIX.fr.fin]) : dire(`Séance terminée, bravo ${prenom()} !`), 1200); }
     $("go").textContent = "Recommencer"; libererEcran();
     const duree = (performance.now() - debut) / 1000, reps = +$("nreps").textContent;
     $("bilan").innerHTML = `Séance terminée en <b>${fmt(duree)}</b>` + (mode === "intervalles" ? ` · <b>${reglages().tours}</b> round${reglages().tours > 1 ? "s" : ""}` : "") + (reps ? ` · <b>${reps}</b> répétitions` : "");
@@ -382,6 +466,14 @@ window.Minuteur = (() => {
   function tic() {
     const maintenant = performance.now(), dt = (maintenant - dernier) / 1000; dernier = maintenant;
     if (mode === "chrono") { ecoule += dt; dessiner(); return; }
+    if (mode === "intervalles" && etapesProgrammees) {
+      const el = ctx.currentTime - t0 + etapes[departEtape].debut;
+      voixParle = plages.some(([a, b]) => ctx.currentTime >= a - 0.1 && ctx.currentTime <= b + 0.8);
+      if (ctx.currentTime >= finSeance) return terminer(true);
+      let n = k; while (n < etapes.length - 1 && el >= etapes[n + 1].debut) n++;
+      if (n !== k) entrerEtape(n, n - k > 1); else appliquerVolume();
+      reste = etapes[k].debut + etapes[k].duree - el; if (etat === "marche") dessiner(); return;
+    }
     reste -= dt; compteARebours();
     while (reste <= 0) {   // si le téléphone a mis le minuteur en veille, on rattrape les étapes passées
       if (mode === "rebours" || k >= etapes.length - 1) return terminer();
@@ -400,6 +492,7 @@ window.Minuteur = (() => {
     audioCtx();
     // Sur iPhone, la voix ne marche qu'après un premier appui : on la « réveille » ici
     if ("speechSynthesis" in window && !demarrer.voixOk) { try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch {} demarrer.voixOk = true; }
+    prechargerClips([...clipsFixes(), ...exos.map(e => clipNom(e.nom))]);
     if (etat === "decompte") { clearTimeout(decompte); musiqueDejaLancee = false; arreterMusique(); etat = "arret"; $("go").textContent = "Démarrer"; $("temps").textContent = "GO"; try { speechSynthesis.cancel(); } catch {} return; }
     if ((etat === "arret" || etat === "fini") && !reposFiche && $("depart-sifflet").checked) {
       etat = "decompte"; $("go").textContent = "Annuler"; seance++; lancerMusique(); musiqueDejaLancee = true;
@@ -414,21 +507,26 @@ window.Minuteur = (() => {
     lancer();
   }
   function lancer(apresSifflet) {
-    if (etat === "marche") { etat = "pause"; clearInterval(minuterie); arreterMusique(); $("go").textContent = "Reprendre"; libererEcran(); return; }
+    if (etat === "marche") { etat = "pause"; clearInterval(minuterie); arreterMusique(); $("go").textContent = "Reprendre"; libererEcran();
+      if (etapesProgrammees && ctx) ctx.suspend(); arreterVeille(); try { navigator.mediaSession.playbackState = "paused"; } catch {} return; }
+    if (etat === "pause" && etapesProgrammees) { etat = "marche"; ctx.resume(); }
     if (etat === "arret" || etat === "fini") {
       ecoule = 0; debut = performance.now(); $("bilan").textContent = "";
       if (mode === "intervalles") { etapes = programme(); if (!etapes.length) return;
-        entrerEtape(apresSifflet && etapes[0].phase === "prepa" && etapes.length > 1 ? 1 : 0); }
+        departEtape = apresSifflet && etapes[0].phase === "prepa" && etapes.length > 1 ? 1 : 0;
+        t0 = audioCtx().currentTime + 0.05; finSeance = programmerSeance(departEtape); etapesProgrammees = true; k = departEtape; entrerEtape(departEtape); }
       else if (mode === "rebours" && reposFiche) { setPhase("repos", reposFiche.duree); montrerExo(reposFiche.exo, true); $("suivant").innerHTML = esc(reposFiche.texte); sifflet(0.8); const t = "Repos. " + reposFiche.texte; setTimeout(() => dire(t), 850); }
       else if (mode === "rebours") { const t = lireNb("rmin", 5) * 60 + lireNb("rsec", 0); if (t <= 0) return; setPhase("rebours", t); if (!apresSifflet) dire("C'est parti"); }
       else { setPhase("chrono", 60); if (!apresSifflet) dire("C'est parti"); }
     }
     etat = "marche"; dernier = performance.now(); $("go").textContent = "Pause"; $("ecouter").textContent = "▶ Écouter";
     if (!reposFiche && !musiqueDejaLancee) lancerMusique(); musiqueDejaLancee = false; garderEcran();
+    if (mode === "intervalles") { demarrerVeille(); try { navigator.mediaSession.playbackState = "playing"; } catch {} }
     clearInterval(minuterie); minuterie = setInterval(tic, 100); dessiner();
   }
   function remiseAZero() {
     clearInterval(minuterie); clearTimeout(decompte); arreterMusique(); libererEcran(); etat = "arret"; ecoule = 0; k = 0;
+    etapesProgrammees = false; arreterVeille(); if (ctx) { try { busSeance && busSeance.disconnect(); } catch {} busSeance = null; if (ctx.state !== "running") ctx.resume(); }
     try { speechSynthesis.cancel(); } catch {}
     setPhase(mode === "chrono" ? "chrono" : mode === "rebours" ? "rebours" : "pret", 1); reste = 1;
     $("arc").style.strokeDashoffset = 0; $("go").textContent = "Démarrer"; $("bilan").textContent = "";
