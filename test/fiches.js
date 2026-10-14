@@ -210,3 +210,17 @@ FICHES.push(
     exos: [circ_("Étirement des mollets (contre un mur)"), circ_("Étirement des quadriceps (allongé sur le côté)"), circ_("Étirement des ischios (debout)"),
            circ_("Étirement des hanches (fente au sol)"), circ_("Dos rond, dos creux (chat)"), circ_("Genoux contre la poitrine")] }
 );
+
+// ---------------- NIVEAUX : 1 = Débutant, 2 = Intermédiaire, 3 = Confirmé ----------------
+const NIVEAUX = { 1: "Débutant", 2: "Intermédiaire", 3: "Confirmé" };
+(() => {
+  const n = {
+    "m-haut-1": 2, "m-haut-2": 2, "m-bras-1": 2, "m-bras-2": 2, "m-bas-1": 1, "m-bas-2": 2, "m-abdos-1": 1, "m-abdos-2": 1, "m-cardio-1": 3, "m-cardio-2": 3,
+    "s-haut-1": 3, "s-haut-2": 3, "s-bras-1": 2, "s-bras-2": 2, "s-bas-1": 3, "s-bas-2": 2, "s-abdos-1": 2, "s-abdos-2": 1, "s-cardio-1": 2, "s-cardio-2": 1,
+    "f-m-fessiers": 1, "f-m-jambes": 2, "f-m-ventre": 2, "f-m-bras": 1, "f-m-cardio": 1, "f-m-debutante": 1, "f-m-haut": 1,
+    "f-s-fessiers": 2, "f-s-jambes": 2, "f-s-haut": 1, "f-s-bras": 1, "f-s-abdos": 2, "f-s-cardio": 2,
+    "r-frac-1": 1, "r-frac-2": 2, "r-frac-3": 3, "r-endurance": 2, "r-echauffement": 1, "r-renfo": 2, "r-pieds": 1, "r-etirements": 1,
+    "w-debutant": 1, "w-30": 2, "w-sportive": 3, "w-equilibre": 1, "w-dos": 1, "w-etirements": 1
+  };
+  FICHES.forEach(f => { f.niveau = n[f.id] || 2; });
+})();

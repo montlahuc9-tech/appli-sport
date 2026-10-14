@@ -339,3 +339,14 @@ details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 .lieux button[aria-pressed="true"][data-lieu="exterieur"] { border-color: #8fd14f; color: var(--texte); background: rgba(143, 209, 79, .12); }
 .badge.exterieur, .badge.partout { background: rgba(143, 209, 79, .16); color: #8fd14f; }
 .badge.univers { background: var(--texte); color: var(--sol); }
+
+/* ---------- Niveaux ---------- */
+.niveau { display: inline-flex; align-items: center; gap: 2px; font-weight: 700; color: var(--texte); white-space: nowrap; }
+.niveau i { width: 5px; height: 11px; border-radius: 2px; background: var(--trait); display: inline-block; }
+.niveau i:first-child { height: 7px; } .niveau i:nth-child(2) { height: 9px; }
+.niveau.n1 i:nth-child(-n+1), .niveau.n2 i:nth-child(-n+2), .niveau.n3 i { background: var(--repos); }
+.niveau.n2 i:nth-child(-n+2) { background: var(--prepa); } .niveau.n3 i { background: var(--travail); }
+.badge .niveau { color: inherit; }
+.niveaux button { display: inline-flex; align-items: center; gap: 6px; }
+.progression { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--prepa); border-radius: 14px; background: rgba(242, 194, 48, .08); }
+.exo-serie .conseil span { color: var(--prepa) !important; font-weight: 600; }

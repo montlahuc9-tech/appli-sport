@@ -17,12 +17,12 @@ window.Minuteur = (() => {
   let sauverAttente = null;
   const sauver = () => { clearTimeout(sauverAttente); sauverAttente = setTimeout(() => {
     const r = Compte.donnees.reglages; CHAMPS.forEach(k => r[k] = $(k).value); COCHES.forEach(k => r[k] = $(k).checked); r.morceau = morceauNom;
-    r.exos = exos; r.titre = titreSeance; Compte.sauver(); }, 400); };
+    r.exos = exos; r.titre = titreSeance; r.ficheId = ficheId; Compte.sauver(); }, 400); };
   function chargerReglages() {
     const r = Compte.donnees.reglages || {};
     CHAMPS.forEach(k => { if (r[k] != null) $(k).value = r[k]; }); COCHES.forEach(k => { if (r[k] != null) $(k).checked = !!r[k]; });
     exos = Array.isArray(r.exos) ? r.exos.filter(e => e && typeof e.nom === "string") : [{ nom: "Squats" }, { nom: "Pompes" }, { nom: "Fentes alternées" }, { nom: "Planche" }, { nom: "Jumping jacks" }];
-    titreSeance = r.titre || "";
+    titreSeance = r.titre || ""; ficheId = r.ficheId || null;
     if (r.morceau == null && (r.source == null || r.source === "aucune")) $("source").value = "fichier";  // nouveauté : les musiques de l'appli par défaut
   }
   const exoInfo = (e) => e ? infoExo(e.nom, e.muscle) : null;
@@ -440,8 +440,9 @@ window.Minuteur = (() => {
     if (entier !== dernierEntier) { dernierEntier = entier; if (entier <= 3 && entier >= 1 && dureePhase > 4) {
       bip(entier === 1 ? 990 : 660, .08, .2); direEn(["one", "two", "three"][entier - 1]); } }
   }
-  function noterHistorique(titre, duree, detail) {
-    const h = Compte.donnees.historique; h.unshift({ date: new Date().toISOString(), titre: titre || "Séance libre", duree: Math.round(duree), detail: detail || "" });
+  let ficheId = null;
+  function noterHistorique(titre, duree, detail, id) {
+    const h = Compte.donnees.historique; h.unshift({ date: new Date().toISOString(), titre: titre || "Séance libre", duree: Math.round(duree), detail: detail || "", id: id || null });
     if (h.length > 200) h.length = 200; Compte.sauver();
   }
   function finRepos() {
@@ -461,7 +462,7 @@ window.Minuteur = (() => {
     $("go").textContent = "Recommencer"; libererEcran();
     const duree = (performance.now() - debut) / 1000, reps = +$("nreps").textContent;
     $("bilan").innerHTML = `Séance terminée en <b>${fmt(duree)}</b>` + (mode === "intervalles" ? ` · <b>${reglages().tours}</b> round${reglages().tours > 1 ? "s" : ""}` : "") + (reps ? ` · <b>${reps}</b> répétitions` : "");
-    if (mode === "intervalles") noterHistorique(titreSeance || "Circuit", duree, `${reglages().tours} rounds · ${exos.length} exercices`);
+    if (mode === "intervalles") noterHistorique(titreSeance || "Circuit", duree, `${reglages().tours} rounds · ${exos.length} exercices`, ficheId);
   }
   function tic() {
     const maintenant = performance.now(), dt = (maintenant - dernier) / 1000; dernier = maintenant;
@@ -561,16 +562,26 @@ window.Minuteur = (() => {
       return `<div class="exo-serie${fait >= n && n ? " fini" : e === actuel ? " actuel" : ""}"><span class="vign">${vignette(ex)}</span>
         <div class="l1"><button class="nom-serie" data-voir="${i}" type="button">${esc(e.nom)}</button>
           <label class="charge"><input data-charge="${i}" value="${esc(charges()[e.nom] || "")}" inputmode="decimal" placeholder="—" aria-label="Charge pour ${esc(e.nom)}"> kg</label></div>
+        ${conseilCharge(e.nom, i)}
         <div class="l2"><span>${n} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}</span>
           <span class="points">${Array.from({ length: n }, (_, s) => `<button class="point${s < fait ? " on" : ""}" data-serie="${i},${s}" type="button" aria-pressed="${s < fait}" aria-label="Série ${s + 1} de ${esc(e.nom)}">${s + 1}</button>`).join("")}</span></div>
       </div>`; }).join("");
     $("series-corps").querySelectorAll("[data-voir]").forEach(b => b.addEventListener("click", () => { montrerSerie(f.exos[+b.dataset.voir]); window.scrollTo({ top: 0, behavior: "smooth" }); }));
+    $("series-corps").querySelectorAll("[data-plus-lourd]").forEach(b => b.addEventListener("click", () => { const nom = f.exos[+b.dataset.plusLourd].nom;
+      charges()[nom] = b.dataset.kg; (Compte.donnees.chargesOk || {})[nom] = 0; Compte.sauver(); dessinerSeries(); toast(`C'est noté : ${b.dataset.kg} kg`); }));
     $("series-corps").querySelectorAll("[data-charge]").forEach(inp => inp.addEventListener("input", () => { charges()[f.exos[+inp.dataset.charge].nom] = inp.value.trim(); Compte.sauver(); }));
     $("series-corps").querySelectorAll("[data-serie]").forEach(b => b.addEventListener("click", () => {
       const [i, s] = b.dataset.serie.split(",").map(Number), e = f.exos[i];
       if (s < (e.fait || 0)) { e.fait = s; garderSeries(); return dessinerSeries(); }
       e.fait = s + 1; garderSeries(); dessinerSeries(); serieFaite(i);
     }));
+  }
+  // Après 2 séances réussies au même poids : on propose un peu plus lourd
+  function conseilCharge(nom, i) {
+    const kg = parseFloat(String(charges()[nom] || "").replace(",", ".")), ok = (Compte.donnees.chargesOk || {})[nom] || 0;
+    if (!kg || ok < 2) return "";
+    const nouveau = Math.round((kg + (kg < 20 ? 1 : 2.5)) * 10) / 10, txt = String(nouveau).replace(".", ",");
+    return `<div class="l2 conseil"><span>💪 Réussi ${ok} fois à ${String(kg).replace(".", ",")} kg</span><button class="mini" type="button" data-plus-lourd="${i}" data-kg="${txt}">Passer à ${txt} kg</button></div>`;
   }
   const garderSeries = () => { Compte.donnees.encours = series; Compte.sauver(); };
   function montrerSerie(e) {
@@ -586,7 +597,9 @@ window.Minuteur = (() => {
       $("temps").textContent = "00:00"; $("info").textContent = "Séance terminée"; $("suivant").textContent = ""; $("go").textContent = "Démarrer";
       const total = f.exos.reduce((a, x) => a + (+x.series || 0), 0);
       $("bilan").innerHTML = `Bravo ! <b>${total}</b> séries faites` + (f.debut ? ` en <b>${fmt((Date.now() - f.debut) / 1000)}</b>` : "");
-      noterHistorique(f.titre, f.debut ? (Date.now() - f.debut) / 1000 : 0, `${total} séries`);
+      noterHistorique(f.titre, f.debut ? (Date.now() - f.debut) / 1000 : 0, `${total} séries`, f.id);
+      // Progression des charges : chaque exercice fini avec un poids compte une réussite
+      const ok = Compte.donnees.chargesOk || (Compte.donnees.chargesOk = {}); f.exos.forEach(x => { if (parseFloat(charges()[x.nom])) ok[x.nom] = (ok[x.nom] || 0) + 1; });
       f.terminee = true; garderSeries();
       sifflet(1.1); setTimeout(() => dire(`Séance terminée, bravo ${prenom()} !`), 1200); return;
     }
@@ -604,7 +617,7 @@ window.Minuteur = (() => {
   $("series-raz").addEventListener("click", () => { if (!series) return; series.exos.forEach(e => e.fait = 0); series.debut = Date.now(); series.terminee = false; garderSeries(); dessinerSeries(); remiseAZero(); });
   deuxClics($("series-fermer"), "Sûr ? Touchez encore", () => {
     if (series && !series.terminee) { const faites = series.exos.reduce((a, e) => a + Math.min(e.fait || 0, +e.series || 0), 0);
-      if (faites) noterHistorique(series.titre, series.debut ? (Date.now() - series.debut) / 1000 : 0, `${faites} séries (pas finie)`); }
+      if (faites) noterHistorique(series.titre, series.debut ? (Date.now() - series.debut) / 1000 : 0, `${faites} séries (pas finie)`, series.id); }
     series = null; reposFiche = null; Compte.donnees.encours = null; Compte.sauver(); dessinerSeries(); choisirMode("intervalles"); });
 
   // ---------- Ce que le reste de l'appli utilise ----------
@@ -619,7 +632,7 @@ window.Minuteur = (() => {
     chargerCircuit(f) {
       clearInterval(minuterie); reposFiche = null; series = null; dessinerSeries(); Compte.donnees.encours = null;
       ["travail", "repos", "tours", "pause"].forEach(kk => { if (f[kk] != null) $(kk).value = f[kk]; });
-      exos = f.exos.map(e => e.duree ? { nom: e.nom, muscle: e.muscle, duree: e.duree } : { nom: e.nom, muscle: e.muscle }); titreSeance = f.titre;
+      exos = f.exos.map(e => e.duree ? { nom: e.nom, muscle: e.muscle, duree: e.duree } : { nom: e.nom, muscle: e.muscle }); titreSeance = f.titre; ficheId = f.id;
       choisirMode("intervalles"); dessinerExos(); resumeSeance(); sauver();
     },
     chargerSeries(f) {

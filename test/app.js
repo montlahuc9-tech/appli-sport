@@ -129,10 +129,18 @@
       return (10 + t * n * (f.travail || 40) + t * (n - 1) * (f.repos || 0) + (t - 1) * (f.pause || f.repos || 0)); }
     return f.exos.reduce((a, e) => a + (+e.series || 3) * (40 + (+e.repos || 60)), 0);
   }
+  const badgeNiveau = (n) => `<span class="niveau n${n}" title="${NIVEAUX[n]}"><i></i><i></i><i></i> ${NIVEAUX[n]}</span>`;
+  const niveauChoisi = () => +D().reglages.niveau || 0;
+  const bonNiveau = (f) => !niveauChoisi() || f.niveau === niveauChoisi();
+  function dessinerFiltreNiveau(apres) {
+    const z = $("filtre-niveau"), n = niveauChoisi();
+    z.innerHTML = [[0, "Tous les niveaux"], [1, NIVEAUX[1]], [2, NIVEAUX[2]], [3, NIVEAUX[3]]].map(([k, t]) => `<button type="button" data-niveau="${k}" aria-pressed="${n === k}">${k ? badgeNiveau(k).replace(/ [A-Za-zéÉ]+<\/span>$/, "</span>") + " " : ""}${t}</button>`).join("");
+    z.querySelectorAll("[data-niveau]").forEach(b => b.onclick = () => { D().reglages.niveau = +b.dataset.niveau; Compte.sauver(); apres(); });
+  }
   const minutes = (s) => `≈ ${Math.max(1, Math.round(s / 60))} min`;
   const carteFiche = (f) => { const ex = infoExo(f.exos[0] ? f.exos[0].nom : "", f.exos[0] && f.exos[0].muscle);
     return `<button class="fiche" type="button" data-ouvrir="${esc(f.id)}">${f.exos[0] ? vignette(ex) : svgSilhouette({ nom: "", p: [], s: [] })}
-      <span><b>${esc(f.titre)}</b><span class="res">${esc(resumeFiche(f))} · ${minutes(dureeFiche(f))}</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
+      <span><b>${esc(f.titre)}</b><span class="res">${f.niveau ? badgeNiveau(f.niveau) + " " : ""}${esc(resumeFiche(f))} · ${minutes(dureeFiche(f))}</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
   function dessinerSeances() {
     lieu = D().reglages.lieu || lieu;
     $("bonjour").textContent = `Bonjour ${Compte.utilisateur.prenom}`;
@@ -142,6 +150,7 @@
     $("v-seances").querySelectorAll("[data-univers]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.univers === univers));
       b.onclick = () => { D().reglages.univers = b.dataset.univers; Compte.sauver(); dessinerSeances(); }; });
     $("v-seances").querySelectorAll(".publics, .lieux:not(.publics)").forEach(z => z.hidden = univers !== "fitness");
+    dessinerFiltreNiveau(dessinerSeances);
     if (univers !== "fitness") return dessinerUnivers(univers);
     const miennes = mesSeances().filter(f => f.lieu === lieu && !f.univers);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
@@ -152,7 +161,7 @@
       b.onclick = () => { D().reglages.public = b.dataset.public; Compte.sauver(); dessinerSeances(); }; });
     const pourMoi = (f) => pub === "femme" ? f.public === "femmes" : !f.public;
     $("groupes-fiches").innerHTML = Object.entries(GROUPES).map(([g, G]) => {
-      const fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && pourMoi(f));
+      const fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && pourMoi(f) && bonNiveau(f));
       if (!fiches.length) return "";
       return `<section class="groupe" aria-labelledby="g-${g}">
         <div class="groupe-tete"><h2 id="g-${g}">${G.nom}</h2><span class="muscles-liste">${G.muscles.length > 1 ? G.muscles.map(m => MUSCLES[m]).join(" · ") : ""}</span></div>
@@ -168,7 +177,7 @@
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
     $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
-      const fiches = FICHES.filter(f => f.univers === u && f.cat === cat); if (!fiches.length) return "";
+      const fiches = FICHES.filter(f => f.univers === u && f.cat === cat && bonNiveau(f)); if (!fiches.length) return "";
       return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(carteFiche).join("")}</div></section>`; }).join("");
     $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
   }
@@ -178,11 +187,12 @@
   function dessinerFiche(id) {
     const f = trouverFiche(id), perso = estPerso(f);
     let h = `<div class="tete-fiche">
-        <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
+        <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>
         ${f.note ? `<p class="doux">${esc(f.note)}</p>` : ""}
         <p class="total">${f.type === "circuit" && dureesDifferentes(f) ? `<b>${f.tours}</b> fois : ${f.exos.map(e => `${esc(e.nom)} <b>${dureeTexte(+e.duree || f.travail)}</b>`).join(" → ")}` : f.type === "circuit" ? `<b>${f.travail} s</b> d'effort · <b>${f.repos} s</b> de repos · <b>${f.tours}</b> rounds` : `<b>${f.exos.reduce((a, e) => a + (+e.series || 0), 0)}</b> séries au total`} · <b>${minutes(dureeFiche(f))}</b></p>
       </div>
+      ${blocProgression(f)}
       <button class="principal" type="button" id="lancer-fiche">▶ Lancer la séance</button>
       <div class="exos-fiche">${f.exos.map((e, i) => { const ex = infoExo(e.nom, e.muscle);
         return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex) + materiel(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : e.duree ? ` · ${dureeTexte(+e.duree)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
@@ -196,6 +206,9 @@
       if (f.type === "circuit") Minuteur.chargerCircuit(f); else Minuteur.chargerSeries(f);
       aller("minuteur"); toast(f.type === "circuit" ? "Prêt : appuyez sur Démarrer" : "Faites votre série, puis touchez son numéro");
     });
+    const monter = $("fiche-corps").querySelector("[data-monter]");
+    if (monter) monter.addEventListener("click", () => { const c = versionPlusDure(f); mesSeances().push(c); Compte.sauver(); toast("Version plus dure créée dans vos séances"); aller("fiche", c.id, true); });
+    $("fiche-corps").querySelectorAll("[data-voir-fiche]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.voirFiche)));
     if (perso) {
       $("modifier-fiche").addEventListener("click", () => ouvrirEdition(f));
       deuxClics($("supprimer-fiche"), "Sûr ? Touchez encore pour supprimer", () => { D().seances = mesSeances().filter(x => x.id !== f.id); Compte.sauver(); history.back(); });
@@ -203,6 +216,29 @@
       const copie = JSON.parse(JSON.stringify(f)); copie.id = "p" + Date.now(); copie.titre = f.titre + " (à moi)"; delete copie.groupe;
       mesSeances().push(copie); Compte.sauver(); toast("Copiée dans vos séances"); ouvrirEdition(copie);
     });
+  }
+
+  // ---------- Progression : au bout de 3 séances réussies, on propose plus dur ----------
+  const fois = (f) => (D().historique || []).filter(h => h.id === f.id && !/pas finie/.test(h.detail || "")).length;
+  function versionPlusDure(f) {
+    const c = JSON.parse(JSON.stringify(f)); c.id = "p" + Date.now(); c.base = f.id; c.niveau = Math.min(3, (f.niveau || 1) + 1);
+    c.palier = (f.palier || 0) + 1; c.titreBase = f.titreBase || f.titre; c.titre = `${c.titreBase} · niveau +${c.palier}`;
+    delete c.public; delete c.groupe; delete c.cat;
+    if (f.univers) c.univers = f.univers;
+    if (c.type === "circuit") {
+      c.tours = (c.tours || 3) + 1;
+      if (!c.exos.some(e => e.duree)) { c.travail = Math.min(900, (c.travail || 40) + 5); if (c.repos > 10) c.repos = Math.max(10, c.repos - 5); }
+      else c.exos.forEach((e, i) => { if (i === 0) e.duree = Math.round(e.duree * 1.15); });   // l'effort un peu plus long
+    } else c.exos.forEach(e => { if ((+e.series || 3) < 5) e.series = (+e.series || 3) + 1; else e.repos = Math.max(30, (+e.repos || 60) - 15); });
+    return c;
+  }
+  function blocProgression(f) {
+    const n = fois(f); if (n < 3) return n ? `<p class="total">Faite <b>${n}</b> fois. Encore ${3 - n} pour débloquer le niveau supérieur 💪</p>` : "";
+    const deja = mesSeances().find(x => x.base === f.id);
+    const autre = FICHES.find(x => x !== f && x.niveau === (f.niveau || 1) + 1 && x.lieu === f.lieu && (x.groupe && x.groupe === f.groupe || x.cat && x.cat === f.cat) && x.public === f.public && x.univers === f.univers);
+    return `<div class="progression"><b>🔥 Déjà faite ${n} fois : prêt${D().reglages.public === "femme" ? "e" : ""} à passer au niveau supérieur ?</b>
+      ${deja ? `<button class="ajout" type="button" data-voir-fiche="${esc(deja.id)}">Voir ma version plus dure</button>` : `<button class="ajout" type="button" data-monter>Créer ma version plus dure</button>`}
+      ${autre ? `<button class="lien" type="button" data-voir-fiche="${esc(autre.id)}">Ou essayez « ${esc(autre.titre)} » (${NIVEAUX[autre.niveau]}) →</button>` : ""}</div>`;
   }
 
   // ---------- Fiche d'un exercice (fenêtre du bas) ----------
