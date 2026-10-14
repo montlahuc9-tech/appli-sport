@@ -100,3 +100,46 @@ const FICHES = [
     note: "5 minutes par machine, rythme où vous pouvez encore parler.", travail: 300, repos: 30, tours: 2, pause: 60,
     exos: [circ_("Rameur"), circ_("Vélo"), circ_("Tapis de course"), circ_("Vélo elliptique")] }
 ];
+
+// ---------------- PROGRAMMES FEMMES (affichés dans leur propre partie, maison et salle) ----------------
+FICHES.push(
+  { id: "f-m-fessiers", public: "femmes", lieu: "maison", groupe: "bas", type: "circuit", titre: "Fessiers galbés",
+    note: "Sans matériel, juste une chaise pour se tenir. Serrez bien les fessiers en haut de chaque mouvement.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Pont fessier"), circ_("Kickback fessier à quatre pattes"), circ_("Élévation latérale de jambe (debout)"), circ_("Squats"), circ_("Fentes croisées arrière"), circ_("Élévation de jambe arrière debout")] },
+  { id: "f-m-jambes", public: "femmes", lieu: "maison", groupe: "bas", type: "circuit", titre: "Cuisses et jambes",
+    note: "Pour affiner et raffermir les jambes. Un haltère ou une bouteille d'eau pour le squat sumo.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Squat sumo (haltère)"), circ_("Fentes alternées"), circ_("Chaise contre le mur"), circ_("Montée sur chaise + genou levé"), circ_("Pont fessier sur une jambe"), circ_("Mollets debout")] },
+  { id: "f-m-ventre", public: "femmes", lieu: "maison", groupe: "abdos", type: "circuit", titre: "Ventre plat et gainage",
+    note: "Sur un tapis. Rentrez le nombril et gardez le bas du dos plaqué au sol.", travail: 30, repos: 15, tours: 3, pause: 45,
+    exos: [circ_("Planche"), circ_("Crunch inversé"), circ_("Bicycle crunch"), circ_("Gainage latéral"), circ_("Ciseaux (battements de jambes)"), circ_("Crunch pieds levés (toucher les pieds)")] },
+  { id: "f-m-bras", public: "femmes", lieu: "maison", groupe: "bras", type: "series", titre: "Bras toniques",
+    note: "Des haltères légers (1 à 3 kg) suffisent. Mouvements lents et contrôlés.",
+    exos: [serie_("Pompes inclinées (mains sur une chaise)", 3, "10", 45), serie_("Dips sur chaise", 3, "10", 45), serie_("Curl biceps haltères", 3, "15", 45),
+           serie_("Kickback triceps haltère", 3, "15 / bras", 45), serie_("Élévations latérales haltères", 3, "15", 45), serie_("Extension triceps haltère", 3, "15", 45)] },
+  { id: "f-m-cardio", public: "femmes", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Cardio sans sauts (appartement)",
+    note: "Aucun saut : idéal en appartement, sans déranger les voisins, et doux pour les genoux.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Marche rapide sur place (sans sauter)"), circ_("Squats"), circ_("Mountain climbers"), circ_("Montée sur chaise + genou levé"), circ_("Fentes alternées"), circ_("Planche")] },
+  { id: "f-m-debutante", public: "femmes", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Full body débutante",
+    note: "Pour (re)commencer en douceur : 30 secondes d'effort, 30 secondes de repos.", travail: 30, repos: 30, tours: 3, pause: 60,
+    exos: [circ_("Squats"), circ_("Pompes inclinées (mains sur une chaise)"), circ_("Pont fessier"), circ_("Superman (allongé sur le ventre)"), circ_("Planche"), circ_("Jumping jacks")] },
+
+  { id: "f-s-fessiers", public: "femmes", lieu: "salle", groupe: "bas", type: "series", titre: "Fessiers (salle)",
+    note: "La séance fessiers complète. Commencez léger au hip thrust pour bien sentir le mouvement.",
+    exos: [serie_("Hip thrust à la barre", 4, "10", 90), serie_("Pull-through à la poulie", 3, "12", 60), serie_("Kickback fessier à la poulie", 3, "12 / jambe", 60),
+           serie_("Machine abducteurs", 3, "15", 60), serie_("Soulevé de terre roumain", 3, "10", 90), serie_("Fentes marchées haltères", 3, "10 / jambe", 90)] },
+  { id: "f-s-jambes", public: "femmes", lieu: "salle", groupe: "bas", type: "series", titre: "Jambes et intérieur des cuisses",
+    note: "Cuisses, intérieur des cuisses et fessiers. Buvez bien entre les séries.",
+    exos: [serie_("Presse à cuisses", 4, "12", 90), serie_("Soulevé de terre sumo", 3, "10", 90), serie_("Machine adducteurs (intérieur des cuisses)", 3, "15", 60),
+           serie_("Leg curl assis", 3, "12", 60), serie_("Step-up sur banc (haltères)", 3, "10 / jambe", 60), serie_("Mollets à la machine", 3, "15", 45)] },
+  { id: "f-s-haut", public: "femmes", lieu: "salle", groupe: "haut", type: "series", titre: "Haut du corps tonique",
+    note: "Dos, épaules et bras, pour une jolie posture. Charges modérées, 12 à 15 répétitions.",
+    exos: [serie_("Tirage vertical", 3, "12", 60), serie_("Tirage horizontal", 3, "12", 60), serie_("Développé incliné haltères", 3, "12", 60),
+           serie_("Élévations latérales à la poulie", 3, "15", 45), serie_("Extension triceps poulie", 3, "15", 45), serie_("Curl à la poulie", 3, "15", 45)] },
+  { id: "f-s-abdos", public: "femmes", lieu: "salle", groupe: "abdos", type: "series", titre: "Abdos et taille",
+    note: "Ventre, côtés et bas du dos.",
+    exos: [serie_("Relevés de jambes suspendu", 3, "10", 60), serie_("Crunch à la poulie", 3, "15", 45), serie_("Russian twist", 3, "20", 30),
+           serie_("Planche", 3, "45 s", 30), serie_("Gainage latéral", 3, "30 s / côté", 30), serie_("Banc à lombaires", 3, "12", 45)] },
+  { id: "f-s-cardio", public: "femmes", lieu: "salle", groupe: "cardio", type: "circuit", titre: "Cardio brûle-calories",
+    note: "2 minutes par poste, à un rythme soutenu mais où vous pouvez encore parler.", travail: 120, repos: 30, tours: 3, pause: 60,
+    exos: [circ_("Vélo elliptique"), circ_("Rameur"), circ_("Kettlebell swing"), circ_("Tapis de course"), circ_("Step-up sur banc (haltères)")] }
+);

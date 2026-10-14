@@ -130,8 +130,12 @@
     const miennes = mesSeances().filter(f => f.lieu === lieu);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance ${lieu === "salle" ? "de salle" : "à la maison"} : choisissez les exercices dans la liste, c'est tout.</div>`;
-    $("groupes-fiches").innerHTML = Object.entries(GROUPES).map(([g, G]) => {
-      const fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g);
+    const femmes = FICHES.filter(f => f.lieu === lieu && f.public === "femmes");
+    $("groupes-fiches").innerHTML = (femmes.length ? `<section class="groupe programmes-femmes" aria-labelledby="g-femmes">
+        <div class="groupe-tete"><h2 id="g-femmes">Programmes femmes</h2><span class="muscles-liste">Fessiers · Jambes · Ventre · Bras · Cardio</span></div>
+        <p class="total">Pensés pour les objectifs les plus demandés par les femmes. Les exercices sont les mêmes pour tout le monde : chacun peut les faire.</p>
+        <div class="liste-fiches">${femmes.map(carteFiche).join("")}</div></section>` : "") + Object.entries(GROUPES).map(([g, G]) => {
+      const fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && !f.public);
       return `<section class="groupe" aria-labelledby="g-${g}">
         <div class="groupe-tete"><h2 id="g-${g}">${G.nom}</h2><span class="muscles-liste">${G.muscles.length > 1 ? G.muscles.map(m => MUSCLES[m]).join(" · ") : ""}</span></div>
         <div class="liste-fiches">${fiches.map(carteFiche).join("")}</div>
@@ -146,7 +150,7 @@
   function dessinerFiche(id) {
     const f = trouverFiche(id), perso = estPerso(f);
     let h = `<div class="tete-fiche">
-        <div class="infos-fiche"><span class="badge ${f.lieu}">${f.lieu === "salle" ? "Salle" : "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
+        <div class="infos-fiche"><span class="badge ${f.lieu}">${f.lieu === "salle" ? "Salle" : "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.public === "femmes" ? `<span class="badge femmes">Programme femmes</span>` : f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>
         ${f.note ? `<p class="doux">${esc(f.note)}</p>` : ""}
         <p class="total">${f.type === "circuit" ? `<b>${f.travail} s</b> d'effort · <b>${f.repos} s</b> de repos · <b>${f.tours}</b> rounds` : `<b>${f.exos.reduce((a, e) => a + (+e.series || 0), 0)}</b> séries au total`} · <b>${minutes(dureeFiche(f))}</b></p>

@@ -320,3 +320,6 @@ details.gerer[open] > summary { color: var(--texte); margin-bottom: 10px; }
 .musique-nom span { color: var(--doux); font-size: 12px; }
 .musique-ligne.choisie .musique-nom b::before { content: "♪ "; color: var(--travail); }
 .musique-ligne .mini { min-width: 44px; min-height: 40px; font-size: 15px; }
+
+.badge.femmes { background: rgba(255, 105, 180, .16); color: #ff8cc6; }
+.programmes-femmes .groupe-tete h2 { color: #ff8cc6; }
