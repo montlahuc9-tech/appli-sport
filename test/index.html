@@ -74,6 +74,7 @@
 <main id="v-seances" class="vue" hidden>
   <header class="entete">
     <div><p class="doux bonjour" id="bonjour">Bonjour</p><h1>Mes <span>séances</span></h1></div>
+    <button class="mini" type="button" data-guide>📖 Comment ça marche ?</button>
   </header>
   <div class="univers" role="group" aria-label="Activité">
     <button type="button" data-univers="fitness" aria-pressed="true"><span aria-hidden="true">💪</span>Fitness</button>
@@ -272,6 +273,13 @@
   <div id="biblio-liste" class="exos-fiche"></div>
 </main>
 
+<!-- ============ Guide ============ -->
+<main id="v-guide" class="vue" hidden>
+  <button class="lien" type="button" data-retour>← Retour</button>
+  <header class="entete"><h1>Guide de <span>l'appli</span></h1></header>
+  <div id="guide-corps" class="guide"></div>
+</main>
+
 <!-- ============ Profil ============ -->
 <main id="v-profil" class="vue" hidden>
   <header class="entete"><h1>Pro<span>fil</span></h1></header>
@@ -295,6 +303,7 @@
 <script src="lib/qrcode.js"></script>
 <script src="exercices.js"></script>
 <script src="voix.js"></script>
+<script src="guide.js"></script>
 <script src="fiches.js"></script>
 <script src="compte.js"></script>
 <script src="commun.js"></script>

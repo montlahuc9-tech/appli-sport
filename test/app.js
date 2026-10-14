@@ -1,7 +1,7 @@
 // L'appli : inscription, séances (maison / salle, par groupe), détail d'une fiche, création de séance, bibliothèque, profil.
 (() => {
-  const VUES = ["auth", "acces", "mdp", "seances", "fiche", "edition", "minuteur", "exercices", "profil"];
-  const ONGLET = { seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
+  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil"];
+  const ONGLET = { guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
   let lieu = "maison";
   let biblio = { groupe: "tout", muscle: "tout" };
   const D = () => Compte.donnees;
@@ -29,6 +29,7 @@
     if (vue === "edition") { if (!brouillon) { vue = "seances"; dessinerSeances(); } }
     if (vue === "exercices") dessinerBiblio();
     if (vue === "profil") dessinerProfil();
+    if (vue === "guide") dessinerGuide();
     montrer(vue);
   }
   window.addEventListener("popstate", (e) => { fermerFeuille(); afficher(e.state || { vue: "seances" }); });
@@ -450,6 +451,7 @@
         <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div></div>
         ${h.length ? `<ul class="historique">${h.slice(0, 15).map(x => `<li><b>${esc(x.titre)}</b><span>${jour(x.date)}${x.duree ? " · " + fmt(x.duree) : ""}</span></li>`).join("")}</ul>` : '<p class="total">Vos séances terminées apparaîtront ici.</p>'}
       </section>
+      <button class="principal" type="button" data-guide>📖 Guide de l'appli : comment s'en servir</button>
       <section class="bloc" id="bloc-installer">
         <h2>Mettre l'appli sur l'écran d'accueil</h2>
         <div id="installer-corps"></div>
@@ -469,7 +471,7 @@
       <p class="total">Photos des exercices : Free Exercise DB (domaine public).</p>`;
     $("pr-prenom").addEventListener("change", () => { Compte.changerPrenom($("pr-prenom").value); toast("Prénom enregistré"); });
     deuxClics($("deconnexion"), "Sûr ? Touchez encore", async () => { await Compte.deconnecter(); modeAuth = Compte.enLigne ? "connexion" : "inscription"; majAuth(); aller("auth", null, true); });
-    dessinerInstall();
+    dessinerInstall(); $("profil-corps").querySelector("[data-guide]").onclick = () => aller("guide");
     if (Compte.estAdmin) dessinerGestion();
     const lien = location.origin + location.pathname.replace(/index\.html$/, "");
     try { const q = qrcode(0, "M"); q.addData(lien); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch { $("qr").hidden = true; }
@@ -562,6 +564,15 @@
     if (!nom) nom = /spotify/i.test(lien) ? "Ma playlist " + (mesPlaylists().length + 1) : lien.slice(0, 40);
     mesPlaylists().push({ nom, lien }); Compte.sauver(); $("pl-nom").value = ""; $("pl-lien").value = ""; dessinerPlaylists(); toast("Playlist ajoutée");
   });
+
+  // ---------- Guide ----------
+  function dessinerGuide() {
+    $("guide-corps").innerHTML = `<nav class="guide-sommaire">${GUIDE.map((g, i) => `<a href="#g${i}">${esc(g.titre)}</a>`).join("")}</nav>` +
+      GUIDE.map((g, i) => `<section class="bloc guide-etape" id="g${i}"><h2>${esc(g.titre)}</h2>${g.texte.map(t => `<p>${esc(t)}</p>`).join("")}
+        ${g.img ? `<img src="guide/${g.img}.jpg" alt="${esc(g.titre)}" loading="lazy">` : ""}</section>`).join("");
+    $("guide-corps").querySelectorAll(".guide-sommaire a").forEach(a => a.onclick = (e) => { e.preventDefault(); document.querySelector(a.getAttribute("href")).scrollIntoView({ behavior: "smooth" }); });
+  }
+  document.querySelectorAll("[data-guide]").forEach(b => b.addEventListener("click", () => aller("guide")));
 
   // ---------- Mode télé : le minuteur en très grand (à afficher sur la télé en « Caster l'écran ») ----------
   function modeTele(oui) {

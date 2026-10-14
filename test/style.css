@@ -389,3 +389,12 @@ body.tv .photos { max-width: none; width: 100%; }
 body.tv .corps-muscles { display: none; }
 body.tv .suivant { font-size: min(2.6vw, 4.5vh); }
 body.tv .commandes .gros { font-size: min(2.4vw, 4vh); padding: 1.6vh 3vw; }
+
+/* ---------- Guide ---------- */
+.guide { display: grid; gap: 14px; }
+.guide-sommaire { display: grid; gap: 4px; padding: 12px 14px; background: var(--panneau); border: 1px solid var(--trait); border-radius: 16px; }
+.guide-sommaire a { color: var(--doux); text-decoration: none; font-weight: 600; padding: 4px 0; }
+.guide-sommaire a:hover { color: var(--texte); }
+.guide-etape h2 { color: var(--texte) !important; font-size: 20px !important; letter-spacing: .04em !important; }
+.guide-etape p { margin: 0; line-height: 1.5; }
+.guide-etape img { width: min(100%, 360px); justify-self: center; border-radius: 16px; border: 1px solid var(--trait); display: block; }
