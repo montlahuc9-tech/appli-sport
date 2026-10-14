@@ -320,8 +320,10 @@ window.Minuteur = (() => {
   // Vitesse pour atteindre le tempo voulu (on accepte aussi la moitié ou le double du tempo, pour rester entre 75 et 135 %)
   function vitessePour(cible, bpm) {
     if (!cible || !bpm) return 1;
-    const c = [bpm, bpm * 2, bpm / 2].map(b => cible / b).sort((a, b) => Math.abs(Math.log(a)) - Math.abs(Math.log(b)))[0];
-    return Math.min(1.35, Math.max(0.75, c));
+    // On va toujours dans le bon sens : un tempo plus rapide accélère la musique, un tempo plus lent la ralentit
+    const plusVite = cible >= bpm, ok = [bpm, bpm * 2, bpm / 2].map(b => cible / b).filter(r => r >= 0.75 && r <= 1.35 && (plusVite ? r >= 1 : r <= 1));
+    if (ok.length) return ok.sort((a, b) => Math.abs(Math.log(a)) - Math.abs(Math.log(b)))[0];
+    return Math.min(1.35, Math.max(0.75, cible / bpm));
   }
   function appliquerTempo() {
     const t = regTempo(), v = t.cible ? vitessePour(t.cible, bpmDe()) : (t.vitesse || 1);
