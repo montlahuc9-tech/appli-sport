@@ -1,7 +1,7 @@
 // Le guide de l'appli : chaque étape avec une image de l'écran et une explication simple.
 const GUIDE = [
   { titre: "Bienvenue !", img: null, texte: [
-    "Minuteur Sport vous guide pendant vos séances : un minuteur qui parle, un coup de sifflet, les photos de chaque exercice et les muscles travaillés.",
+    "Rythmo Sport vous guide pendant vos séances : un minuteur qui parle, un coup de sifflet, les photos de chaque exercice et les muscles travaillés.",
     "Fitness à la maison ou à la salle, Running ou Marche sportive : tout est dans l'appli. Voici comment vous en servir en quelques minutes."] },
   { titre: "1. Mettre l'appli sur votre téléphone", img: "16-profil", texte: [
     "Ouvrez le lien de l'appli dans Chrome (Android) ou Safari (iPhone).",

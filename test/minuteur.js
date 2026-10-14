@@ -388,8 +388,8 @@ window.Minuteur = (() => {
   }
   function majEcranVerrouille(e) {
     if (!("mediaSession" in navigator) || !e) return;
-    try { navigator.mediaSession.metadata = new MediaMetadata({ title: (e.phase === "travail" && e.exo ? e.exo.nom : NOMS[e.phase]) || "Minuteur Sport",
-      artist: `${titreSeance || "Circuit"} · round ${e.round} / ${reglages().tours}`, album: "Minuteur Sport", artwork: [{ src: "icones/icone-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: (e.phase === "travail" && e.exo ? e.exo.nom : NOMS[e.phase]) || "Rythmo Sport",
+      artist: `${titreSeance || "Circuit"} · round ${e.round} / ${reglages().tours}`, album: "Rythmo Sport", artwork: [{ src: "icones/icone-512.png", sizes: "512x512", type: "image/png" }] }); } catch {}
   }
   // Petit son quasi inaudible qui garde l'appli éveillée quand l'écran est verrouillé (et affiche le minuteur sur l'écran verrouillé)
   let veille = null;

@@ -477,8 +477,8 @@
     const lien = location.origin + location.pathname.replace(/index\.html$/, "");
     try { const q = qrcode(0, "M"); q.addData(lien); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch { $("qr").hidden = true; }
     $("partager").addEventListener("click", async () => {
-      const texte = "Essaie mon appli de sport (minuteur, séances maison et salle) :";
-      if (navigator.share) { try { await navigator.share({ title: "Minuteur Sport", text: texte, url: lien }); } catch {} }
+      const texte = "Essaie Rythmo Sport, mon appli de sport (minuteur, séances maison, salle, running et marche) :";
+      if (navigator.share) { try { await navigator.share({ title: "Rythmo Sport", text: texte, url: lien }); } catch {} }
       else { try { await navigator.clipboard.writeText(lien); toast("Lien copié"); } catch { toast(lien, 6000); } }
     });
   }
@@ -625,7 +625,7 @@
 
   // ---------- Démarrage ----------
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
-  if (Compte.env === "test") { $("bandeau-test").hidden = false; document.body.classList.add("test"); document.title = "Sport TEST"; }
+  if (Compte.env === "test") { $("bandeau-test").hidden = false; document.body.classList.add("test"); document.title = "Rythmo TEST"; }
   (async () => {
     majAuth();
     const u = await Compte.init();
