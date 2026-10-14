@@ -153,7 +153,7 @@
       </div>
       <button class="principal" type="button" id="lancer-fiche">▶ Lancer la séance</button>
       <div class="exos-fiche">${f.exos.map((e, i) => { const ex = infoExo(e.nom, e.muscle);
-        return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
+        return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex) + materiel(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
       <div class="actions">${perso
         ? `<button class="ajout" type="button" id="modifier-fiche">Modifier</button><button class="lien danger" type="button" id="supprimer-fiche">Supprimer la séance</button>`
         : `<button class="ajout" type="button" id="copier-fiche">Copier dans mes séances pour la modifier</button>`}</div>`;
@@ -187,7 +187,7 @@
       <h2>${esc(ex.nom)}</h2>
       ${photosGrandes(ex)}
       <div class="corps-muscles">${CORPS_SVG}</div>
-      <p class="total">Muscles : <b>${esc(nomMuscles(ex))}</b>${ex.libre ? "" : ` · Conseil : <b>${ex.series} × ${esc(ex.reps)}</b>, repos ${dureeTexte(ex.repos)}`}</p>
+      <p class="total">Muscles : <b>${esc(nomMuscles(ex))}</b>${ex.materiel ? ` · Matériel : <b>${esc(ex.materiel)}</b>` : ""}${ex.libre ? "" : ` · Conseil : <b>${ex.series} × ${esc(ex.reps)}</b>, repos ${dureeTexte(ex.repos)}`}</p>
     </div>`, (fe) => { colorerCorps(fe, ex); brancherZoom(fe, ex); });
   }
 
@@ -207,7 +207,7 @@
       if (biblio.groupe !== "tout" && g !== biblio.groupe) continue;
       for (const m of G.muscles) { const l = liste.filter(e => e.muscle === m); if (!l.length) continue;
         html += `<h3 class="sous-titre">${G.muscles.length > 1 ? `${G.nom} · ${MUSCLES[m]}` : G.nom}</h3>` + l.map(e =>
-          `<button class="exo-ligne" type="button" data-nom="${esc(e.nom)}">${vignette(e)}<span><b>${esc(e.nom)}</b><span>${esc(nomMuscles(e))} · ${e.series} × ${esc(e.reps)}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`).join(""); }
+          `<button class="exo-ligne" type="button" data-nom="${esc(e.nom)}">${vignette(e)}<span><b>${esc(e.nom)}</b><span>${esc(nomMuscles(e))} · ${e.series} × ${esc(e.reps)}${esc(materiel(e))}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`).join(""); }
     }
     $("biblio-liste").innerHTML = html || '<div class="total">Aucun exercice ici.</div>';
     $("biblio-groupes").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.g, muscle: "tout" }; dessinerBiblio(); }));
@@ -302,7 +302,7 @@
       ${c.mode === "ajout" ? '<div class="total">Cochez <b>tous</b> les exercices voulus (vous pouvez changer de filtre entre deux), puis « Ajouter ».</div>' : '<div class="total">Touchez l\'exercice qui remplace l\'ancien.</div>'}
       <div class="exos-fiche">${liste.map(x => { const coche = c.selection.includes(x.nom);
         return `<button class="exo-ligne choix${coche ? " coche" : ""}" type="button" data-c="${esc(x.nom)}" aria-pressed="${coche}">${vignette(x)}
-          <span><b>${esc(x.nom)}</b><span>${esc(nomMuscles(x))} · ${x.lieu === "salle" ? "salle" : "maison"}</span></span>
+          <span><b>${esc(x.nom)}</b><span>${esc(nomMuscles(x))} · ${x.lieu === "salle" ? "salle" : "maison"}${esc(materiel(x))}</span></span>
           ${c.mode === "ajout" ? '<span class="case-coche" aria-hidden="true"></span>' : '<span class="fleche doux">›</span>'}</button>`; }).join("")
         || '<div class="total">Aucun exercice pour ce choix : essayez « Les deux » ou « Tous ».</div>'}</div>
       ${c.mode === "ajout" ? '<div class="barre-ajout"><button class="principal" type="button" data-c-valider disabled>Choisissez des exercices</button></div>' : ""}

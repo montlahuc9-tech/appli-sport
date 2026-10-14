@@ -67,7 +67,7 @@ window.Minuteur = (() => {
     $("carte-exo").hidden = mode !== "intervalles" && !series;
     const ex = exoInfo(e);
     $("nom-exo").textContent = ex ? ex.nom : (mode === "intervalles" ? "Intervalles" : "");
-    $("grp-exo").textContent = ex ? nomMuscles(ex) : "Effort / repos";
+    $("grp-exo").textContent = ex ? nomMuscles(ex) + materiel(ex) : "Effort / repos";
     $("pose-exo").innerHTML = ex ? photosGrandes(ex) : "";
     if (ex) brancherZoom($("pose-exo"), ex);
     colorerCorps($("corps-carte"), ex);

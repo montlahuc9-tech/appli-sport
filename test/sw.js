@@ -1,6 +1,6 @@
 // Fait marcher l'appli même sans réseau (à la salle, au sous-sol…).
 // Changer VERSION à chaque mise à jour pour que les téléphones prennent la nouvelle version.
-const VERSION = "20261014191801";
+const VERSION = "20261014192100";
 const COQUILLE = ["./", "index.html", "style.css", "config.js", "lib/supabase.js", "lib/591.supabase.js", "lib/qrcode.js", "exercices.js", "fiches.js",
   "compte.js", "commun.js", "minuteur.js", "app.js", "manifest.webmanifest", "icones/icone-192.png", "icones/icone-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open("appli-" + VERSION).then(c => c.addAll(COQUILLE)).then(() => self.skipWaiting())); });

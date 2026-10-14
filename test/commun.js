@@ -19,6 +19,8 @@ function infoExo(nom, muscleLibre) {
   return { nom, photo: null, lieu: "maison", muscle: m, p: m === "cardio" ? ["quadri", "abdos"] : [m], s: [], series: 3, reps: "10", repos: 60, libre: true };
 }
 const urlPhoto = (id, i) => `photos/${encodeURIComponent(id)}_${i}.jpg`;
+// « · matériel : barre de porte » quand l'exercice demande un matériel particulier
+const materiel = (ex) => ex && ex.materiel ? ` · matériel : ${ex.materiel}` : "";
 const nomMuscles = (ex) => ex.muscle === "cardio" ? "Cardio" : [ex.p, ex.s].flat().filter((m, i, a) => a.indexOf(m) === i).slice(0, 3).map(m => MUSCLES[m] || m).join(", ");
 
 // ---------- Silhouette quand il n'y a pas de photo ----------
