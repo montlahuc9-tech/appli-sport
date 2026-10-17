@@ -11,6 +11,11 @@ window.SeanceMusique = (() => {
   // ---------- Écouter une chanson à l'avance ----------
   async function analyser(m, cap) {
     const cle = m.id + "|" + cap; if (plans[cle]) return plans[cle];
+    if (enCours[cle]) return enCours[cle];
+    return (enCours[cle] = analyserVraiment(m, cap, cle).finally(() => { delete enCours[cle]; }));
+  }
+  const enCours = {};
+  async function analyserVraiment(m, cap, cle) {
     let bpm = m.bpm; if (!bpm) { try { bpm = await Minuteur.detecterBpm(m.url); } catch { bpm = 120; } }
     const brut = await (await fetch(m.url)).arrayBuffer();
     const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 11025);

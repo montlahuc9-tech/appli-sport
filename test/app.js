@@ -296,7 +296,11 @@
       <p class="total">Ajoutez vos propres MP3 dans le Minuteur → « Ma musique ».</p>
       <div class="puces" id="sm-duree">${[[150, "2 min 30 par chanson"], [0, "Chansons entières"]].map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${(r.capSeance ?? 150) === k}">${t}</button>`).join("")}</div>
       <button class="principal" type="button" data-sm-go>▶ C'est parti</button></div>`, (fe) => {
-      fe.querySelectorAll("#sm-duree [data-v]").forEach(b => b.onclick = () => { fe.querySelectorAll("#sm-duree [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+      // on commence à écouter les chansons tout de suite, pour que la séance démarre sans attendre
+      const prechauffer = () => { const cap = +fe.querySelector("#sm-duree [aria-pressed=true]").dataset.v;
+        [...fe.querySelectorAll(".choix-materiel input:checked")].forEach(i => SeanceMusique.analyser(ms.find(m => m.id === i.value), cap).catch(() => {})); };
+      prechauffer(); fe.querySelectorAll(".choix-materiel input").forEach(i => i.addEventListener("change", prechauffer));
+      fe.querySelectorAll("#sm-duree [data-v]").forEach(b => b.onclick = () => { fe.querySelectorAll("#sm-duree [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); prechauffer(); });
       fe.querySelector("[data-sm-go]").onclick = async () => {
         const ids = [...fe.querySelectorAll(".choix-materiel input:checked")].map(i => i.value);
         if (!ids.length) return toast("Choisissez au moins une chanson");
