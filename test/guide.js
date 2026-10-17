@@ -52,19 +52,25 @@ const GUIDE = [
     "2 musiques sont aussi fournies avec l'appli. Pour choisir la musique : Minuteur → « Son, voix et musique ».",
     "Tempo : l'appli calcule le tempo de chaque musique (en BPM). Touchez « Marche », « Muscu / HIIT », « Footing » ou « Course rapide » : la musique accélère ou ralentit pour suivre votre rythme. Vous pouvez aussi régler la vitesse à la main.",
     "La musique baisse pendant les repos et quand la voix parle. Vous pouvez aussi garder votre musique habituelle : choisissez « Sans musique »."] },
-  { titre: "15. Spotify", img: "13-spotify", texte: [
+  { titre: "15. La séance musique : 1 chanson = 1 exercice", img: "20-musique-seance", texte: [
+    "Sur une séance, touchez « 🎵 Séance musique ». Choisissez vos chansons (celles de l'appli ou vos MP3) : chaque chanson porte un exercice.",
+    "La musique devient le minuteur : l'appli écoute vos chansons à l'avance et cale les efforts quand la musique monte, les repos quand elle retombe, toujours en rythme. Nouvelle chanson = nouvel exercice. « ⏭ Chanson suivante » passe au suivant."] },
+  { titre: "16. Les encouragements de vos proches", img: "21-encouragements", texte: [
+    "Profil → « 💬 Mes encouragements » : faites enregistrer quelques mots à un proche (« Allez, plus que 10 secondes ! »), ou importez un message vocal reçu sur WhatsApp.",
+    "L'appli les joue pendant vos séances, au moment le plus dur : 8 secondes avant la fin d'un effort, et après chaque kilomètre en course. Ils restent sur votre téléphone."] },
+  { titre: "17. Spotify", img: "13-spotify", texte: [
     "Dans le Minuteur, les boutons verts ouvrent une playlist dans Spotify. Lancez la musique, revenez dans l'appli et touchez « Démarrer ».",
     "Pour ajouter votre playlist : dans Spotify, ⋮ → Partager → Copier le lien, puis collez-le dans « + Ajouter ou retirer une playlist »."] },
-  { titre: "16. Course et Marche", img: "14-running", texte: [
+  { titre: "18. Course et Marche", img: "14-running", texte: [
     "Fractionné, footing, marche active, renforcement et étirements : la voix annonce chaque changement (« Course rapide ! », « Footing lent ! »).",
     "Vous pouvez verrouiller votre téléphone et le mettre en poche : la séance continue (sur Android ; sur iPhone, gardez l'appli ouverte)."] },
-  { titre: "17. Le suivi GPS", img: "18-gps", texte: [
+  { titre: "19. Le suivi GPS", img: "18-gps", texte: [
     "Course ou Marche → « 📍 Suivi GPS de mon parcours » → « Démarrer » : distance, durée, allure et tracé sur la carte, avec une annonce à chaque kilomètre.",
     "Gardez l'appli ouverte (l'écran reste allumé) ; « Écran noir » économise la batterie. À la fin : résumé, carte, temps au kilomètre et bouton Partager. Vos parcours sont gardés dans « Mes parcours »."] },
-  { titre: "18. Progresser", img: "15-progression", texte: [
+  { titre: "20. Progresser", img: "15-progression", texte: [
     "Après 3 séances réussies, l'appli vous propose une version plus dure ou la séance du niveau supérieur. Votre niveau se règle dans le Profil.",
     "En musculation, quand vous réussissez 2 fois le même poids, elle vous propose d'en ajouter un peu."] },
-  { titre: "19. Sur la télé", img: "17-tele", texte: [
+  { titre: "21. Sur la télé", img: "17-tele", texte: [
     "Minuteur → « 📺 Afficher sur la télé ». Avec une clé Chromecast ou une Google TV : un seul appui, le minuteur s'affiche en grand sur la télé et le téléphone reste dans votre main.",
     "Autres télés : « Copier l'écran du téléphone » : l'appli vous dit le nom exact du bouton à toucher sur VOTRE téléphone (Smart View chez Samsung, Recopie de l'écran sur iPhone…), puis met le minuteur en grand."] },
   { titre: "Une question, une idée ?", img: null, texte: [

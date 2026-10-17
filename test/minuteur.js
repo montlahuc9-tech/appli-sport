@@ -696,6 +696,10 @@ window.Minuteur = (() => {
       else { series = null; dessinerSeries(); choisirMode("intervalles"); }
     },
     surFin(f) { surFinCb = f; },
+    // pour la « séance musique » : la liste des morceaux, leur tempo, l'historique, et la musique du minuteur à couper
+    morceaux: () => tousMorceaux().map(m => ({ id: m.id, nom: m.nom, url: m.url, bpm: m.bpm || ((Compte.donnees.reglages.tempos || {})[m.id] || {}).bpm || 0 })),
+    detecterBpm, noterHistorique,
+    couperMusique() { try { arreterMusique(); } catch {} },
     occupe: () => etat === "marche" || etat === "decompte",
     chargerCircuit(f) {
       clearInterval(minuterie); reposFiche = null; series = null; dessinerSeries(); Compte.donnees.encours = null;

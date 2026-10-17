@@ -1,7 +1,7 @@
 // L'appli : inscription, séances (maison / salle, par groupe), détail d'une fiche, création de séance, bibliothèque, profil.
 (() => {
-  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps"];
-  const ONGLET = { gps: "seances", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
+  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps", "musique"];
+  const ONGLET = { gps: "seances", musique: "minuteur", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
   let lieu = "maison";
   let biblio = { groupe: "tout", muscle: "tout" };
   const D = () => Compte.donnees;
@@ -32,6 +32,7 @@
     if (vue === "guide") dessinerGuide();
     montrer(vue);
     if (vue === "gps") GPS.afficher(param);
+    if (vue === "musique" && !SeanceMusique.actif() && !musiqueEnPrep) { return aller("seances", null, true); }
   }
   window.addEventListener("popstate", (e) => { fermerFeuille(); afficher(e.state || { vue: "seances" }); });
   document.querySelectorAll("#barre button").forEach(b => b.addEventListener("click", () => aller(b.dataset.vue)));
@@ -102,7 +103,7 @@
 
   function entrer(nouveau) {
     if (!Compte.acces.ok) { dessinerAcces(); return aller("acces", null, true); }
-    Minuteur.init(); dessinerPlaylists();
+    Minuteur.init(); dessinerPlaylists(); Encouragements.charger(); SeanceMusique.brancher();
     if (GPS.reprendre()) setTimeout(() => { aller("gps"); toast("Suivi GPS repris"); }, 300);
     aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
@@ -261,6 +262,7 @@
       </div>
       ${blocProgression(f)}
       <button class="principal" type="button" id="lancer-fiche">▶ Lancer la séance</button>
+      ${f.echauffement || f.cat === "echauffement" ? "" : `<button class="secondaire bouton-musique" type="button" id="lancer-musique">🎵 Séance musique : 1 chanson = 1 exercice</button>`}
       <div class="exos-fiche">${f.exos.map((e, i) => { const ex = infoExo(e.nom, e.muscle);
         return `<button class="exo-ligne" type="button" data-exo="${i}">${vignette(ex)}<span><b>${i + 1}. ${esc(e.nom)}</b><span>${esc(nomMuscles(ex) + materiel(ex))}${f.type === "series" ? ` · ${e.series} × ${esc(e.reps)} · repos ${dureeTexte(+e.repos || 0)}` : e.duree ? ` · ${dureeTexte(+e.duree)}` : ""}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`; }).join("")}</div>
       <div class="actions">${perso
@@ -269,6 +271,7 @@
     $("fiche-corps").innerHTML = h;
     $("fiche-corps").querySelectorAll("[data-exo]").forEach(b => b.addEventListener("click", () => { const e = f.exos[+b.dataset.exo]; ouvrirExo(infoExo(e.nom, e.muscle)); }));
     $("lancer-fiche").addEventListener("click", () => lancerFiche(f));
+    if ($("lancer-musique")) $("lancer-musique").onclick = () => choisirMusiques(f);
     const monter = $("fiche-corps").querySelector("[data-monter]");
     if (monter) monter.addEventListener("click", () => { const c = versionPlusDure(f); mesSeances().push(c); Compte.sauver(); toast("Version plus dure créée dans vos séances"); aller("fiche", c.id, true); });
     $("fiche-corps").querySelectorAll("[data-voir-fiche]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.voirFiche)));
@@ -278,6 +281,30 @@
     } else $("copier-fiche").addEventListener("click", () => {
       const copie = JSON.parse(JSON.stringify(f)); copie.id = "p" + Date.now(); copie.titre = f.titre + " (à moi)"; delete copie.groupe;
       mesSeances().push(copie); Compte.sauver(); toast("Copiée dans vos séances"); ouvrirEdition(copie);
+    });
+  }
+
+  // ---------- Séance musique : on choisit ses chansons, une par exercice ----------
+  let musiqueEnPrep = false;
+  function choisirMusiques(f) {
+    const ms = Minuteur.morceaux(), r = D().reglages, deja = new Set(r.musiquesSeance || ms.map(m => m.id));
+    const n = f.exos.length;
+    ouvrirFeuille(`<div class="fiche-exo"><h2>🎵 1 chanson = 1 exercice</h2>
+      <p>La musique devient le minuteur : <b>l'effort démarre quand la musique monte, le repos arrive quand elle retombe</b>. À chaque nouvelle chanson, on change d'exercice.</p>
+      <p class="total">Cette séance a <b>${n} exercices</b> : choisissez vos chansons (elles se répètent s'il y en a moins).</p>
+      <div class="choix-materiel">${ms.map(m => `<label class="case grosse"><input type="checkbox" value="${esc(m.id)}" ${deja.has(m.id) ? "checked" : ""}> ♪ ${esc(m.nom)}</label>`).join("")}</div>
+      <p class="total">Ajoutez vos propres MP3 dans le Minuteur → « Ma musique ».</p>
+      <div class="puces" id="sm-duree">${[[150, "2 min 30 par chanson"], [0, "Chansons entières"]].map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${(r.capSeance ?? 150) === k}">${t}</button>`).join("")}</div>
+      <button class="principal" type="button" data-sm-go>▶ C'est parti</button></div>`, (fe) => {
+      fe.querySelectorAll("#sm-duree [data-v]").forEach(b => b.onclick = () => { fe.querySelectorAll("#sm-duree [data-v]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+      fe.querySelector("[data-sm-go]").onclick = async () => {
+        const ids = [...fe.querySelectorAll(".choix-materiel input:checked")].map(i => i.value);
+        if (!ids.length) return toast("Choisissez au moins une chanson");
+        r.musiquesSeance = ids; r.capSeance = +fe.querySelector("#sm-duree [aria-pressed=true]").dataset.v; Compte.sauver();
+        fermerFeuille(); musiqueEnPrep = true; aller("musique");
+        const ok = await SeanceMusique.lancer(f, ids.map(id => ms.find(m => m.id === id)), r.capSeance);
+        musiqueEnPrep = false; if (!ok) history.back();
+      };
     });
   }
 
@@ -537,6 +564,10 @@
         <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div></div>
         ${h.length ? `<ul class="historique">${h.slice(0, 15).map(x => `<li><b>${esc(x.titre)}</b><span>${jour(x.date)}${x.duree ? " · " + fmt(x.duree) : ""}</span></li>`).join("")}</ul>` : '<p class="total">Vos séances terminées apparaîtront ici.</p>'}
       </section>
+      <section class="bloc" id="bloc-encouragements">
+        <h2>💬 Mes encouragements</h2>
+        <div id="enc-corps"><p class="total">Chargement…</p></div>
+      </section>
       <button class="principal" type="button" data-guide>📖 Guide de l'appli : comment s'en servir</button>
       <section class="bloc" id="bloc-installer">
         <h2>Mettre l'appli sur l'écran d'accueil</h2>
@@ -562,6 +593,7 @@
     $("pr-prenom").addEventListener("change", () => { Compte.changerPrenom($("pr-prenom").value); toast("Prénom enregistré"); });
     deuxClics($("deconnexion"), "Sûr ? Touchez encore", async () => { await Compte.deconnecter(); modeAuth = Compte.enLigne ? "connexion" : "inscription"; majAuth(); aller("auth", null, true); });
     dessinerInstall(); $("profil-corps").querySelector("[data-guide]").onclick = () => aller("guide");
+    Encouragements.dessiner($("enc-corps"));
     if (Compte.estAdmin) dessinerGestion();
     const lien = location.origin + location.pathname.replace(/index\.html$/, "");
     try { const q = qrcode(0, "M"); q.addData(lien); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch { $("qr").hidden = true; }
@@ -731,7 +763,7 @@
   // jamais pendant une séance, ni pendant qu'on crée une séance. Les données sont déjà sauvegardées.
   let majPrete = false;
   const vueActuelle = () => VUES.find(v => !$("v-" + v).hidden);
-  const peutRecharger = () => !Minuteur.occupe() && !GPS.actif() && vueActuelle() !== "edition" && $("feuille").hidden && document.activeElement?.tagName !== "INPUT";
+  const peutRecharger = () => !Minuteur.occupe() && !GPS.actif() && !SeanceMusique.actif() && vueActuelle() !== "edition" && $("feuille").hidden && document.activeElement?.tagName !== "INPUT";
   function appliquerMaj() {
     if (!majPrete || !peutRecharger()) return;
     try { sessionStorage.setItem("ms-maj", "1"); } catch {}

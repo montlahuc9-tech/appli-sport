@@ -487,3 +487,23 @@ button.secondaire { width: 100%; background: none; border: 1px solid var(--trait
 label.case.grosse { font-size: 16px; color: var(--texte); padding: 10px 12px; border: 1px solid var(--trait); border-radius: 12px; margin: 0; }
 .reglages-profil .etiq { margin: 14px 0 6px; color: var(--doux); font-size: 13px; }
 #espace-retour { margin-bottom: 4px; }
+
+/* ===== Séance musique ===== */
+.bouton-musique { border-color: #7a5c14; color: #ffd27a; }
+.sm-prep { text-align: center; padding: 40px 10px; color: var(--doux); font-size: 16px; }
+.sm-cadran { text-align: center; padding: 18px 0 6px; }
+.sm-cadran .phase { font: 900 30px var(--f-titre, var(--f-texte)); color: var(--phase); text-transform: uppercase; letter-spacing: .06em; }
+.sm-cadran .temps { font: 900 96px/1 var(--f-titre, var(--f-texte)); font-variant-numeric: tabular-nums; color: var(--phase); text-shadow: 0 0 24px color-mix(in srgb, var(--phase) 45%, transparent); }
+.sm-morceau { text-align: center; color: var(--doux); margin: 8px 0; font-size: 14px; }
+.sm-barre { height: 8px; background: var(--trait); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+.sm-barre i { display: block; height: 100%; width: 0; background: var(--phase); transition: width .2s linear; }
+.sm-carte { border-color: var(--phase); }
+#sm-suivante { margin-top: 4px; }
+/* encouragements */
+.enc-boutons { display: grid; gap: 8px; margin: 10px 0 4px; }
+.enc-import { display: block; text-align: center; cursor: pointer; }
+.liste-enc { display: grid; gap: 6px; margin: 10px 0; }
+.enc { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--trait); border-radius: 12px; padding: 8px 10px; }
+.enc span { display: grid; } .enc small { color: var(--doux); }
+#enc-rec.rec { background: #b3261e; animation: clignote 1s infinite; }
+@keyframes clignote { 50% { opacity: .7; } }

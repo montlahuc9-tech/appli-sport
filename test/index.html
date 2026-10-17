@@ -306,6 +306,29 @@
   <div id="guide-corps" class="guide"></div>
 </main>
 
+<!-- ============ Séance musique : 1 chanson = 1 exercice ============ -->
+<main id="v-musique" class="vue" hidden>
+  <header class="entete"><div><p class="doux" id="sm-total"></p><h1>Séance <span>musique</span></h1></div></header>
+  <p class="seance-titre" id="sm-titre"></p>
+  <p class="sm-prep" id="sm-prep" hidden></p>
+  <div id="sm-jeu">
+    <div class="sm-cadran"><div class="phase" id="sm-phase">Prêt</div><div class="temps" id="sm-temps">--:--</div></div>
+    <div class="sm-morceau" id="sm-morceau"></div>
+    <div class="sm-barre"><i id="sm-barre"></i></div>
+    <div class="exo sm-carte">
+      <div class="exo-texte"><div class="nom" id="sm-exo">—</div><div class="grp" id="sm-muscles"></div><div id="sm-pose"></div></div>
+      <div class="corps-muscles" id="sm-corps"></div>
+    </div>
+    <div class="suivant" id="sm-ensuite"></div>
+    <div class="commandes">
+      <button class="gros go" id="sm-pause" type="button">Pause</button>
+      <button class="gros sec" id="sm-stop" type="button">Arrêter</button>
+    </div>
+    <button class="secondaire" id="sm-suivante" type="button">⏭ Chanson suivante</button>
+    <p class="total">La musique est le minuteur : l'effort démarre quand elle monte, le repos arrive quand elle retombe. Chaque chanson = un exercice.</p>
+  </div>
+</main>
+
 <!-- ============ Suivi GPS (course / marche) ============ -->
 <main id="v-gps" class="vue" hidden>
   <button class="lien" type="button" data-retour>← Retour</button>
@@ -343,6 +366,8 @@
 <script src="lib/leaflet/leaflet.js"></script>
 <script src="minuteur.js"></script>
 <script src="gps.js"></script>
+<script src="encouragements.js"></script>
+<script src="musique-seance.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
