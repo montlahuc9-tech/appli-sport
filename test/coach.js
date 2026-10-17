@@ -33,7 +33,7 @@ window.Coach = (() => {
   // Priorité : les enregistrements du studio (Alex entend sa voix tout de suite), sinon ceux intégrés à l'appli
   const publies = () => (typeof VOIX !== "undefined" && VOIX.coach) || {};
   const dispo = (moment) => {
-    const loc = PHRASES.filter(p => p.moment === moment && studio[p.id]).map(p => studio[p.id].url);
+    const loc = peutEnregistrer() ? PHRASES.filter(p => p.moment === moment && studio[p.id]).map(p => studio[p.id].url) : [];
     return loc.length ? loc : (publies()[moment] || []).map(f => "voix/coach/" + f + ".mp3");
   };
   const actif = () => Compte.donnees.reglages.voixCoach !== false;
@@ -48,7 +48,7 @@ window.Coach = (() => {
     lecteur = new Audio(u); lecteur.volume = 1; lecteur.play().catch(() => {});
     return lecteur;
   }
-  const aDesPhrases = () => PHRASES.some(p => studio[p.id]) || Object.keys(publies()).length > 0;
+  const aDesPhrases = () => (peutEnregistrer() && PHRASES.some(p => studio[p.id])) || Object.keys(publies()).length > 0;
 
   // ---------- Pendant le minuteur (séances en circuit) : on suit l'écran du minuteur ----------
   const secondes = (t) => { const m = /^(\d+):(\d+)$/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
@@ -72,7 +72,8 @@ window.Coach = (() => {
   }, 300);
 
   // ---------- Studio d'enregistrement ----------
-  const peutEnregistrer = () => Compte.estAdmin || (Compte.utilisateur?.email || "").toLowerCase() === "montlahuc9@gmail.com" || (!Compte.enLigne && Compte.env === "test");
+  // Studio masqué : la voix du coach est une voix de synthèse (Piper « gilles »). Remettre la condition pour le réactiver.
+  const peutEnregistrer = () => false;
   let enreg = null;
   async function dessinerStudio(z) {
     await pret;
