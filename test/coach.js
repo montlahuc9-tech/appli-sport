@@ -72,7 +72,7 @@ window.Coach = (() => {
   }, 300);
 
   // ---------- Studio d'enregistrement ----------
-  // Studio masqué : la voix du coach est une voix de synthèse (Piper « gilles »). Remettre la condition pour le réactiver.
+  // Studio masqué : la voix du coach est une voix de synthèse (Piper « siwis »). Remettre la condition pour le réactiver.
   const peutEnregistrer = () => false;
   let enreg = null;
   async function dessinerStudio(z) {
