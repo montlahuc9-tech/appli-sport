@@ -31,7 +31,7 @@ h1 span { color: var(--travail); }
 .bonjour { margin: 0 0 4px; font-weight: 600; }
 
 /* ---------- Barre du bas ---------- */
-.barre { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr);
+.barre { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr);
   background: rgba(16, 18, 23, .96); border-top: 1px solid var(--trait); padding-bottom: env(safe-area-inset-bottom); backdrop-filter: blur(10px); }
 .barre button { background: none; border: 0; color: var(--doux); height: var(--barre-h); display: grid; place-items: center; align-content: center; gap: 3px;
   font: 600 12px var(--f-texte); cursor: pointer; }
@@ -515,3 +515,26 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 .studio-ligne { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--trait); border-radius: 12px; margin-bottom: 6px; }
 .studio-ligne.fait { border-color: #1f6b5c; background: #10352f55; }
 .studio-ligne .mini.rec { background: #b3261e; color: #fff; animation: clignote 1s infinite; }
+
+/* ===== Recettes ===== */
+.ing-tete { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: none; border: 0; color: var(--texte); text-align: left; cursor: pointer; padding: 0; font: 500 14px var(--f-texte); }
+.ing-tete > span:first-child { display: grid; gap: 2px; } .ing-tete b { font-size: 17px; } .ing-tete span span { color: var(--doux); }
+.ing-tete .lien-txt { color: #6fe3c8; font-weight: 700; }
+.cat-ing h3 { font: 700 13px var(--f-texte); color: var(--doux); margin: 14px 0 8px; }
+.cat-ing .puces button[aria-pressed="true"] { background: #1f6b5c; border-color: #26c6b0; color: #fff; }
+.cat-ing .puces button[aria-pressed="true"]::before { content: "✓ "; }
+.ing-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; }
+.ing-actions .principal { flex: 1; }
+#rec-moments { margin: 14px -16px 4px; }
+.rec-titre { font: 800 18px var(--f-titre, var(--f-texte)); margin: 18px 0 10px; }
+.rec-ico { font-size: 30px; width: 56px; text-align: center; }
+.badge.manque { background: #3a2f12; color: #ffd27a; text-transform: none; letter-spacing: 0; }
+.nutri { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 4px; text-align: center; }
+.nutri div { background: var(--trait); border-radius: 12px; padding: 8px 4px; } .nutri b { display: block; font-size: 17px; } .nutri span { font-size: 11px; color: var(--doux); }
+.recette-detail h3 { font: 700 15px var(--f-texte); margin: 16px 0 6px; }
+.rec-ing { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+.rec-ing li.ok { color: var(--texte); } .rec-ing li.manque { color: #ffb39e; }
+.rec-etapes { padding-left: 20px; margin: 0; display: grid; gap: 6px; }
+.astuce { background: #10352f; border-radius: 12px; padding: 10px 12px; margin-top: 14px; }
+@media (max-width: 380px) { .barre button { font-size: 10px; } }
+.fiche .prot { font-style: normal; color: #6fe3c8; font-weight: 700; }

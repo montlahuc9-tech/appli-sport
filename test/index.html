@@ -336,6 +336,12 @@
   <div id="gps-corps"></div>
 </main>
 
+<!-- ============ Recettes ============ -->
+<main id="v-recettes" class="vue" hidden>
+  <header class="entete"><div><p class="doux">Avec ce que vous avez chez vous</p><h1>Re<span>cettes</span></h1></div></header>
+  <div id="recettes-corps"></div>
+</main>
+
 <!-- ============ Profil ============ -->
 <main id="v-profil" class="vue" hidden>
   <header class="entete"><h1>Pro<span>fil</span></h1></header>
@@ -347,6 +353,7 @@
   <button type="button" data-vue="seances" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10l4 4v12H5z M14 4v5h5 M8 12h8 M8 16h6"/></svg>Séances</button>
   <button type="button" data-vue="minuteur"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2 M9 2h6 M12 2v3"/></svg>Minuteur</button>
   <button type="button" data-vue="exercices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4 M6 7v10 M18 7v10 M21 10v4 M6 12h12"/></svg>Exercices</button>
+  <button type="button" data-vue="recettes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v8a2 2 0 0 1-4 0V2 M5 10v12 M17 2c-2 0-3 2-3 6s1 5 3 5v9"/></svg>Recettes</button>
   <button type="button" data-vue="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/></svg>Profil</button>
 </nav>
 
@@ -368,6 +375,8 @@
 <script src="gps.js"></script>
 <script src="coach.js"></script>
 <script src="musique-seance.js"></script>
+<script src="recettes-data.js"></script>
+<script src="recettes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

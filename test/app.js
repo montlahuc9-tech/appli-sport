@@ -1,7 +1,7 @@
 // L'appli : inscription, séances (maison / salle, par groupe), détail d'une fiche, création de séance, bibliothèque, profil.
 (() => {
-  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps", "musique"];
-  const ONGLET = { gps: "seances", musique: "minuteur", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
+  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps", "musique", "recettes"];
+  const ONGLET = { gps: "seances", musique: "minuteur", recettes: "recettes", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
   let lieu = "maison";
   let biblio = { groupe: "tout", muscle: "tout" };
   const D = () => Compte.donnees;
@@ -30,6 +30,7 @@
     if (vue === "exercices") dessinerBiblio();
     if (vue === "profil") dessinerProfil();
     if (vue === "guide") dessinerGuide();
+    if (vue === "recettes") Recettes.dessiner();
     montrer(vue);
     if (vue === "gps") GPS.afficher(param);
     if (vue === "musique" && !SeanceMusique.actif() && !musiqueEnPrep) { return aller("seances", null, true); }
@@ -387,6 +388,7 @@
     fe.hidden = false; fe.onclick = (e) => { if (e.target === fe || e.target.closest("[data-fermer]")) fermerFeuille(); };
     if (apres) apres(fe);
   }
+  window.ouvrirFeuilleRecette = (h) => ouvrirFeuille(h);
   function fermerFeuille() { $("feuille").hidden = true; $("feuille").innerHTML = ""; }
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerFeuille(); });
   function ouvrirExo(ex) {

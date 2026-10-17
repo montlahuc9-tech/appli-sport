@@ -73,6 +73,9 @@ const GUIDE = [
   { titre: "21. Sur la télé", img: "17-tele", texte: [
     "Minuteur → « 📺 Afficher sur la télé ». Avec une clé Chromecast ou une Google TV : un seul appui, le minuteur s'affiche en grand sur la télé et le téléphone reste dans votre main.",
     "Autres télés : « Copier l'écran du téléphone » : l'appli vous dit le nom exact du bouton à toucher sur VOTRE téléphone (Smart View chez Samsung, Recopie de l'écran sur iPhone…), puis met le minuteur en grand."] },
+  { titre: "22. Les recettes", img: "22-recettes", texte: [
+    "Onglet « Recettes » en bas : touchez « Ce que j'ai chez moi » et cochez vos ingrédients (frigo, fruits et légumes, placard).",
+    "L'appli montre les recettes que vous pouvez faire tout de suite, puis celles où il ne manque qu'un ingrédient. Filtrez : avant le sport, après le sport, repas ou collation. Chaque recette indique le temps, les calories et les protéines."] },
   { titre: "Une question, une idée ?", img: null, texte: [
     "L'appli est en test : vos retours sont précieux. Dites ce qui vous plaît, ce qui manque ou ce qui bloque. Bonnes séances ! 💪"] }
 ];
