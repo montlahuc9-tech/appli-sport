@@ -507,3 +507,11 @@ label.case.grosse { font-size: 16px; color: var(--texte); padding: 10px 12px; bo
 .enc span { display: grid; } .enc small { color: var(--doux); }
 #enc-rec.rec { background: #b3261e; animation: clignote 1s infinite; }
 @keyframes clignote { 50% { opacity: .7; } }
+/* studio voix du coach */
+details.studio { margin-top: 12px; }
+details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padding: 8px 0; }
+.studio-compte { font-size: 15px; margin: 8px 0; }
+.studio-moment { font: 700 13px var(--f-texte); color: var(--doux); text-transform: uppercase; letter-spacing: .06em; margin: 16px 0 6px; }
+.studio-ligne { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--trait); border-radius: 12px; margin-bottom: 6px; }
+.studio-ligne.fait { border-color: #1f6b5c; background: #10352f55; }
+.studio-ligne .mini.rec { background: #b3261e; color: #fff; animation: clignote 1s infinite; }

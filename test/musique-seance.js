@@ -88,7 +88,14 @@ window.SeanceMusique = (() => {
     }
     // 3 bips avant la reprise
     const r = Math.ceil(reste); if (ph.type !== "effort" && r <= 3 && r !== S.dernierBip) { S.dernierBip = r; if (r > 0) bip(r === 1 ? 1320 : 880); }
-    if (ph.type === "effort" && reste > 7.6 && reste < 8.4 && ph.fin - ph.debut > 14 && window.Encouragements) Encouragements.jouer();
+    // la voix du coach (Alex) aux bons moments
+    const lg = ph.fin - ph.debut, k = idx + "|" + S.i, dit = S.dit || (S.dit = {});
+    if (window.Coach) {
+      if (ph.type === "effort" && lg >= 20 && reste < 10.4 && reste > 9.6 && !dit["f" + k]) { dit["f" + k] = 1; if (Math.random() < 0.75) Coach.dire("fin_effort", { ecart: 6000 }); }
+      if (ph.type === "effort" && lg >= 30 && Math.abs(reste - lg / 2) < 0.4 && !dit["m" + k]) { dit["m" + k] = 1; if (Math.random() < 0.5) Coach.dire("milieu"); }
+      if (ph.type === "repos" && lg >= 12 && Math.abs(reste - lg / 2) < 0.4 && !dit["r" + k]) { dit["r" + k] = 1; if (Math.random() < 0.6) Coach.dire("repos"); }
+      if (ph.type === "prepa" && S.i === 0 && t > 3 && !dit.debut) { dit.debut = 1; Coach.dire("debut", { ecart: 0 }); }
+    }
     afficher(it, ph, reste, t);
   }
   function afficher(it, ph, reste, t) {
@@ -120,7 +127,7 @@ window.SeanceMusique = (() => {
     if (!S) return; const s = S; S = null; clearInterval(s.minuterie); s.lecteur.pause(); try { veille?.release(); } catch {} veille = null;
     const duree = (Date.now() - s.debut - s.tempsPause) / 1000;
     if (duree > 60) Minuteur.noterHistorique(s.titre + " 🎵", duree, complet ? "séance musique" : "séance musique (pas finie)", s.id);
-    if (complet) { sifflet(1.1); annoncer([VOIX.fr.fin]); }
+    if (complet) { sifflet(1.1); annoncer([VOIX.fr.fin]); if (window.Coach) setTimeout(() => Coach.dire("fin", { ecart: 0 }), 2800); }
     $id("sm-phase").textContent = complet ? "Bravo !" : "Arrêtée"; $id("sm-temps").textContent = complet ? "FINI" : "--:--";
     $id("sm-pause").hidden = true; $id("sm-suivante").hidden = true; $id("sm-stop").textContent = "← Retour";
   }

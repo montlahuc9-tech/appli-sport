@@ -103,7 +103,7 @@
 
   function entrer(nouveau) {
     if (!Compte.acces.ok) { dessinerAcces(); return aller("acces", null, true); }
-    Minuteur.init(); dessinerPlaylists(); Encouragements.charger(); SeanceMusique.brancher();
+    Minuteur.init(); dessinerPlaylists(); SeanceMusique.brancher();
     if (GPS.reprendre()) setTimeout(() => { aller("gps"); toast("Suivi GPS repris"); }, 300);
     aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
@@ -568,9 +568,11 @@
         <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div></div>
         ${h.length ? `<ul class="historique">${h.slice(0, 15).map(x => `<li><b>${esc(x.titre)}</b><span>${jour(x.date)}${x.duree ? " · " + fmt(x.duree) : ""}</span></li>`).join("")}</ul>` : '<p class="total">Vos séances terminées apparaîtront ici.</p>'}
       </section>
-      <section class="bloc" id="bloc-encouragements">
-        <h2>💬 Mes encouragements</h2>
-        <div id="enc-corps"><p class="total">Chargement…</p></div>
+      <section class="bloc" id="bloc-coach">
+        <h2>🎙️ La voix du coach</h2>
+        <p class="total">Pendant vos séances, le coach vous encourage : « Encore un petit effort ! », « Bien joué, souffle un peu »…</p>
+        <label class="case"><input type="checkbox" id="pr-coach" ${D().reglages.voixCoach === false ? "" : "checked"}> Entendre la voix du coach pendant les séances</label>
+        ${Coach.peutEnregistrer() ? `<details class="studio"><summary>🎚️ Studio : enregistrer la voix du coach (vous seul)</summary><div id="studio-corps"></div></details>` : ""}
       </section>
       <button class="principal" type="button" data-guide>📖 Guide de l'appli : comment s'en servir</button>
       <section class="bloc" id="bloc-installer">
@@ -597,7 +599,8 @@
     $("pr-prenom").addEventListener("change", () => { Compte.changerPrenom($("pr-prenom").value); toast("Prénom enregistré"); });
     deuxClics($("deconnexion"), "Sûr ? Touchez encore", async () => { await Compte.deconnecter(); modeAuth = Compte.enLigne ? "connexion" : "inscription"; majAuth(); aller("auth", null, true); });
     dessinerInstall(); $("profil-corps").querySelector("[data-guide]").onclick = () => aller("guide");
-    Encouragements.dessiner($("enc-corps"));
+    $("pr-coach").onchange = (ev) => { D().reglages.voixCoach = ev.target.checked; Compte.sauver(); };
+    if ($("studio-corps")) Coach.dessinerStudio($("studio-corps"));
     if (Compte.estAdmin) dessinerGestion();
     const lien = location.origin + location.pathname.replace(/index\.html$/, "");
     try { const q = qrcode(0, "M"); q.addData(lien); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch { $("qr").hidden = true; }

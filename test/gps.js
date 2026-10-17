@@ -54,7 +54,7 @@ window.GPS = (() => {
       if (k > suivi.kms.length) {                          // un kilomètre de plus !
         const t = tempsPasse(), avant = suivi.kms.reduce((a, x) => a + x, 0); suivi.kms.push(t - avant);
         dire(`${k} kilomètre${k > 1 ? "s" : ""}. Temps ${duree(t).replace(":", " minutes ")}. Allure moyenne ${allureParlee(allure(t, suivi.distance))} au kilomètre.`);
-        setTimeout(() => window.Encouragements && Encouragements.jouer(), 7000);
+        setTimeout(() => window.Coach && Coach.dire("km", { ecart: 0 }), 7000);
       }
     }
     suivi.points.push(p);

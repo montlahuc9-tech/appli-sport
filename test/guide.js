@@ -55,9 +55,9 @@ const GUIDE = [
   { titre: "15. La séance musique : 1 chanson = 1 exercice", img: "20-musique-seance", texte: [
     "Sur une séance, touchez « 🎵 Séance musique ». Choisissez vos chansons (celles de l'appli ou vos MP3) : chaque chanson porte un exercice.",
     "La musique devient le minuteur : l'appli écoute vos chansons à l'avance et cale les efforts quand la musique monte, les repos quand elle retombe, toujours en rythme. Nouvelle chanson = nouvel exercice. « ⏭ Chanson suivante » passe au suivant."] },
-  { titre: "16. Les encouragements de vos proches", img: "21-encouragements", texte: [
-    "Profil → « 💬 Mes encouragements » : faites enregistrer quelques mots à un proche (« Allez, plus que 10 secondes ! »), ou importez un message vocal reçu sur WhatsApp.",
-    "L'appli les joue pendant vos séances, au moment le plus dur : 8 secondes avant la fin d'un effort, et après chaque kilomètre en course. Ils restent sur votre téléphone."] },
+  { titre: "16. La voix du coach", img: null, texte: [
+    "Pendant vos séances, le coach vous encourage au bon moment : au départ, au milieu de l'effort, dans les 10 dernières secondes (« Encore un petit effort ! »), pendant le repos et à la fin.",
+    "Vous préférez le calme ? Profil → « La voix du coach » : décochez la case."] },
   { titre: "17. Spotify", img: "13-spotify", texte: [
     "Dans le Minuteur, les boutons verts ouvrent une playlist dans Spotify. Lancez la musique, revenez dans l'appli et touchez « Démarrer ».",
     "Pour ajouter votre playlist : dans Spotify, ⋮ → Partager → Copier le lien, puis collez-le dans « + Ajouter ou retirer une playlist »."] },
