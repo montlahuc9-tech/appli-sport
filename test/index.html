@@ -74,32 +74,34 @@
 <!-- ============ Séances (fiches) ============ -->
 <main id="v-seances" class="vue" hidden>
   <header class="entete">
-    <div><p class="doux bonjour" id="bonjour">Bonjour</p><h1>Mes <span>séances</span></h1></div>
+    <div><p class="doux bonjour" id="bonjour">Bonjour</p><h1 id="titre-seances">Rythmo <span>Sport</span></h1></div>
     <button class="mini" type="button" data-guide>📖 Comment ça marche ?</button>
   </header>
-  <div class="univers" role="group" aria-label="Activité">
-    <button type="button" data-univers="fitness" aria-pressed="true"><span aria-hidden="true">💪</span>Fitness</button>
-    <button type="button" data-univers="running" aria-pressed="false"><span aria-hidden="true">🏃</span>Running</button>
-    <button type="button" data-univers="marche" aria-pressed="false"><span aria-hidden="true">🚶</span>Marche sportive</button>
+  <!-- Accueil : 4 grosses tuiles -->
+  <div id="accueil" class="accueil">
+    <p class="question">Où faites-vous votre séance ?</p>
+    <div class="tuiles">
+      <button type="button" class="tuile maison" data-espace="maison"><span class="ico" aria-hidden="true">🏠</span><b>Maison</b><span>Sans matériel ou presque</span></button>
+      <button type="button" class="tuile salle" data-espace="salle"><span class="ico" aria-hidden="true">🏋️</span><b>Salle</b><span>Machines, barres, haltères</span></button>
+      <button type="button" class="tuile course" data-espace="running"><span class="ico" aria-hidden="true">🏃</span><b>Course</b><span>Fractionné, footing, GPS</span></button>
+      <button type="button" class="tuile marche" data-espace="marche"><span class="ico" aria-hidden="true">🚶</span><b>Marche</b><span>Marche active, GPS</span></button>
+    </div>
+    <div id="derniere"></div>
   </div>
-  <div class="lieux publics" role="group" aria-label="Séances pour">
-    <button type="button" data-public="homme" aria-pressed="true">Homme</button>
-    <button type="button" data-public="femme" aria-pressed="false">Femme</button>
+  <!-- Un espace : Maison, Salle, Course ou Marche -->
+  <div id="espace" hidden>
+    <button class="lien" type="button" id="espace-retour">← Accueil</button>
+    <div id="espace-materiel"></div>
+    <button class="principal pour-moi" type="button" id="pour-moi">▶ Une séance pour moi</button>
+    <section class="gps-bloc" id="bloc-gps" hidden></section>
+    <div id="zones" class="zones"></div>
+    <div id="groupes-fiches"></div>
+    <section class="bloc">
+      <h2>Mes séances</h2>
+      <div id="mes-seances" class="liste-fiches"></div>
+      <button class="ajout" type="button" id="creer-seance">+ Créer ma séance</button>
+    </section>
   </div>
-  <div class="lieux" role="group" aria-label="Lieu">
-    <button type="button" data-lieu="maison" aria-pressed="true"><span aria-hidden="true">🏠</span> Maison</button>
-    <button type="button" data-lieu="salle" aria-pressed="false"><span aria-hidden="true">🏋️</span> Salle</button>
-  </div>
-  <div class="puces materiel defilant" id="filtre-materiel" role="group" aria-label="Mon matériel"></div>
-  <div class="puces niveaux defilant" id="filtre-niveau" role="group" aria-label="Niveau"></div>
-  <section class="gps-bloc" id="bloc-gps" hidden></section>
-  <section class="echauffement" id="bloc-echauffement"></section>
-  <section class="bloc">
-    <h2>Mes séances</h2>
-    <div id="mes-seances" class="liste-fiches"></div>
-    <button class="ajout" type="button" id="creer-seance">+ Créer ma séance</button>
-  </section>
-  <div id="groupes-fiches"></div>
 </main>
 
 <!-- ============ Détail d'une fiche ============ -->

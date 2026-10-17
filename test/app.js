@@ -24,7 +24,7 @@
     if (vue === "mdp") return montrer("mdp");
     if (!Compte.utilisateur) vue = "auth";
     else if (!Compte.acces.ok) { dessinerAcces(); vue = "acces"; }
-    if (vue === "seances") dessinerSeances();
+    if (vue === "seances") dessinerSeances(param);
     if (vue === "fiche") { if (!trouverFiche(param)) vue = "seances", dessinerSeances(); else dessinerFiche(param); }
     if (vue === "edition") { if (!brouillon) { vue = "seances"; dessinerSeances(); } }
     if (vue === "exercices") dessinerBiblio();
@@ -159,41 +159,81 @@
   const carteFiche = (f) => { const ex = infoExo(f.exos[0] ? f.exos[0].nom : "", f.exos[0] && f.exos[0].muscle);
     return `<button class="fiche" type="button" data-ouvrir="${esc(f.id)}">${f.exos[0] ? vignette(ex) : svgSilhouette({ nom: "", p: [], s: [] })}
       <span><b>${esc(f.titre)}</b><span class="res">${badgeMateriel(f)}${f.niveau ? badgeNiveau(f.niveau) + " " : ""}${esc(resumeFiche(f))} · ${minutes(dureeFiche(f))}</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
-  function dessinerSeances() {
-    lieu = D().reglages.lieu || lieu;
+  // ---------- Accueil (4 tuiles) puis un espace : Maison, Salle, Course ou Marche ----------
+  const pubChoisi = () => D().reglages.public === "femme" ? "femme" : "homme";
+  const pourMoi = (f) => pubChoisi() === "femme" ? f.public === "femmes" : !f.public;
+  const NOM_ESPACE = { maison: "🏠 Maison", salle: "🏋️ Salle", running: "🏃 Course", marche: "🚶 Marche" };
+  const ficheEspace = (f, e) => !f.echauffement && (e === "running" || e === "marche" ? f.univers === e : !f.univers && f.lieu === e && pourMoi(f));
+  // le niveau choisi (Profil) : les séances de ce niveau d'abord
+  const triNiveau = (a, b) => { const n = niveauChoisi(); return n ? Math.abs(a.niveau - n) - Math.abs(b.niveau - n) : a.niveau - b.niveau; };
+  function dessinerSeances(param) {
     $("bonjour").textContent = `Bonjour ${Compte.utilisateur.prenom}`;
-    brancherLieux($("v-seances"), dessinerSeances);
-    // Fitness / Running / Marche sportive : trois espaces séparés
-    const univers = UNIVERS[D().reglages.univers] ? D().reglages.univers : "fitness";
-    $("v-seances").querySelectorAll("[data-univers]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.univers === univers));
-      b.onclick = () => { D().reglages.univers = b.dataset.univers; Compte.sauver(); dessinerSeances(); }; });
-    $("v-seances").querySelectorAll(".publics, .lieux:not(.publics)").forEach(z => z.hidden = univers !== "fitness");
-    dessinerFiltreNiveau(dessinerSeances); dessinerEchauffement(univers);
-    $("filtre-materiel").hidden = univers !== "fitness" || lieu !== "maison"; $("bloc-gps").hidden = univers === "fitness";
-    if (univers !== "fitness") return dessinerUnivers(univers);
-    const miennes = mesSeances().filter(f => f.lieu === lieu && !f.univers);
-    $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
-      || `<div class="total">Créez votre propre séance ${lieu === "salle" ? "de salle" : "à la maison"} : choisissez les exercices dans la liste, c'est tout.</div>`;
-    // Homme / Femme : chacun voit ses séances toutes prêtes (tous les exercices restent dans « Créer ma séance »)
-    const pub = D().reglages.public === "femme" ? "femme" : "homme";
-    $("v-seances").querySelectorAll("[data-public]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.public === pub));
-      b.onclick = () => { D().reglages.public = b.dataset.public; Compte.sauver(); dessinerSeances(); }; });
-    const pourMoi = (f) => pub === "femme" ? f.public === "femmes" : !f.public;
-    dessinerMateriel(dessinerSeances);
-    let cachees = 0;
-    $("groupes-fiches").innerHTML = Object.entries(GROUPES).map(([g, G]) => {
-      let fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && pourMoi(f) && bonNiveau(f));
-      const avant = fiches.length; fiches = fiches.filter(jaiLeMateriel); cachees += avant - fiches.length;
-      // sans matériel d'abord, puis avec accessoires
-      fiches.sort((a, b) => (materielFiche(a).length > 0) - (materielFiche(b).length > 0));
-      if (!fiches.length) return "";
-      return `<section class="groupe" aria-labelledby="g-${g}">
-        <div class="groupe-tete"><h2 id="g-${g}">${G.nom}</h2><span class="muscles-liste">${G.muscles.length > 1 ? G.muscles.map(m => MUSCLES[m]).join(" · ") : ""}</span></div>
+    const [e, zone] = (param || "").split(":");
+    if (!NOM_ESPACE[e]) return dessinerAccueil();
+    $("accueil").hidden = true; $("espace").hidden = false;
+    $("titre-seances").innerHTML = NOM_ESPACE[e].replace(/ (\S+)$/, " <span>$1</span>");
+    // garde les anciens réglages à jour (création de séance, exercices…)
+    if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e;
+    Compte.sauver();
+    $("espace-retour").onclick = () => aller("seances");
+    $("bloc-gps").hidden = e === "maison" || e === "salle";
+    $("espace-materiel").innerHTML = ""; $("zones").innerHTML = "";
+    $("pour-moi").onclick = () => seancePourMoi(e);
+    if (e === "running" || e === "marche") return dessinerUnivers(e);
+    // Maison : le matériel qu'on a chez soi
+    if (e === "maison") {
+      const m = monMateriel();
+      if (!m) setTimeout(() => demanderMateriel(() => dessinerSeances(param)), 250);
+      $("espace-materiel").innerHTML = `<button class="mon-materiel" type="button" id="changer-materiel"><span>Chez moi : <b>${m && m.length ? m.map(k => MATERIELS[k]).join(", ") : "aucun accessoire"}</b></span><span class="lien-txt">Modifier</span></button>`;
+      $("changer-materiel").onclick = () => demanderMateriel(() => dessinerSeances(param));
+    }
+    const toutes = FICHES.filter(f => ficheEspace(f, e) && jaiLeMateriel(f));
+    $("zones").innerHTML = `<p class="question">Que voulez-vous travailler ?</p><div class="tuiles petites">${Object.entries(ZONES).map(([z, Z]) => {
+      const n = toutes.filter(f => zoneDe(f) === z).length; if (!n) return "";
+      return `<button type="button" class="tuile zone" data-zone="${z}" aria-pressed="${z === zone}"><span class="ico" aria-hidden="true">${Z.ico}</span><b>${Z.nom}</b><span>${n} séance${n > 1 ? "s" : ""}</span></button>`; }).join("")}</div>`;
+    $("zones").querySelectorAll("[data-zone]").forEach(b => b.onclick = () => aller("seances", e + ":" + b.dataset.zone, true));
+    if (zone && ZONES[zone]) {
+      const fiches = toutes.filter(f => zoneDe(f) === zone).sort((a, b) => (materielFiche(a).length > 0) - (materielFiche(b).length > 0) || triNiveau(a, b));
+      $("groupes-fiches").innerHTML = `<section class="groupe" id="liste-zone"><div class="groupe-tete"><h2>${ZONES[zone].nom}</h2><span class="muscles-liste">${ZONES[zone].detail}</span></div>
         <div class="liste-fiches">${fiches.map(carteFiche).join("")}</div>
-        <button class="lien" type="button" data-voir-exos="${g}">Voir tous les exercices « ${G.nom.toLowerCase()} » ${lieu === "salle" ? "à la salle" : "à la maison"} →</button>
-      </section>`; }).join("") + (cachees ? `<p class="total">${cachees} séance${cachees > 1 ? "s" : ""} avec du matériel que vous n'avez pas ${cachees > 1 ? "sont cachées" : "est cachée"}. Touchez « Tout voir » pour les afficher.</p>` : "");
-    $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
-    $("v-seances").querySelectorAll("[data-voir-exos]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.voirExos, muscle: "tout" }; aller("exercices"); }));
+        ${zone !== "complet" ? `<button class="lien" type="button" data-voir-exos="${zone}">Voir tous les exercices « ${ZONES[zone].nom.toLowerCase()} » ${e === "salle" ? "à la salle" : "à la maison"} →</button>` : ""}</section>`;
+      setTimeout(() => $("liste-zone")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    } else $("groupes-fiches").innerHTML = "";
+    const miennes = mesSeances().filter(f => f.lieu === e && !f.univers);
+    $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
+      || `<div class="total">Créez votre propre séance ${e === "salle" ? "de salle" : "à la maison"} : choisissez les exercices dans la liste, c'est tout.</div>`;
+    $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
+    $("v-seances").querySelectorAll("[data-voir-exos]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.voirExos, muscle: "tout" }; D().reglages.lieuBiblio = e; aller("exercices"); }));
+  }
+  function dessinerAccueil() {
+    $("accueil").hidden = false; $("espace").hidden = true;
+    $("titre-seances").innerHTML = "Rythmo <span>Sport</span>";
+    $("accueil").querySelectorAll("[data-espace]").forEach(b => b.onclick = () => aller("seances", b.dataset.espace));
+    // reprendre la dernière séance faite
+    const h = (D().historique || []).find(x => x.id && trouverFiche(x.id) && !trouverFiche(x.id).echauffement);
+    $("derniere").innerHTML = h ? `<p class="question">Refaire votre dernière séance</p><div class="liste-fiches">${carteFiche(trouverFiche(h.id))}</div>` : "";
+    $("derniere").querySelectorAll("[data-ouvrir]").forEach(b => b.onclick = () => aller("fiche", b.dataset.ouvrir));
+  }
+  // « Qu'avez-vous chez vous ? » : demandé une fois, modifiable à tout moment
+  function demanderMateriel(apres) {
+    const m = new Set(monMateriel() || []);
+    ouvrirFeuille(`<div class="fiche-exo"><h2>🏠 Qu'avez-vous chez vous ?</h2>
+      <p class="total">Cochez ce que vous avez. Rien du tout ? Ne cochez rien : il y a plein de séances sans matériel. Un tapis (ou une serviette) et une chaise suffisent.</p>
+      <div class="choix-materiel">${Object.entries(MATERIELS).map(([k, t]) => `<label class="case grosse"><input type="checkbox" value="${k}" ${m.has(k) ? "checked" : ""}> ${t}</label>`).join("")}</div>
+      <button class="principal" type="button" data-mat-ok>Valider</button></div>`, (fe) => {
+      fe.querySelector("[data-mat-ok]").onclick = () => { D().reglages.materiel = [...fe.querySelectorAll(".choix-materiel input:checked")].map(i => i.value); Compte.sauver(); fermerFeuille(); apres && apres(); };
+    });
+  }
+  // « Une séance pour moi » : adaptée au public, au niveau et au matériel, en variant les zones
+  function seancePourMoi(e) {
+    let c = FICHES.filter(f => ficheEspace(f, e) && jaiLeMateriel(f) && f.cat !== "etirements" && f.cat !== "echauffement");
+    if (!c.length) return toast("Aucune séance trouvée");
+    const n = niveauChoisi(); if (n && c.some(f => f.niveau === n)) c = c.filter(f => f.niveau === n);
+    const recentes = (D().historique || []).slice(0, 4).map(h => h.id), zonesRecentes = recentes.map(id => trouverFiche(id)).filter(Boolean).map(zoneDe);
+    const neuves = c.filter(f => !recentes.includes(f.id) && !zonesRecentes.includes(zoneDe(f)));
+    const pool = neuves.length ? neuves : c.filter(f => !recentes.includes(f.id)).length ? c.filter(f => !recentes.includes(f.id)) : c;
+    const f = pool[Math.floor(Math.random() * pool.length)];
+    toast("Votre séance du jour : " + f.titre); aller("fiche", f.id);
   }
   function dessinerUnivers(u) {
     const U = UNIVERS[u];
@@ -202,9 +242,9 @@
       || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
     $("bloc-gps").innerHTML = `<button class="gps-lancer" type="button" data-gps>📍 <span><b>${GPS.actif() ? "Suivi GPS en cours : " + GPS.resumeTexte() : "Suivi GPS de mon parcours"}</b><span>Distance, temps, allure et tracé sur la carte</span></span><span class="fleche" aria-hidden="true">›</span></button>`;
     $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
-      const fiches = FICHES.filter(f => f.univers === u && f.cat === cat && bonNiveau(f)); if (!fiches.length) return "";
+      const fiches = FICHES.filter(f => f.univers === u && f.cat === cat).sort(triNiveau); if (!fiches.length) return "";
       return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(carteFiche).join("")}</div></section>`; }).join("");
-    $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
+    $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelector("[data-gps]").onclick = () => aller("gps", u);
   }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
@@ -287,15 +327,6 @@
         b.onclick = () => lancerFiche(suite, true); $("bilan").appendChild(document.createElement("br")); $("bilan").appendChild(b); }
     }
   });
-  function dessinerEchauffement(univers) {
-    const ids = univers === "running" ? ["r-echauffement"] : univers === "marche" ? ["e-general"] : ["e-general", "e-haut", "e-bas"];
-    $("bloc-echauffement").innerHTML = `<div class="ech-tete"><b>🔥 Échauffez-vous d'abord</b><span>5 minutes pour éviter les blessures</span></div>
-      <div class="ech-boutons">${ids.map(id => { const f = trouverFiche(id); return `<button type="button" data-ech="${id}">${esc(f.titre.replace(/ \(5 min\)/, "").replace("Échauffement ", "").replace(/^./, c => c.toUpperCase()))}</button>`; }).join("")}</div>`;
-    $("bloc-echauffement").insertAdjacentHTML("beforeend", `<label class="case"><input type="checkbox" id="ech-proposer" ${D().reglages.pasDEchauffement ? "" : "checked"}> Me proposer l'échauffement avant chaque séance</label>`);
-    $("ech-proposer").onchange = (ev) => { D().reglages.pasDEchauffement = !ev.target.checked; Compte.sauver(); toast(ev.target.checked ? "L'échauffement vous sera proposé" : "L'échauffement ne vous sera plus proposé"); };
-    $("bloc-echauffement").querySelectorAll("[data-ech]").forEach(b => b.onclick = () => aller("fiche", b.dataset.ech));
-  }
-
   // ---------- Progression : au bout de 3 séances réussies, on propose plus dur ----------
   const fois = (f) => (D().historique || []).filter(h => h.id === f.id && !/pas finie/.test(h.detail || "")).length;
   function versionPlusDure(f) {
@@ -435,7 +466,7 @@
       aller("fiche", id, true); toast("Séance enregistrée");
     });
     const suppr = R.querySelector("[data-supprimer]");
-    if (suppr) deuxClics(suppr, "Sûr ? Touchez encore pour supprimer", () => { D().seances = mesSeances().filter(x => x.id !== b.id); Compte.sauver(); brouillon = null; aller("seances", null, true); });
+    if (suppr) deuxClics(suppr, "Sûr ? Touchez encore pour supprimer", () => { D().seances = mesSeances().filter(x => x.id !== b.id); Compte.sauver(); brouillon = null; aller("seances", b.univers || b.lieu, true); });
   }
   // Choisir des exercices dans la bibliothèque : Maison / Salle, groupe, muscle, on coche
   function dessinerChoix() {
@@ -491,6 +522,16 @@
         <div class="profil-ligne"><span class="doux">E-mail</span><b>${esc(u.email)}</b></div>
         <p class="total">${Compte.enLigne ? "Vos séances sont sauvegardées en ligne : connectez-vous avec cet e-mail sur un autre téléphone pour les retrouver." : "Version de test : vos séances sont gardées sur ce téléphone."}</p>
       </section>
+      <section class="bloc reglages-profil">
+        <h2>Mes réglages</h2>
+        <p class="etiq">Les séances proposées sont pour</p>
+        <div class="puces" id="pr-public">${[["homme", "Un homme"], ["femme", "Une femme"]].map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${pubChoisi() === k}">${t}</button>`).join("")}</div>
+        <p class="etiq">Mon niveau</p>
+        <div class="puces" id="pr-niveau">${[[0, "Je ne sais pas"], [1, NIVEAUX[1]], [2, NIVEAUX[2]], [3, NIVEAUX[3]]].map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${niveauChoisi() === k}">${t}</button>`).join("")}</div>
+        <p class="etiq">Mon matériel à la maison</p>
+        <button class="mon-materiel" type="button" id="pr-materiel"><span><b>${(monMateriel() || []).map(k => MATERIELS[k]).join(", ") || "Aucun accessoire"}</b></span><span class="lien-txt">Modifier</span></button>
+        <label class="case"><input type="checkbox" id="pr-ech" ${D().reglages.pasDEchauffement ? "" : "checked"}> Me proposer l'échauffement avant chaque séance</label>
+      </section>
       <section class="bloc">
         <h2>Mes séances faites</h2>
         <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div></div>
@@ -513,7 +554,11 @@
       </section>
       ${Compte.estAdmin ? `<section class="bloc" id="gestion"><h2>Gestion (vous seul)</h2><div id="gestion-corps" class="pile"><p class="total">Chargement…</p></div></section>` : ""}
       <button class="lien danger" type="button" id="deconnexion">Se déconnecter</button>
-      <p class="total">Photos des exercices : Free Exercise DB (domaine public).</p>`;
+      <p class="total">Photos des exercices : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
+    $("pr-public").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { D().reglages.public = b.dataset.v; Compte.sauver(); dessinerProfil(); toast("Enregistré"); });
+    $("pr-niveau").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { D().reglages.niveau = +b.dataset.v; Compte.sauver(); dessinerProfil(); toast("Enregistré"); });
+    $("pr-materiel").onclick = () => demanderMateriel(dessinerProfil);
+    $("pr-ech").onchange = (ev) => { D().reglages.pasDEchauffement = !ev.target.checked; Compte.sauver(); toast(ev.target.checked ? "L'échauffement vous sera proposé" : "L'échauffement ne vous sera plus proposé"); };
     $("pr-prenom").addEventListener("change", () => { Compte.changerPrenom($("pr-prenom").value); toast("Prénom enregistré"); });
     deuxClics($("deconnexion"), "Sûr ? Touchez encore", async () => { await Compte.deconnecter(); modeAuth = Compte.enLigne ? "connexion" : "inscription"; majAuth(); aller("auth", null, true); });
     dessinerInstall(); $("profil-corps").querySelector("[data-guide]").onclick = () => aller("guide");

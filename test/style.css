@@ -456,3 +456,34 @@ button.lien.danger { color: #ff7a66; }
 
 button.secondaire { width: 100%; background: none; border: 1px solid var(--trait); color: var(--texte); border-radius: 14px; padding: 13px; font: 700 15px var(--f-texte); cursor: pointer; margin: 8px 0; }
 #passer-ech { margin: 0 0 10px; }
+/* Corps musclé (face / dos) */
+.corps-muscles svg polygon { stroke: var(--sol); stroke-width: .9; stroke-linejoin: round; }
+.corps-muscles svg .neutre { fill: #2c323b; }
+.corps-muscles svg { width: 150px; }
+.fiche-exo .corps-muscles svg { width: 240px; }
+@media (max-width: 420px) { .corps-muscles svg { width: 130px; } }
+.corps-muscles svg .z:not(.on):not(.sec) { fill: #4a5260; }
+
+/* ===== Accueil et espaces (réorganisation) ===== */
+.question { font: 700 15px var(--f-texte); color: var(--doux); margin: 18px 0 10px; }
+.tuiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tuile { display: grid; justify-items: start; align-content: end; gap: 3px; min-height: 132px; padding: 16px; text-align: left; border-radius: 20px; border: 1px solid var(--trait); background: var(--carte, #171a1f); color: var(--texte); cursor: pointer; font: 500 13px var(--f-texte); position: relative; overflow: hidden; }
+.tuile .ico { font-size: 34px; line-height: 1; margin-bottom: auto; }
+.tuile b { font: 800 22px var(--f-titre, var(--f-texte)); letter-spacing: .02em; text-transform: uppercase; }
+.tuile > span:last-child { color: var(--doux); }
+.tuile.maison { background: linear-gradient(150deg, #10352f, #121a19); border-color: #1f6b5c; }
+.tuile.salle { background: linear-gradient(150deg, #3d1810, #1a1312); border-color: #7a2c1c; }
+.tuile.course { background: linear-gradient(150deg, #3a2c0c, #1a1710); border-color: #7a5c14; }
+.tuile.marche { background: linear-gradient(150deg, #1b2a45, #12161e); border-color: #2c4a7a; }
+.tuile:active { transform: scale(.98); }
+.tuiles.petites .tuile { min-height: 104px; padding: 13px; border-radius: 16px; }
+.tuiles.petites .tuile .ico { font-size: 26px; }
+.tuiles.petites .tuile b { font-size: 16px; text-transform: none; letter-spacing: 0; }
+.tuile.zone[aria-pressed="true"] { border-color: var(--travail); box-shadow: 0 0 0 2px var(--travail) inset; }
+.pour-moi { margin: 12px 0 4px; }
+.mon-materiel { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #10352f; border: 1px solid #1f6b5c; color: var(--texte); border-radius: 14px; padding: 12px 14px; font: 500 14px var(--f-texte); cursor: pointer; text-align: left; margin-top: 6px; }
+.mon-materiel .lien-txt { color: #6fe3c8; font-weight: 700; white-space: nowrap; }
+.choix-materiel { display: grid; gap: 4px; margin: 6px 0 14px; }
+label.case.grosse { font-size: 16px; color: var(--texte); padding: 10px 12px; border: 1px solid var(--trait); border-radius: 12px; margin: 0; }
+.reglages-profil .etiq { margin: 14px 0 6px; color: var(--doux); font-size: 13px; }
+#espace-retour { margin-bottom: 4px; }

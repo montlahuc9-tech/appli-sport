@@ -314,3 +314,17 @@ const echauffementPour = (f) => f.univers === "running" ? "r-echauffement"
 // ---------------- MATÉRIEL : ce qu'il faut pour chaque séance maison (chaise, canapé, mur, tapis ne comptent pas) ----------------
 const MATERIELS = { elastique: "Élastique", lests: "Lests de chevilles", halteres: "Haltères", barre: "Barre de porte", corde: "Corde à sauter" };
 const materielFiche = (f) => [...new Set((f.exos || []).map(e => { const x = EXERCICES.find(y => y.nom === e.nom); return x && x.mat; }).filter(Boolean))];
+
+// ---------------- ZONES : les grosses tuiles dans Maison et Salle ----------------
+const ZONES = {
+  haut:    { nom: "Haut du corps",      ico: "💪", detail: "Pectoraux, épaules, dos" },
+  bras:    { nom: "Bras",               ico: "🦾", detail: "Biceps, triceps, avant-bras" },
+  bas:     { nom: "Jambes et fessiers", ico: "🦵", detail: "Cuisses, fessiers, mollets" },
+  abdos:   { nom: "Ventre et dos",      ico: "🧘", detail: "Abdos, gainage, lombaires" },
+  cardio:  { nom: "Cardio",             ico: "❤️", detail: "Transpirer, brûler des calories" },
+  complet: { nom: "Corps entier",       ico: "⭐", detail: "Tout le corps en une séance" }
+};
+["m-full-0", "m-full-h", "f-m-full-0", "f-m-debutante"].forEach(id => { const f = FICHES.find(x => x.id === id); if (f) f.zone = "complet"; });
+FICHES.forEach(f => { if (!f.zone && f.groupe) f.zone = f.groupe; });
+const zoneDe = (f) => f.zone || f.groupe || "complet";
+MATERIELS.halteres = "Haltères ou bouteilles d'eau";
