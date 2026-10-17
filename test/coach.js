@@ -31,7 +31,7 @@ window.Coach = (() => {
 
   // ---------- Lecture ----------
   // Priorité : les enregistrements du studio (Alex entend sa voix tout de suite), sinon ceux intégrés à l'appli
-  const publies = () => (window.VOIX && VOIX.coach) || {};
+  const publies = () => (typeof VOIX !== "undefined" && VOIX.coach) || {};
   const dispo = (moment) => {
     const loc = PHRASES.filter(p => p.moment === moment && studio[p.id]).map(p => studio[p.id].url);
     return loc.length ? loc : (publies()[moment] || []).map(f => "voix/coach/" + f + ".mp3");
