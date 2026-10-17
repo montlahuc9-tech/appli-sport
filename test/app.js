@@ -1,7 +1,7 @@
 // L'appli : inscription, séances (maison / salle, par groupe), détail d'une fiche, création de séance, bibliothèque, profil.
 (() => {
-  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil"];
-  const ONGLET = { guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
+  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps"];
+  const ONGLET = { gps: "seances", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
   let lieu = "maison";
   let biblio = { groupe: "tout", muscle: "tout" };
   const D = () => Compte.donnees;
@@ -31,6 +31,7 @@
     if (vue === "profil") dessinerProfil();
     if (vue === "guide") dessinerGuide();
     montrer(vue);
+    if (vue === "gps") GPS.afficher(param);
   }
   window.addEventListener("popstate", (e) => { fermerFeuille(); afficher(e.state || { vue: "seances" }); });
   document.querySelectorAll("#barre button").forEach(b => b.addEventListener("click", () => aller(b.dataset.vue)));
@@ -102,6 +103,7 @@
   function entrer(nouveau) {
     if (!Compte.acces.ok) { dessinerAcces(); return aller("acces", null, true); }
     Minuteur.init(); dessinerPlaylists();
+    if (GPS.reprendre()) setTimeout(() => { aller("gps"); toast("Suivi GPS repris"); }, 300);
     aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
   }
@@ -139,9 +141,24 @@
     z.querySelectorAll("[data-niveau]").forEach(b => b.onclick = () => { D().reglages.niveau = +b.dataset.niveau; Compte.sauver(); apres(); });
   }
   const minutes = (s) => `≈ ${Math.max(1, Math.round(s / 60))} min`;
+  // « Mon matériel » : undefined = tout voir ; sinon la liste de ce que la personne possède
+  const monMateriel = () => Array.isArray(D().reglages.materiel) ? D().reglages.materiel : null;
+  const jaiLeMateriel = (f) => { const m = monMateriel(); return !m || f.lieu !== "maison" || materielFiche(f).every(k => m.includes(k)); };
+  const badgeMateriel = (f) => { if (f.lieu !== "maison" || f.univers || f.perso) return ""; const m = materielFiche(f);
+    return m.length ? `<span class="badge mat">${m.map(k => MATERIELS[k]).join(" + ")}</span>` : `<span class="badge mat sans">Sans matériel</span>`; };
+  function dessinerMateriel(apres) {
+    const z = $("filtre-materiel"); if (!z) return;
+    const m = monMateriel();
+    z.innerHTML = `<span class="etiquette">Mon matériel :</span>` + [["tout", "Tout voir"], ["rien", "Rien"], ...Object.entries(MATERIELS)].map(([k, t]) =>
+      `<button type="button" data-mat="${k}" aria-pressed="${k === "tout" ? !m : k === "rien" ? !!m && !m.length : !!m && m.includes(k)}">${t}</button>`).join("");
+    z.querySelectorAll("[data-mat]").forEach(b => b.onclick = () => { const k = b.dataset.mat, r = D().reglages;
+      if (k === "tout") delete r.materiel; else if (k === "rien") r.materiel = [];
+      else { const l = new Set(monMateriel() || []); l.has(k) ? l.delete(k) : l.add(k); r.materiel = [...l]; }
+      Compte.sauver(); apres(); });
+  }
   const carteFiche = (f) => { const ex = infoExo(f.exos[0] ? f.exos[0].nom : "", f.exos[0] && f.exos[0].muscle);
     return `<button class="fiche" type="button" data-ouvrir="${esc(f.id)}">${f.exos[0] ? vignette(ex) : svgSilhouette({ nom: "", p: [], s: [] })}
-      <span><b>${esc(f.titre)}</b><span class="res">${f.niveau ? badgeNiveau(f.niveau) + " " : ""}${esc(resumeFiche(f))} · ${minutes(dureeFiche(f))}</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
+      <span><b>${esc(f.titre)}</b><span class="res">${badgeMateriel(f)}${f.niveau ? badgeNiveau(f.niveau) + " " : ""}${esc(resumeFiche(f))} · ${minutes(dureeFiche(f))}</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
   function dessinerSeances() {
     lieu = D().reglages.lieu || lieu;
     $("bonjour").textContent = `Bonjour ${Compte.utilisateur.prenom}`;
@@ -152,6 +169,7 @@
       b.onclick = () => { D().reglages.univers = b.dataset.univers; Compte.sauver(); dessinerSeances(); }; });
     $("v-seances").querySelectorAll(".publics, .lieux:not(.publics)").forEach(z => z.hidden = univers !== "fitness");
     dessinerFiltreNiveau(dessinerSeances); dessinerEchauffement(univers);
+    $("filtre-materiel").hidden = univers !== "fitness" || lieu !== "maison"; $("bloc-gps").hidden = univers === "fitness";
     if (univers !== "fitness") return dessinerUnivers(univers);
     const miennes = mesSeances().filter(f => f.lieu === lieu && !f.univers);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
@@ -161,14 +179,19 @@
     $("v-seances").querySelectorAll("[data-public]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.public === pub));
       b.onclick = () => { D().reglages.public = b.dataset.public; Compte.sauver(); dessinerSeances(); }; });
     const pourMoi = (f) => pub === "femme" ? f.public === "femmes" : !f.public;
+    dessinerMateriel(dessinerSeances);
+    let cachees = 0;
     $("groupes-fiches").innerHTML = Object.entries(GROUPES).map(([g, G]) => {
-      const fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && pourMoi(f) && bonNiveau(f));
+      let fiches = FICHES.filter(f => f.lieu === lieu && f.groupe === g && pourMoi(f) && bonNiveau(f));
+      const avant = fiches.length; fiches = fiches.filter(jaiLeMateriel); cachees += avant - fiches.length;
+      // sans matériel d'abord, puis avec accessoires
+      fiches.sort((a, b) => (materielFiche(a).length > 0) - (materielFiche(b).length > 0));
       if (!fiches.length) return "";
       return `<section class="groupe" aria-labelledby="g-${g}">
         <div class="groupe-tete"><h2 id="g-${g}">${G.nom}</h2><span class="muscles-liste">${G.muscles.length > 1 ? G.muscles.map(m => MUSCLES[m]).join(" · ") : ""}</span></div>
         <div class="liste-fiches">${fiches.map(carteFiche).join("")}</div>
         <button class="lien" type="button" data-voir-exos="${g}">Voir tous les exercices « ${G.nom.toLowerCase()} » ${lieu === "salle" ? "à la salle" : "à la maison"} →</button>
-      </section>`; }).join("");
+      </section>`; }).join("") + (cachees ? `<p class="total">${cachees} séance${cachees > 1 ? "s" : ""} avec du matériel que vous n'avez pas ${cachees > 1 ? "sont cachées" : "est cachée"}. Touchez « Tout voir » pour les afficher.</p>` : "");
     $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelectorAll("[data-voir-exos]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.voirExos, muscle: "tout" }; aller("exercices"); }));
   }
@@ -177,10 +200,12 @@
     const miennes = mesSeances().filter(f => f.univers === u);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
+    $("bloc-gps").innerHTML = `<button class="gps-lancer" type="button" data-gps>📍 <span><b>${GPS.actif() ? "Suivi GPS en cours : " + GPS.resumeTexte() : "Suivi GPS de mon parcours"}</b><span>Distance, temps, allure et tracé sur la carte</span></span><span class="fleche" aria-hidden="true">›</span></button>`;
     $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
       const fiches = FICHES.filter(f => f.univers === u && f.cat === cat && bonNiveau(f)); if (!fiches.length) return "";
       return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(carteFiche).join("")}</div></section>`; }).join("");
     $("v-seances").querySelectorAll("[data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
+    $("v-seances").querySelector("[data-gps]").onclick = () => aller("gps", u);
   }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
 
@@ -191,6 +216,7 @@
         <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>
         ${f.note ? `<p class="doux">${esc(f.note)}</p>` : ""}
+        ${f.lieu === "maison" && !f.univers ? `<p class="total">Matériel : <b>${materielFiche(f).map(k => MATERIELS[k]).join(", ") || "aucun"}</b></p>` : ""}
         <p class="total">${f.type === "circuit" && dureesDifferentes(f) ? `<b>${f.tours}</b> fois : ${f.exos.map(e => `${esc(e.nom)} <b>${dureeTexte(+e.duree || f.travail)}</b>`).join(" → ")}` : f.type === "circuit" ? `<b>${f.travail} s</b> d'effort · <b>${f.repos} s</b> de repos · <b>${f.tours}</b> rounds` : `<b>${f.exos.reduce((a, e) => a + (+e.series || 0), 0)}</b> séries au total`} · <b>${minutes(dureeFiche(f))}</b></p>
       </div>
       ${blocProgression(f)}
@@ -221,28 +247,42 @@
   const dejaEchauffe = () => Date.now() - (D().dernierEchauffement || 0) < 45 * 60 * 1000;
   function chargerDansMinuteur(f) {
     if (f.type === "circuit") Minuteur.chargerCircuit(f); else Minuteur.chargerSeries(f);
+    majPasserEch(f);
     aller("minuteur"); toast(f.type === "circuit" ? "Prêt : appuyez sur Démarrer" : "Faites votre série, puis touchez son numéro");
   }
   function lancerFiche(f, passer) {
     if (Minuteur.occupe()) { toast("Une séance tourne déjà : remettez le minuteur à zéro d'abord."); return aller("minuteur"); }
-    if (passer || sansEchauffement(f) || dejaEchauffe()) { seanceApres = null; return chargerDansMinuteur(f); }
+    if (passer || sansEchauffement(f) || dejaEchauffe() || D().reglages.pasDEchauffement) { seanceApres = null; return chargerDansMinuteur(f); }
     const e = trouverFiche(echauffementPour(f));
     ouvrirFeuille(`<div class="fiche-exo"><h2>🔥 Échauffement d'abord ?</h2>
       <p>Pour éviter les blessures, faites <b>5 minutes d'échauffement</b> avant « ${esc(f.titre)} ». Muscles et articulations chauds = moins de risques et de meilleures performances.</p>
       <button class="principal" type="button" data-ech-oui>🔥 Oui : ${esc(e.titre)}</button>
       <p class="total">Ensuite, votre séance se lance en un seul appui.</p>
-      <button class="lien" type="button" data-ech-non>Je suis déjà échauffé(e), lancer la séance</button></div>`, (fe) => {
+      <button class="secondaire passer-ech" type="button" data-ech-non>⏭ Passer l'échauffement</button>
+      <p class="total">Vous êtes déjà échauffé(e) : l'appli ne vous le redemande pas pendant 45 minutes.</p>
+      <label class="case"><input type="checkbox" data-ech-jamais> Ne plus me proposer l'échauffement</label></div>`, (fe) => {
+      fe.querySelector("[data-ech-jamais]").onchange = (ev) => { D().reglages.pasDEchauffement = ev.target.checked; Compte.sauver(); };
       fe.querySelector("[data-ech-oui]").onclick = () => { fermerFeuille(); seanceApres = f.id; chargerDansMinuteur(e); toast("Échauffement prêt : appuyez sur Démarrer"); };
       // « Déjà échauffé(e) » : on le note, l'appli ne redemande plus pendant 45 minutes
       fe.querySelector("[data-ech-non]").onclick = () => { fermerFeuille(); seanceApres = null; D().dernierEchauffement = Date.now(); Compte.sauver(); chargerDansMinuteur(f); };
     });
   }
+  // Pendant l'échauffement : bouton pour le sauter et passer directement à la séance
+  function majPasserEch(f) {
+    const b = $("passer-ech"), suite = seanceApres && trouverFiche(seanceApres);
+    b.hidden = !(f.echauffement && suite);
+    if (suite) b.textContent = "⏭ Passer l'échauffement → " + suite.titre;
+  }
+  $("passer-ech").addEventListener("click", () => {
+    const suite = seanceApres && trouverFiche(seanceApres); if (!suite) return;
+    seanceApres = null; $("stop").click(); D().dernierEchauffement = Date.now(); Compte.sauver(); lancerFiche(suite, true);
+  });
   // Fin d'une séance : après l'échauffement, on propose de passer à la vraie séance
   Minuteur.surFin((id) => {
     const f = trouverFiche(id); if (!f) return;
     if (f.echauffement || f.cat === "echauffement") {
       D().dernierEchauffement = Date.now(); Compte.sauver();
-      const suite = seanceApres && trouverFiche(seanceApres); seanceApres = null;
+      const suite = seanceApres && trouverFiche(seanceApres); seanceApres = null; $("passer-ech").hidden = true;
       if (suite) { const b = document.createElement("button"); b.className = "principal"; b.type = "button"; b.textContent = "▶ Passer à ma séance : " + suite.titre;
         b.onclick = () => lancerFiche(suite, true); $("bilan").appendChild(document.createElement("br")); $("bilan").appendChild(b); }
     }
@@ -251,6 +291,8 @@
     const ids = univers === "running" ? ["r-echauffement"] : univers === "marche" ? ["e-general"] : ["e-general", "e-haut", "e-bas"];
     $("bloc-echauffement").innerHTML = `<div class="ech-tete"><b>🔥 Échauffez-vous d'abord</b><span>5 minutes pour éviter les blessures</span></div>
       <div class="ech-boutons">${ids.map(id => { const f = trouverFiche(id); return `<button type="button" data-ech="${id}">${esc(f.titre.replace(/ \(5 min\)/, "").replace("Échauffement ", "").replace(/^./, c => c.toUpperCase()))}</button>`; }).join("")}</div>`;
+    $("bloc-echauffement").insertAdjacentHTML("beforeend", `<label class="case"><input type="checkbox" id="ech-proposer" ${D().reglages.pasDEchauffement ? "" : "checked"}> Me proposer l'échauffement avant chaque séance</label>`);
+    $("ech-proposer").onchange = (ev) => { D().reglages.pasDEchauffement = !ev.target.checked; Compte.sauver(); toast(ev.target.checked ? "L'échauffement vous sera proposé" : "L'échauffement ne vous sera plus proposé"); };
     $("bloc-echauffement").querySelectorAll("[data-ech]").forEach(b => b.onclick = () => aller("fiche", b.dataset.ech));
   }
 
@@ -289,7 +331,9 @@
     ouvrirFeuille(`<div class="fiche-exo">
       <div class="infos-fiche">${ex.libre ? "" : `<span class="badge ${ex.lieu}">${NOM_LIEU[ex.lieu] || "Maison"}</span>`}<span class="badge type">${GROUPES[groupeDuMuscle(ex.muscle)].nom}</span></div>
       <h2>${esc(ex.nom)}</h2>
-      ${photosGrandes(ex)}
+      ${animMouvement(ex)}
+      ${ex.photo ? `<details class="deux-photos"><summary>Voir les 2 photos (départ / arrivée)</summary>${photosGrandes(ex)}</details>` : ""}
+      <a class="secondaire video" href="${lienVideo(ex)}" target="_blank" rel="noopener">▶ Voir une vidéo du mouvement (YouTube)</a>
       <div class="corps-muscles">${CORPS_SVG}</div>
       <p class="total">Muscles : <b>${esc(nomMuscles(ex))}</b>${ex.materiel ? ` · Matériel : <b>${esc(ex.materiel)}</b>` : ""}${ex.libre ? "" : ` · Conseil : <b>${ex.series} × ${esc(ex.reps)}</b>, repos ${dureeTexte(ex.repos)}`}</p>
     </div>`, (fe) => { colorerCorps(fe, ex); brancherZoom(fe, ex); });
@@ -581,25 +625,68 @@
     if (oui) { aller("minuteur"); try { document.documentElement.requestFullscreen?.().then(() => screen.orientation?.lock?.("landscape").catch(() => {})).catch(() => {}); } catch {} }
     else { try { if (document.fullscreenElement) document.exitFullscreen(); screen.orientation?.unlock?.(); } catch {} }
   }
-  $("mode-tv").addEventListener("click", () => modeTele(true));
   $("sortir-tv").addEventListener("click", () => modeTele(false));
   document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("tv")) modeTele(false); });
-  $("aide-tv").addEventListener("click", () => ouvrirFeuille(`<div class="fiche-exo"><h2>📺 Afficher sur la télé</h2>
-    <p>Votre téléphone peut copier son écran sur la télé, sans câble. Il faut une <b>télé connectée</b> (Samsung, LG, Android TV…) ou une clé <b>Chromecast</b>, sur le même Wi-Fi que le téléphone.</p>
-    <ol class="etapes-install">
-      <li>Sur le téléphone, faites glisser le haut de l'écran vers le bas (les réglages rapides).</li>
-      <li>Touchez <b>« Caster l'écran »</b>, <b>« Smart View »</b>, <b>« Projection »</b> ou <b>« Diffusion »</b> selon votre téléphone. Sur iPhone : <b>« Recopie de l'écran »</b> (télé compatible AirPlay).</li>
-      <li>Choisissez votre télé.</li>
-      <li>Revenez dans l'appli, touchez <b>📺 Mode télé</b> et tournez le téléphone : le minuteur s'affiche en grand.</li>
-    </ol>
-    <p class="total">Le son (voix, sifflet, musique) passe aussi par la télé.</p></div>`));
+
+  // ---------- Envoyer sur la télé : un seul bouton, l'appli choisit la façon la plus simple ----------
+  // 1) Chromecast / Google TV : la télé affiche le minuteur en grand, le téléphone reste la télécommande.
+  // 2) Sinon : recopie de l'écran, avec le nom exact du bouton selon la marque du téléphone.
+  let tele = null, envoiTele = null;
+  const ua = navigator.userAgent;
+  const marque = /iPhone|iPad/.test(ua) ? "iphone" : /SM-|Samsung/i.test(ua) ? "samsung" : /Xiaomi|Redmi|POCO|\bMi /i.test(ua) ? "xiaomi" : /Pixel/.test(ua) ? "pixel" : /HUAWEI|Honor/i.test(ua) ? "huawei" : /OnePlus|OPPO|realme/i.test(ua) ? "oppo" : "android";
+  const BOUTON_RECOPIE = { iphone: "Recopie de l'écran", samsung: "Smart View", xiaomi: "Caster", pixel: "Caster l'écran", huawei: "Projection sans fil", oppo: "Caster l'écran", android: "Caster l'écran (ou « Smart View », « Projection »)" };
+  function etatMinuteur() {
+    const imgs = [...$("pose-exo").querySelectorAll("img")].map(i => new URL(i.getAttribute("src"), location.href).href);
+    const arc = $("arc"), tot = parseFloat(arc.style.strokeDasharray) || 0, off = parseFloat(arc.style.strokeDashoffset) || 0;
+    return { round: $("round").hidden ? "" : $("round").textContent, phase: $("phase").textContent, temps: $("temps").textContent, info: $("info").textContent,
+      nom: $("nom-exo").textContent === "—" ? "" : $("nom-exo").textContent, suivant: $("suivant").textContent, photos: imgs.slice(0, 2),
+      couleur: getComputedStyle(arc).stroke, progres: tot ? Math.max(0, Math.min(1, 1 - off / tot)) : 0 };
+  }
+  function brancherTele(c) {
+    tele = c; majBoutonTele(); try { sessionStorage.setItem("tv-id", c.id); } catch {}
+    const envoyer = () => { try { if (tele && tele.state === "connected") tele.send(JSON.stringify(etatMinuteur())); } catch {} };
+    c.onconnect = () => { envoyer(); toast("✓ Connecté à la télé"); majBoutonTele(); };
+    c.onclose = c.onterminate = () => { tele = null; clearInterval(envoiTele); majBoutonTele(); };
+    clearInterval(envoiTele); envoiTele = setInterval(envoyer, 250); envoyer();
+  }
+  function majBoutonTele() { $("mode-tv").textContent = tele ? "📺 Sur la télé ✓ (toucher pour arrêter)" : "📺 Afficher sur la télé"; }
+  async function envoyerDirect() {
+    try { const r = new PresentationRequest([new URL("tv.html", location.href).href]); brancherTele(await r.start()); aller("minuteur"); }
+    catch (e) { if (e && e.name !== "NotAllowedError" && e.name !== "AbortError") toast("Aucune télé trouvée : utilisez « Copier l'écran »"); }
+  }
+  function ouvrirTele() {
+    if (tele) { try { tele.terminate(); } catch {} tele = null; majBoutonTele(); return toast("Télé déconnectée"); }
+    const direct = "PresentationRequest" in window && marque !== "iphone";
+    ouvrirFeuille(`<div class="fiche-exo"><h2>📺 Afficher sur la télé</h2>
+      <p class="total">La télé et le téléphone doivent être sur le <b>même Wi-Fi</b>.</p>
+      ${direct ? `<button class="principal" type="button" data-tv="direct">📡 Chromecast / Google TV : envoyer en 1 appui</button>
+      <p class="total">Le minuteur s'affiche en grand sur la télé, le téléphone reste dans votre main.</p>` : ""}
+      <button class="${direct ? "secondaire" : "principal"}" type="button" data-tv="copie">📱→📺 Copier l'écran du téléphone</button>
+      <div class="etape-tv" id="etape-copie" hidden>
+        <p><b>1.</b> ${marque === "iphone" ? "Faites glisser depuis le coin en haut à droite de l'écran." : "Faites glisser le haut de l'écran vers le bas, <b>2 fois</b>."}</p>
+        <p><b>2.</b> Touchez <b>« ${BOUTON_RECOPIE[marque]} »</b>${marque === "iphone" ? " (télé compatible AirPlay)" : ""}.</p>
+        <p><b>3.</b> Choisissez votre télé, puis revenez ici.</p>
+        <button class="principal" type="button" data-tv="grand">✓ C'est fait : minuteur en grand</button>
+      </div>
+      <button class="lien" type="button" data-tv="grand">Juste afficher en grand sur cet écran (tablette)</button></div>`, (fe) => {
+      fe.querySelectorAll("[data-tv]").forEach(b => b.onclick = () => {
+        const t = b.dataset.tv;
+        if (t === "direct") { fermerFeuille(); envoyerDirect(); }
+        else if (t === "copie") { fe.querySelector("#etape-copie").hidden = false; b.hidden = true; }
+        else { fermerFeuille(); modeTele(true); }
+      });
+    });
+  }
+  $("mode-tv").addEventListener("click", ouvrirTele);
+  // Si l'appli a été rechargée alors qu'une télé était connectée, on se reconnecte
+  try { const id = sessionStorage.getItem("tv-id"); if (id && "PresentationRequest" in window) new PresentationRequest([new URL("tv.html", location.href).href]).reconnect(id).then(brancherTele).catch(() => {}); } catch {}
 
   // ---------- Mise à jour automatique ----------
   // Quand une nouvelle version est en ligne, l'appli se recharge toute seule, au bon moment :
   // jamais pendant une séance, ni pendant qu'on crée une séance. Les données sont déjà sauvegardées.
   let majPrete = false;
   const vueActuelle = () => VUES.find(v => !$("v-" + v).hidden);
-  const peutRecharger = () => !Minuteur.occupe() && vueActuelle() !== "edition" && $("feuille").hidden && document.activeElement?.tagName !== "INPUT";
+  const peutRecharger = () => !Minuteur.occupe() && !GPS.actif() && vueActuelle() !== "edition" && $("feuille").hidden && document.activeElement?.tagName !== "INPUT";
   function appliquerMaj() {
     if (!majPrete || !peutRecharger()) return;
     try { sessionStorage.setItem("ms-maj", "1"); } catch {}

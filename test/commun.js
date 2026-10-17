@@ -63,6 +63,13 @@ function photosGrandes(ex) {
   return `<div class="photos" data-zoom="${esc(ex.nom)}">` + [0, 1].map(i =>
     `<figure><img src="${urlPhoto(ex.photo, i)}" alt="${esc(ex.nom)} : ${i ? "arrivée" : "départ"}"><figcaption>${i ? "2 · Arrivée" : "1 · Départ"}</figcaption></figure>`).join("") + `</div>`;
 }
+// Le mouvement animé : la photo de départ et celle d'arrivée se fondent l'une dans l'autre, en boucle
+function animMouvement(ex) {
+  if (!ex.photo) return svgSilhouette(ex, "grande");
+  return `<div class="anim" data-zoom="${esc(ex.nom)}" role="img" aria-label="${esc(ex.nom)} : le mouvement">
+    <img src="${urlPhoto(ex.photo, 0)}" alt=""><img class="b" src="${urlPhoto(ex.photo, 1)}" alt=""><span class="etiq">▶ Mouvement</span></div>`;
+}
+const lienVideo = (ex) => `https://www.youtube.com/results?search_query=${encodeURIComponent(ex.nom.replace(/\(.*?\)/g, "") + " exercice bien faire le mouvement")}`;
 function brancherZoom(racine, ex) {
   const z = racine.querySelector("[data-zoom]"); if (!z || !ex.photo) return;
   z.onclick = () => { const d = document.createElement("div"); d.className = "zoom-photo";

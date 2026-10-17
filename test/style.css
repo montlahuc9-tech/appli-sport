@@ -403,3 +403,56 @@ body.tv .commandes .gros { font-size: min(2.4vw, 4vh); padding: 1.6vh 3vw; }
 .tempo-musique { border: 1px solid var(--trait); border-radius: 12px; padding: 10px; background: var(--sol); }
 #bpm-musique, #vitesse-val { font: 800 18px var(--f-chiffres); min-width: 64px; }
 #cibles-tempo button[aria-pressed="true"] { background: var(--travail); border-color: var(--travail); color: var(--sol); }
+
+/* Mon matériel */
+.puces.materiel { align-items: center; }
+.puces.materiel .etiquette { font-size: .85rem; color: var(--doux, #9aa); white-space: nowrap; margin-right: 2px; }
+.badge.mat { background: #3a2f12; color: #ffd27a; margin-right: 6px; font-size: .72rem; }
+.badge.mat.sans { background: #10352f; color: #6fe3c8; }
+
+/* Passer l'échauffement */
+button.passer-ech { width: 100%; background: none; border: 1px dashed #ffb04a; color: #ffb04a; border-radius: 14px; padding: 12px; font: 700 15px var(--f-texte); cursor: pointer; margin: 6px 0; }
+#passer-ech { grid-column: 1 / -1; }
+label.case { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--doux); margin-top: 10px; cursor: pointer; }
+label.case input { width: 20px; height: 20px; accent-color: #ffb04a; }
+
+/* Mouvement animé (départ <-> arrivée) */
+.anim { position: relative; width: 100%; max-width: 440px; margin-top: 10px; cursor: zoom-in; border-radius: 14px; overflow: hidden; background: var(--sol); aspect-ratio: 3 / 2; }
+.anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.anim img.b { animation: mouvement 2.8s ease-in-out infinite; }
+@keyframes mouvement { 0%, 30% { opacity: 0; } 45%, 80% { opacity: 1; } 95%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .anim img.b { animation-duration: 6s; } }
+.anim .etiq { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.65); color: #fff; font: 700 11px var(--f-texte); padding: 3px 8px; border-radius: 999px; letter-spacing: .04em; }
+details.deux-photos { margin-top: 8px; color: var(--doux); font-size: 14px; }
+details.deux-photos summary { cursor: pointer; }
+a.video { display: block; text-align: center; margin: 10px 0 4px; padding: 11px; border-radius: 14px; border: 1px solid var(--trait); color: var(--texte); text-decoration: none; font: 600 15px var(--f-texte); }
+body.tv .anim { max-width: none; }
+
+.etape-tv { background: var(--trait); border-radius: 14px; padding: 4px 14px 12px; margin: 10px 0; }
+.etape-tv p { margin: 10px 0; font-size: 16px; }
+
+/* Suivi GPS */
+.gps-bloc { margin: 4px 0 18px; }
+.gps-lancer { width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; text-align: left; background: linear-gradient(135deg, #10352f, #14231f); border: 1px solid #1f6b5c; color: var(--texte); border-radius: 16px; padding: 14px; font: 500 14px var(--f-texte); cursor: pointer; }
+.gps-lancer > span:first-of-type { display: grid; gap: 2px; } .gps-lancer b { font-size: 16px; } .gps-lancer span span { color: var(--doux); }
+.gps-lancer { font-size: 26px; } .gps-lancer > span { font-size: 14px; }
+.gps-carte { height: 42vh; min-height: 220px; border-radius: 16px; overflow: hidden; margin: 12px 0; background: #1a1d22; z-index: 0; }
+.gps-carte.grande { height: 46vh; }
+.gps-gros { text-align: center; font: 900 76px/1 var(--f-titre, var(--f-texte)); font-variant-numeric: tabular-nums; margin-top: 8px; }
+.gps-gros small { font-size: 22px; color: var(--doux); margin-left: 6px; }
+.gps-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin: 10px 0; }
+.gps-stats b { display: block; font: 800 26px var(--f-titre, var(--f-texte)); font-variant-numeric: tabular-nums; } .gps-stats small { color: var(--doux); font-size: 12px; }
+.gps-precision { text-align: center; color: var(--doux); font-size: 13px; margin: 0; }
+.gps-alerte { background: #3a1a12; color: #ffb39e; border-radius: 12px; padding: 10px 12px; }
+.gps-ico { font-size: 28px; width: 56px; text-align: center; }
+.gps-kms { display: grid; gap: 6px; margin-bottom: 16px; }
+.gps-kms div { display: grid; grid-template-columns: 28px 1fr 64px; gap: 8px; align-items: center; font-size: 14px; }
+.gps-kms i { display: block; height: 10px; border-radius: 99px; background: var(--travail); }
+.gps-kms b { text-align: right; font-variant-numeric: tabular-nums; }
+.ecran-noir { position: fixed; inset: 0; background: #000; z-index: 9999; display: grid; place-content: center; text-align: center; color: #333; }
+.ecran-noir p { font: 800 34px var(--f-texte); color: #444; margin: 0 0 8px; }
+button.lien.danger { color: #ff7a66; }
+.leaflet-container { font: 12px var(--f-texte); }
+
+button.secondaire { width: 100%; background: none; border: 1px solid var(--trait); color: var(--texte); border-radius: 14px; padding: 13px; font: 700 15px var(--f-texte); cursor: pointer; margin: 8px 0; }
+#passer-ech { margin: 0 0 10px; }

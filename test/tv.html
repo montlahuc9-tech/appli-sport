@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Rythmo Sport · Télé</title>
+<style>
+  :root { --phase: #ffb020; --sol: #0d0f12; --texte: #f4f1ea; --doux: #9aa3ad; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--sol); color: var(--texte); font-family: system-ui, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  body { display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; align-items: center; padding: 5vh 5vw; }
+  .gauche { text-align: center; }
+  .round { font-size: 3.4vw; color: var(--doux); font-weight: 700; }
+  .phase { font-size: 5vw; font-weight: 900; color: var(--phase); text-transform: uppercase; letter-spacing: .05em; }
+  .temps { font-size: 17vw; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; color: var(--texte); }
+  .info { font-size: 2.6vw; color: var(--doux); }
+  .barre { height: 1.6vh; background: #262a30; border-radius: 99px; margin: 3vh auto 0; width: 90%; overflow: hidden; }
+  .barre i { display: block; height: 100%; background: var(--phase); width: 0; transition: width .3s linear; }
+  .nom { font-size: 4.2vw; font-weight: 800; margin-bottom: 2vh; }
+  .anim { position: relative; width: 100%; aspect-ratio: 3/2; border-radius: 2vw; overflow: hidden; background: #1a1d22; border: .5vw solid var(--phase); }
+  .anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .anim img.b { animation: m 2.8s ease-in-out infinite; }
+  @keyframes m { 0%, 30% { opacity: 0; } 45%, 80% { opacity: 1; } 95%, 100% { opacity: 0; } }
+  .suivant { font-size: 2.4vw; color: var(--doux); margin-top: 2vh; }
+  .attente { grid-column: 1 / -1; text-align: center; font-size: 4vw; color: var(--doux); }
+  .attente b { color: var(--texte); display: block; font-size: 6vw; margin-bottom: 2vh; }
+</style>
+</head>
+<body>
+  <div class="attente" id="attente"><b>Rythmo Sport</b>En attente du téléphone…</div>
+  <div class="gauche" id="g" hidden>
+    <div class="round" id="round"></div>
+    <div class="phase" id="phase"></div>
+    <div class="temps" id="temps"></div>
+    <div class="info" id="info"></div>
+    <div class="barre"><i id="barre"></i></div>
+  </div>
+  <div class="droite" id="d" hidden>
+    <div class="nom" id="nom"></div>
+    <div class="anim" id="anim"></div>
+    <div class="suivant" id="suivant"></div>
+  </div>
+<script>
+// Page affichée sur la télé (Chromecast / Google TV) : elle reçoit l'état du minuteur depuis le téléphone.
+const $ = (i) => document.getElementById(i);
+let photos = "";
+function afficher(e) {
+  $("attente").hidden = true; $("g").hidden = false; $("d").hidden = false;
+  document.documentElement.style.setProperty("--phase", e.couleur || "#ffb020");
+  for (const k of ["round", "phase", "temps", "info", "nom", "suivant"]) $(k).textContent = e[k] || "";
+  $("barre").style.width = Math.round((e.progres || 0) * 100) + "%";
+  const p = (e.photos || []).join("|");
+  if (p !== photos) { photos = p;
+    $("anim").innerHTML = (e.photos || []).map((u, i) => `<img ${i ? 'class="b"' : ""} src="${u}" alt="">`).join("");
+    $("anim").style.display = e.photos && e.photos.length ? "" : "none"; }
+}
+function brancher(c) { c.onmessage = (m) => { try { afficher(JSON.parse(m.data)); } catch {} }; }
+if (navigator.presentation && navigator.presentation.receiver) {
+  navigator.presentation.receiver.connectionList.then(l => { l.connections.forEach(brancher); l.onconnectionavailable = (ev) => brancher(ev.connection); });
+}
+</script>
+</body>
+</html>

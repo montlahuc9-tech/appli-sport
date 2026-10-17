@@ -68,7 +68,7 @@ window.Minuteur = (() => {
     const ex = exoInfo(e);
     $("nom-exo").textContent = ex ? ex.nom : (mode === "intervalles" ? "Intervalles" : "");
     $("grp-exo").textContent = ex ? nomMuscles(ex) + materiel(ex) : "Effort / repos";
-    $("pose-exo").innerHTML = ex ? photosGrandes(ex) : "";
+    $("pose-exo").innerHTML = ex ? animMouvement(ex) : "";
     if (ex) brancherZoom($("pose-exo"), ex);
     colorerCorps($("corps-carte"), ex);
     $("carte-exo").style.opacity = attenue ? .8 : 1;
@@ -419,6 +419,7 @@ window.Minuteur = (() => {
   function setPhase(p, duree) {
     phase = p; dureePhase = duree || 1; reste = duree; dernierEntier = null;
     document.documentElement.style.setProperty("--phase", `var(${couleurs[p]})`);
+    document.documentElement.dataset.phase = p;
     $("phase").textContent = NOMS[p]; appliquerVolume();
   }
   // Toutes les annonces, bips et sifflets d'une séance en circuit, programmés d'un coup (ils continuent écran verrouillé)

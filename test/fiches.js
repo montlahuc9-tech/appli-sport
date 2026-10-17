@@ -211,11 +211,75 @@ FICHES.push(
            circ_("Étirement des hanches (fente au sol)"), circ_("Dos rond, dos creux (chat)"), circ_("Genoux contre la poitrine")] }
 );
 
+// ---------------- MAISON : une base SANS MATÉRIEL, puis des versions ciblées avec accessoires ----------------
+// (inspiré des programmes Decathlon / Basic-Fit : 40-45 s d'effort, 15-20 s de repos, 3 tours)
+FICHES.push(
+  // Homme
+  { id: "m-full-0", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Full body sans matériel",
+    note: "La base : tout le corps, sans aucun accessoire. 45 s d'effort, 15 s de repos, 3 tours.", travail: 45, repos: 15, tours: 3, pause: 60,
+    exos: [circ_("Squats"), circ_("Pompes"), circ_("Fentes alternées"), circ_("Planche"), circ_("Mountain climbers"), circ_("Pont fessier"), circ_("Superman (allongé sur le ventre)")] },
+  { id: "m-haut-0", lieu: "maison", groupe: "haut", type: "circuit", titre: "Haut du corps débutant (sans matériel)",
+    note: "Pour commencer les pompes en douceur : mains sur une chaise.", travail: 30, repos: 30, tours: 3, pause: 60,
+    exos: [circ_("Pompes inclinées (mains sur une chaise)"), circ_("Superman (allongé sur le ventre)"), circ_("Pompes inclinées serrées (triceps)"), circ_("Planche"), circ_("Dips sur chaise")] },
+  { id: "m-bras-0", lieu: "maison", groupe: "bras", type: "circuit", titre: "Bras sans matériel",
+    note: "Sans matériel, ce sont surtout les triceps qui travaillent. Pour les biceps, il faut un élastique ou des haltères (voir les autres séances).", travail: 30, repos: 20, tours: 3, pause: 45,
+    exos: [circ_("Dips sur chaise"), circ_("Pompes diamant"), circ_("Pompes inclinées serrées (triceps)"), circ_("Rotations de poignets"), circ_("Pompe + gainage latéral")] },
+  { id: "m-abdos-0", lieu: "maison", groupe: "abdos", type: "circuit", titre: "Abdos débutant (sans matériel)",
+    note: "Sur un tapis ou une serviette. Expirez quand vous contractez.", travail: 30, repos: 20, tours: 3, pause: 45,
+    exos: [circ_("Crunchs"), circ_("Talons alternés (obliques)"), circ_("Dead bug"), circ_("Crunch oblique au sol"), circ_("Planche")] },
+  { id: "m-haut-el", lieu: "maison", groupe: "haut", type: "series", titre: "Haut du corps à l'élastique",
+    note: "Un élastique de résistance (bande longue). Plus vous le tendez au départ, plus c'est dur.",
+    exos: [serie_("Écarté pecs à l'élastique", 3, "15", 45), serie_("Rowing assis à l'élastique", 4, "12", 45), serie_("Développé épaules à l'élastique", 3, "12", 45),
+           serie_("Élévations latérales à l'élastique", 3, "15", 45), serie_("Oiseau à l'élastique", 3, "15", 45), serie_("Pompes", 3, "max", 60)] },
+  { id: "m-bras-el", lieu: "maison", groupe: "bras", type: "series", titre: "Biceps et triceps à l'élastique",
+    note: "Pieds sur l'élastique pour les curls. Gardez les coudes collés au corps.",
+    exos: [serie_("Curl biceps à l'élastique", 4, "15", 45), serie_("Extension triceps à l'élastique (allongé)", 4, "15", 45), serie_("Rowing vertical à l'élastique", 3, "12", 45), serie_("Dips sur chaise", 3, "12", 60)] },
+  { id: "m-bas-el", lieu: "maison", groupe: "bas", type: "series", titre: "Jambes à l'élastique",
+    note: "Un élastique long, plus un mini-élastique pour la marche latérale si vous en avez un.",
+    exos: [serie_("Squats à l'élastique", 4, "15", 60), serie_("Good morning à l'élastique", 3, "15", 45), serie_("Kickback debout à l'élastique", 3, "15 / jambe", 45),
+           serie_("Marche latérale avec élastique", 3, "12 pas / côté", 45), serie_("Mollets à l'élastique", 3, "20", 30)] },
+  { id: "m-abdos-lests", lieu: "maison", groupe: "abdos", type: "circuit", titre: "Abdos avec lests de chevilles",
+    note: "Les lests (0,5 à 2 kg par cheville) rendent les relevés de jambes bien plus durs : commencez léger.", travail: 30, repos: 20, tours: 3, pause: 45,
+    exos: [circ_("Relevés de jambes avec lests"), circ_("Ciseaux avec lests"), circ_("Crunch inversé"), circ_("Bicycle crunch"), circ_("Planche")] },
+  { id: "m-full-h", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Full body haltères",
+    note: "Deux haltères. 45 s d'effort, 15 s de repos, 3 tours.", travail: 45, repos: 15, tours: 3, pause: 60,
+    exos: [circ_("Goblet squat (haltère)"), circ_("Soulevé de terre jambes tendues (haltères)"), circ_("Rowing deux haltères"), circ_("Développé épaules haltères"), circ_("Pont fessier"), circ_("Extension triceps haltère")] },
+
+  // Femme
+  { id: "f-m-full-0", public: "femmes", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Full body sans matériel",
+    note: "La base, sans aucun accessoire : tout le corps en 15 minutes.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Squats"), circ_("Pompes inclinées (mains sur une chaise)"), circ_("Fentes alternées"), circ_("Pont fessier"), circ_("Planche"), circ_("Mountain climbers")] },
+  { id: "f-m-ventre-0", public: "femmes", lieu: "maison", groupe: "abdos", type: "circuit", titre: "Ventre débutante (sans matériel)",
+    note: "En douceur, sur un tapis. Rentrez le nombril pendant tout l'exercice.", travail: 30, repos: 20, tours: 3, pause: 45,
+    exos: [circ_("Crunchs"), circ_("Talons alternés (obliques)"), circ_("Dead bug"), circ_("Crunch oblique au sol"), circ_("Planche")] },
+  { id: "f-m-bras-0", public: "femmes", lieu: "maison", groupe: "bras", type: "circuit", titre: "Bras sans matériel",
+    note: "Juste une chaise : surtout l'arrière des bras (triceps).", travail: 30, repos: 30, tours: 3, pause: 45,
+    exos: [circ_("Pompes inclinées (mains sur une chaise)"), circ_("Dips sur chaise"), circ_("Pompes inclinées serrées (triceps)"), circ_("Moulinets des bras"), circ_("Planche")] },
+  { id: "f-m-haut-0", public: "femmes", lieu: "maison", groupe: "haut", type: "circuit", titre: "Dos et posture (sans matériel)",
+    note: "Pour se tenir droite, sans accessoire.", travail: 30, repos: 20, tours: 3, pause: 45,
+    exos: [circ_("Superman (allongé sur le ventre)"), circ_("Pompes inclinées (mains sur une chaise)"), circ_("Dos rond, dos creux (chat)"), circ_("Extension lombaire au sol"), circ_("Planche")] },
+  { id: "f-m-fessiers-el", public: "femmes", lieu: "maison", groupe: "bas", type: "circuit", titre: "Fessiers à l'élastique",
+    note: "Mini-élastique au-dessus des genoux pour la marche latérale, élastique long pour le reste.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Marche latérale avec élastique"), circ_("Kickback debout à l'élastique"), circ_("Squats à l'élastique"), circ_("Pont fessier"), circ_("Adduction à l'élastique (intérieur des cuisses)"), circ_("Good morning à l'élastique")] },
+  { id: "f-m-fessiers-lests", public: "femmes", lieu: "maison", groupe: "bas", type: "circuit", titre: "Fessiers avec lests de chevilles",
+    note: "Des lests de 0,5 à 1 kg suffisent. Mouvements lents, sans à-coups.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Kickback à quatre pattes avec lests"), circ_("Élévation latérale de jambe avec lests"), circ_("Élévation de jambe arrière avec lests"), circ_("Pont fessier sur une jambe avec lests"), circ_("Fentes croisées arrière")] },
+  { id: "f-m-bras-el", public: "femmes", lieu: "maison", groupe: "bras", type: "series", titre: "Bras et épaules à l'élastique",
+    note: "Un élastique léger suffit. Gardez les coudes fixes.",
+    exos: [serie_("Curl biceps à l'élastique", 3, "15", 45), serie_("Extension triceps à l'élastique (allongé)", 3, "15", 45), serie_("Élévations latérales à l'élastique", 3, "15", 45),
+           serie_("Développé épaules à l'élastique", 3, "12", 45), serie_("Écarté à l'élastique (pull apart)", 3, "15", 45)] },
+  { id: "f-m-cardio-lests", public: "femmes", lieu: "maison", groupe: "cardio", type: "circuit", titre: "Cardio doux avec lests",
+    note: "Sans sauts, les lests de chevilles font monter le cœur sans abîmer les genoux.", travail: 40, repos: 20, tours: 3, pause: 60,
+    exos: [circ_("Montées de genoux avec lests"), circ_("Marche rapide sur place (sans sauter)"), circ_("Élévation latérale de jambe avec lests"), circ_("Squats"), circ_("Kickback à quatre pattes avec lests")] }
+);
+
 // ---------------- NIVEAUX : 1 = Débutant, 2 = Intermédiaire, 3 = Confirmé ----------------
 const NIVEAUX = { 1: "Débutant", 2: "Intermédiaire", 3: "Confirmé" };
 (() => {
   const n = {
     "m-haut-1": 2, "m-haut-2": 2, "m-bras-1": 2, "m-bras-2": 2, "m-bas-1": 1, "m-bas-2": 2, "m-abdos-1": 1, "m-abdos-2": 1, "m-cardio-1": 3, "m-cardio-2": 3,
+    "m-full-0": 1, "m-haut-0": 1, "m-bras-0": 1, "m-abdos-0": 1, "m-haut-el": 2, "m-bras-el": 2, "m-bas-el": 2, "m-abdos-lests": 3, "m-full-h": 2,
+    "f-m-full-0": 1, "f-m-ventre-0": 1, "f-m-bras-0": 1, "f-m-haut-0": 1, "f-m-fessiers-el": 2, "f-m-fessiers-lests": 2, "f-m-bras-el": 1, "f-m-cardio-lests": 1,
     "s-haut-1": 3, "s-haut-2": 3, "s-bras-1": 2, "s-bras-2": 2, "s-bas-1": 3, "s-bas-2": 2, "s-abdos-1": 2, "s-abdos-2": 1, "s-cardio-1": 2, "s-cardio-2": 1,
     "f-m-fessiers": 1, "f-m-jambes": 2, "f-m-ventre": 2, "f-m-bras": 1, "f-m-cardio": 1, "f-m-debutante": 1, "f-m-haut": 1,
     "f-s-fessiers": 2, "f-s-jambes": 2, "f-s-haut": 1, "f-s-bras": 1, "f-s-abdos": 2, "f-s-cardio": 2,
@@ -246,3 +310,7 @@ FICHES.push(
 // Quel échauffement pour quelle séance
 const echauffementPour = (f) => f.univers === "running" ? "r-echauffement"
   : (f.groupe === "haut" || f.groupe === "bras") ? "e-haut" : f.groupe === "bas" ? "e-bas" : "e-general";
+
+// ---------------- MATÉRIEL : ce qu'il faut pour chaque séance maison (chaise, canapé, mur, tapis ne comptent pas) ----------------
+const MATERIELS = { elastique: "Élastique", lests: "Lests de chevilles", halteres: "Haltères", barre: "Barre de porte", corde: "Corde à sauter" };
+const materielFiche = (f) => [...new Set((f.exos || []).map(e => { const x = EXERCICES.find(y => y.nom === e.nom); return x && x.mat; }).filter(Boolean))];

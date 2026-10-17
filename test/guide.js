@@ -15,12 +15,16 @@ const GUIDE = [
     "En haut : Fitness, Running ou Marche sportive.",
     "En Fitness : Homme ou Femme, puis Maison ou Salle. Les séances sont rangées par groupe : haut du corps, bras, bas du corps, abdos et lombaires, cardio.",
     "Le filtre de niveau (Débutant, Intermédiaire, Confirmé) n'affiche que les séances de votre niveau."] },
+  { titre: "3 bis. Mon matériel (à la maison)", img: "19-materiel", texte: [
+    "Chaque groupe a des séances SANS matériel (badge vert), puis des versions ciblées avec accessoires : élastique, lests de chevilles, haltères (badge jaune).",
+    "Touchez « Rien » si vous n'avez aucun accessoire, ou cochez ce que vous avez (Élastique, Lests de chevilles, Haltères…) : l'appli n'affiche que les séances que vous pouvez faire. « Tout voir » montre tout."] },
   { titre: "4. Toujours s'échauffer", img: "05-question-echauffement", texte: [
     "Pour éviter les blessures, l'appli propose 5 minutes d'échauffement avant chaque séance.",
-    "Touchez « Oui » : l'échauffement démarre, puis un bouton « Passer à ma séance » lance votre séance. Vous pouvez aussi les lancer depuis l'encadré orange en haut de l'écran Séances."] },
+    "Touchez « Oui » : l'échauffement démarre, puis un bouton « Passer à ma séance » lance votre séance. Vous pouvez aussi les lancer depuis l'encadré orange en haut de l'écran Séances.",
+    "Déjà échauffé(e) ? Touchez « ⏭ Passer l'échauffement » : dans la question, ou même pendant l'échauffement. Vous pouvez aussi décocher « Me proposer l'échauffement avant chaque séance »."] },
   { titre: "5. Voir une séance", img: "04-fiche", texte: [
     "Chaque séance indique le lieu, le niveau, la durée et la liste des exercices.",
-    "Touchez un exercice pour voir ses 2 photos (départ et arrivée), les muscles travaillés et le matériel nécessaire.",
+    "Touchez un exercice pour voir le mouvement (animé), les muscles travaillés et le matériel nécessaire. Le bouton « Voir une vidéo du mouvement » ouvre des vidéos sur YouTube.",
     "Touchez « Lancer la séance » quand vous êtes prêt."] },
   { titre: "6. Le minuteur (séances en circuit)", img: "06-minuteur", texte: [
     "Touchez « Démarrer » : « one, two, three », coup de sifflet, c'est parti !",
@@ -53,11 +57,15 @@ const GUIDE = [
   { titre: "14. Running et Marche sportive", img: "14-running", texte: [
     "Fractionné, footing, marche active, renforcement et étirements : la voix annonce chaque changement (« Course rapide ! », « Footing lent ! »).",
     "Vous pouvez verrouiller votre téléphone et le mettre en poche : la séance continue (sur Android ; sur iPhone, gardez l'appli ouverte)."] },
+  { titre: "14 bis. Le suivi GPS", img: "18-gps", texte: [
+    "Running ou Marche sportive → « 📍 Suivi GPS de mon parcours » → « Démarrer » : distance, durée, allure et tracé sur la carte, avec une annonce à chaque kilomètre.",
+    "Gardez l'appli ouverte (l'écran reste allumé) ; « Écran noir » économise la batterie. À la fin : résumé, carte, temps au kilomètre et bouton Partager. Vos parcours sont gardés dans « Mes parcours »."] },
   { titre: "15. Progresser", img: "15-progression", texte: [
     "Après 3 séances réussies, l'appli vous propose une version plus dure ou la séance du niveau supérieur.",
     "En musculation, quand vous réussissez 2 fois le même poids, elle vous propose d'en ajouter un peu."] },
   { titre: "16. Sur la télé", img: "17-tele", texte: [
-    "Minuteur → « 📺 Mode télé » : le minuteur s'affiche en très grand. Pour l'envoyer sur la télé, utilisez « Caster l'écran » (ou « Smart View ») depuis les réglages rapides du téléphone."] },
+    "Minuteur → « 📺 Afficher sur la télé ». Avec une clé Chromecast ou une Google TV : un seul appui, le minuteur s'affiche en grand sur la télé et le téléphone reste dans votre main.",
+    "Autres télés : « Copier l'écran du téléphone » : l'appli vous dit le nom exact du bouton à toucher sur VOTRE téléphone (Smart View chez Samsung, Recopie de l'écran sur iPhone…), puis met le minuteur en grand."] },
   { titre: "Une question, une idée ?", img: null, texte: [
     "L'appli est en test : vos retours sont précieux. Dites ce qui vous plaît, ce qui manque ou ce qui bloque. Bonnes séances ! 💪"] }
 ];
