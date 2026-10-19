@@ -79,6 +79,7 @@
   </header>
   <!-- Accueil : 4 grosses tuiles -->
   <div id="accueil" class="accueil">
+    <div id="programme"></div>
     <p class="question">Où faites-vous votre séance ?</p>
     <div class="tuiles">
       <button type="button" class="tuile maison" data-espace="maison"><span class="ico" aria-hidden="true">🏠</span><b>Maison</b><span>Sans matériel ou presque</span></button>
@@ -336,6 +337,11 @@
   <div id="gps-corps"></div>
 </main>
 
+<!-- ============ Découverte (questionnaire de départ) ============ -->
+<main id="v-decouverte" class="vue decouverte" hidden>
+  <div id="decouverte-corps"></div>
+</main>
+
 <!-- ============ Recettes ============ -->
 <main id="v-recettes" class="vue" hidden>
   <header class="entete"><div><p class="doux">Avec ce que vous avez chez vous</p><h1>Re<span>cettes</span></h1></div></header>
@@ -375,6 +381,7 @@
 <script src="gps.js"></script>
 <script src="coach.js"></script>
 <script src="musique-seance.js"></script>
+<script src="decouverte.js"></script>
 <script src="recettes-data.js"></script>
 <script src="recettes.js"></script>
 <script src="app.js"></script>

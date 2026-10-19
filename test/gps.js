@@ -176,6 +176,7 @@ window.GPS = (() => {
         <div class="gps-carte grande" id="gps-carte"></div>
         <div class="gps-gros"><span>${km(r.distance)}</span><small>km</small></div>
         <div class="gps-stats"><div><b>${duree(r.duree)}</b><small>Durée</small></div><div><b>${allure(r.duree, r.distance)}</b><small>min/km</small></div><div><b>${(r.distance / 1000 / (r.duree / 3600 || 1)).toFixed(1).replace(".", ",")}</b><small>km/h</small></div></div>
+        <p class="gps-kcal">≈ <b>${Math.round((r.type === "marche" ? 0.55 : 1) * (window.Decouverte && Decouverte.poidsActuel() || 70) * r.distance / 1000)}</b> kcal dépensées${window.Decouverte && Decouverte.poidsActuel() ? "" : " (estimation pour 70 kg : indiquez votre poids dans le Profil)"}</p>
         ${r.kms && r.kms.length ? `<h2>Temps au kilomètre</h2><div class="gps-kms">${r.kms.map((s, i) => { const max = Math.max(...r.kms);
           return `<div><span>${i + 1}</span><i style="width:${Math.round(s / max * 100)}%"></i><b>${duree(s)}</b></div>`; }).join("")}</div>` : ""}
         <button class="principal" type="button" id="gps-partager">Partager</button>

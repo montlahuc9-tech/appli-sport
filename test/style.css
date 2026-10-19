@@ -538,3 +538,25 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 .astuce { background: #10352f; border-radius: 12px; padding: 10px 12px; margin-top: 14px; }
 @media (max-width: 380px) { .barre button { font-size: 10px; } }
 .fiche .prot { font-style: normal; color: #6fe3c8; font-weight: 700; }
+
+/* ===== Découverte et programme ===== */
+.decouverte { padding-top: 24px; }
+.dc-progres { height: 6px; background: var(--trait); border-radius: 99px; overflow: hidden; margin: 6px 0 12px; }
+.dc-progres i { display: block; height: 100%; background: var(--travail); transition: width .3s; }
+.dc-etape { color: var(--doux); font-size: 13px; margin: 0; }
+.dc-question { font: 800 26px/1.15 var(--f-titre, var(--f-texte)); margin: 8px 0 6px; }
+.dc-choix { display: grid; gap: 10px; margin: 16px 0; }
+.dc-btn { display: flex; gap: 14px; align-items: center; text-align: left; padding: 16px; border-radius: 16px; border: 1px solid var(--trait); background: var(--carte, #171a1f); color: var(--texte); cursor: pointer; font: 500 14px var(--f-texte); }
+.dc-btn .ico { font-size: 28px; } .dc-btn b { display: block; font-size: 17px; } .dc-btn small { color: var(--doux); }
+.dc-btn[aria-pressed="true"] { border-color: var(--travail); box-shadow: 0 0 0 2px var(--travail) inset; }
+.dc-bas { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+.dc-bas .principal { flex: 1; max-width: 260px; }
+.dc-corps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+.dc-fin { text-align: center; } .dc-fin .liste-fiches { text-align: left; margin: 16px 0; } .dc-ico { font-size: 56px; margin: 10px 0 0; }
+.dc-jour { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--trait); border-radius: 14px; background: var(--carte, #171a1f); color: var(--texte); text-align: left; font: 500 14px var(--f-texte); width: 100%; cursor: pointer; }
+.dc-jour small { color: var(--doux); } .dc-jour.fait { opacity: .6; } .dc-jour.fait span { text-decoration: line-through; }
+.programme { margin-top: 8px; } .prog-tete { display: flex; justify-content: space-between; align-items: baseline; } .prog-tete h2 { margin: 0; } .prog-tete span { color: var(--repos); font-weight: 800; }
+.poids-ligne { display: flex; gap: 8px; } .poids-ligne input { flex: 1; }
+.courbe { width: 100%; height: auto; margin-top: 10px; background: var(--sol); border-radius: 12px; }
+.gps-kcal { text-align: center; color: var(--doux); margin: 4px 0 12px; } .gps-kcal b { color: var(--texte); }
+.chiffres { grid-template-columns: repeat(2, 1fr) !important; }

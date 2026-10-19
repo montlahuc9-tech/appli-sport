@@ -1,6 +1,6 @@
 // L'appli : inscription, séances (maison / salle, par groupe), détail d'une fiche, création de séance, bibliothèque, profil.
 (() => {
-  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps", "musique", "recettes"];
+  const VUES = ["auth", "acces", "mdp", "guide", "seances", "fiche", "edition", "minuteur", "exercices", "profil", "gps", "musique", "recettes", "decouverte"];
   const ONGLET = { gps: "seances", musique: "minuteur", recettes: "recettes", guide: "profil", seances: "seances", fiche: "seances", edition: "seances", minuteur: "minuteur", exercices: "exercices", profil: "profil" };
   let lieu = "maison";
   let biblio = { groupe: "tout", muscle: "tout" };
@@ -12,7 +12,7 @@
   // ---------- Navigation (le bouton « retour » du téléphone marche) ----------
   function montrer(vue) {
     VUES.forEach(v => $("v-" + v).hidden = v !== vue);
-    $("barre").hidden = ["auth", "acces", "mdp"].includes(vue);
+    $("barre").hidden = ["auth", "acces", "mdp", "decouverte"].includes(vue);
     document.querySelectorAll("#barre button").forEach(b => { if (b.dataset.vue === ONGLET[vue]) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
   }
   function aller(vue, param, remplacer) {
@@ -31,6 +31,7 @@
     if (vue === "profil") dessinerProfil();
     if (vue === "guide") dessinerGuide();
     if (vue === "recettes") Recettes.dessiner();
+    if (vue === "decouverte") Decouverte.lancer(() => aller("seances", null, true));
     montrer(vue);
     if (vue === "gps") GPS.afficher(param);
     if (vue === "musique" && !SeanceMusique.actif() && !musiqueEnPrep) { return aller("seances", null, true); }
@@ -106,7 +107,8 @@
     if (!Compte.acces.ok) { dessinerAcces(); return aller("acces", null, true); }
     Minuteur.init(); dessinerPlaylists(); SeanceMusique.brancher();
     if (GPS.reprendre()) setTimeout(() => { aller("gps"); toast("Suivi GPS repris"); }, 300);
-    aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
+    if (Decouverte.aFaire() && !(D().encours && !D().encours.terminee)) aller("decouverte", null, true);
+    else aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
   }
 
@@ -211,6 +213,10 @@
     $("accueil").hidden = false; $("espace").hidden = true;
     $("titre-seances").innerHTML = "Rythmo <span>Sport</span>";
     $("accueil").querySelectorAll("[data-espace]").forEach(b => b.onclick = () => aller("seances", b.dataset.espace));
+    // mon programme de la semaine
+    $("programme").innerHTML = Decouverte.blocProgramme();
+    $("programme").querySelectorAll("[data-prog]").forEach(b => b.onclick = () => aller("fiche", b.dataset.prog));
+    if ($("dc-refaire-acc")) $("dc-refaire-acc").onclick = () => aller("decouverte");
     // reprendre la dernière séance faite
     const h = (D().historique || []).find(x => x.id && trouverFiche(x.id) && !trouverFiche(x.id).echauffement);
     $("derniere").innerHTML = h ? `<p class="question">Refaire votre dernière séance</p><div class="liste-fiches">${carteFiche(trouverFiche(h.id))}</div>` : "";
@@ -544,6 +550,15 @@
 
   // ---------- Profil ----------
   const debutSemaine = () => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; };
+  function dessinerCourbePoids() {
+    const l = Decouverte.poids(), z = $("courbe-poids"); if (!z) return;
+    if (l.length < 2) { z.innerHTML = l.length ? `<p class="total">Enregistré le ${new Date(l[0].date).toLocaleDateString("fr-FR")} : <b>${String(l[0].kg).replace(".", ",")} kg</b>. Notez-le de temps en temps pour voir l'évolution.</p>` : ""; return; }
+    const v = l.slice(-20), min = Math.min(...v.map(x => x.kg)) - 1, max = Math.max(...v.map(x => x.kg)) + 1, W = 300, H = 90;
+    const pts = v.map((x, i) => `${(i / (v.length - 1) * (W - 20) + 10).toFixed(1)},${(H - 10 - (x.kg - min) / (max - min) * (H - 20)).toFixed(1)}`).join(" ");
+    const d = v[v.length - 1].kg - v[0].kg;
+    z.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="courbe" role="img" aria-label="Évolution du poids"><polyline points="${pts}" fill="none" stroke="var(--repos)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${pts.split(" ").map(p => `<circle cx="${p.split(",")[0]}" cy="${p.split(",")[1]}" r="3.5" fill="var(--repos)"/>`).join("")}</svg>
+      <p class="total">${v.length} pesées · ${d === 0 ? "stable" : (d > 0 ? "+" : "") + d.toFixed(1).replace(".", ",") + " kg"} depuis le ${new Date(v[0].date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</p>`;
+  }
   function dessinerProfil() {
     const u = Compte.utilisateur, h = D().historique || [];
     const semaine = h.filter(x => new Date(x.date) >= debutSemaine()).length, total = h.reduce((a, x) => a + (x.duree || 0), 0);
@@ -554,6 +569,17 @@
         <label class="champ">Prénom<input id="pr-prenom" value="${esc(u.prenom)}" autocomplete="given-name"></label>
         <div class="profil-ligne"><span class="doux">E-mail</span><b>${esc(u.email)}</b></div>
         <p class="total">${Compte.enLigne ? "Vos séances sont sauvegardées en ligne : connectez-vous avec cet e-mail sur un autre téléphone pour les retrouver." : "Version de test : vos séances sont gardées sur ce téléphone."}</p>
+      </section>
+      <section class="bloc">
+        <h2>🎯 Mon programme</h2>
+        ${(D().reglages.profilSport || {}).objectif ? `<p class="total">Objectif : <b>${Decouverte.OBJECTIFS[D().reglages.profilSport.objectif].nom}</b> · ${D().reglages.profilSport.frequence} séances par semaine · ${D().reglages.profilSport.duree} min${(D().reglages.profilSport.douleurs || []).length ? ` · à ménager : ${D().reglages.profilSport.douleurs.map(k => Decouverte.DOULEURS[k].toLowerCase()).join(", ")}` : ""}</p>` : `<p class="total">Répondez à quelques questions : l'appli vous prépare un programme pour la semaine.</p>`}
+        <button class="ajout" type="button" id="pr-questionnaire">${(D().reglages.profilSport || {}).objectif ? "Refaire le questionnaire" : "Créer mon programme"}</button>
+      </section>
+      <section class="bloc">
+        <h2>⚖️ Mon poids</h2>
+        <p class="total">Facultatif. Il sert à estimer les calories dépensées (séances, course, marche).</p>
+        <div class="poids-ligne"><input id="pr-poids" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="${String(Decouverte.poidsActuel() || "").replace(".", ",")}"><button class="mini" type="button" id="pr-poids-ok">Enregistrer</button></div>
+        <div id="courbe-poids"></div>
       </section>
       <section class="bloc reglages-profil">
         <h2>Mes réglages</h2>
@@ -567,7 +593,7 @@
       </section>
       <section class="bloc">
         <h2>Mes séances faites</h2>
-        <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div></div>
+        <div class="chiffres"><div><b>${h.length}</b><span>au total</span></div><div><b>${semaine}</b><span>cette semaine</span></div><div><b>${Math.round(total / 60)}</b><span>minutes</span></div><div><b>≈ ${Decouverte.calories(6, h.filter(x => new Date(x.date) >= debutSemaine()).reduce((a, x) => a + (x.duree || 0), 0))}</b><span>kcal cette semaine</span></div></div>
         ${h.length ? `<ul class="historique">${h.slice(0, 15).map(x => `<li><b>${esc(x.titre)}</b><span>${jour(x.date)}${x.duree ? " · " + fmt(x.duree) : ""}</span></li>`).join("")}</ul>` : '<p class="total">Vos séances terminées apparaîtront ici.</p>'}
       </section>
       <section class="bloc" id="bloc-coach">
@@ -594,6 +620,10 @@
       ${Compte.estAdmin ? `<section class="bloc" id="gestion"><h2>Gestion (vous seul)</h2><div id="gestion-corps" class="pile"><p class="total">Chargement…</p></div></section>` : ""}
       <button class="lien danger" type="button" id="deconnexion">Se déconnecter</button>
       <p class="total">Photos des exercices : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
+    $("pr-questionnaire").onclick = () => aller("decouverte");
+    $("pr-poids-ok").onclick = () => { const w = parseFloat(String($("pr-poids").value).replace(",", ".")); if (!(w >= 30 && w <= 250)) return toast("Poids entre 30 et 250 kg");
+      Decouverte.noterPoids(w); toast("Poids enregistré"); dessinerCourbePoids(); };
+    dessinerCourbePoids();
     $("pr-public").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { D().reglages.public = b.dataset.v; Compte.sauver(); dessinerProfil(); toast("Enregistré"); });
     $("pr-niveau").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { D().reglages.niveau = +b.dataset.v; Compte.sauver(); dessinerProfil(); toast("Enregistré"); });
     $("pr-materiel").onclick = () => demanderMateriel(dessinerProfil);
