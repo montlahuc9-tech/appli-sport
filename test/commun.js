@@ -18,7 +18,9 @@ function infoExo(nom, muscleLibre) {
   const m = muscleLibre || "cardio";
   return { nom, photo: null, lieu: "maison", muscle: m, p: m === "cardio" ? ["quadri", "abdos"] : [m], s: [], series: 3, reps: "10", repos: 60, libre: true };
 }
-const urlPhoto = (id, i) => `photos/${encodeURIComponent(id)}_${i}.jpg`;
+// Photos de salle : Free Exercise DB (.jpg) ; illustrations maison : RepDB (« rdb/… », .webp)
+const urlPhoto = (id, i) => id.startsWith("rdb/") ? `photos/rdb/${encodeURIComponent(id.slice(4))}_${i}.webp` : `photos/${encodeURIComponent(id)}_${i}.jpg`;
+const classePhoto = (ex) => ex && ex.photo && ex.photo.startsWith("rdb/") ? "dessin" : "";
 // « · matériel : barre de porte » quand l'exercice demande un matériel particulier
 const materiel = (ex) => ex && ex.materiel ? ` · matériel : ${ex.materiel}` : "";
 const nomMuscles = (ex) => ex.muscle === "cardio" ? "Cardio" : [ex.p, ex.s].flat().filter((m, i, a) => a.indexOf(m) === i).slice(0, 3).map(m => MUSCLES[m] || m).join(", ");
@@ -56,18 +58,18 @@ function svgSilhouette(ex, classe = "") {
   return `<svg class="pose ${classe}" viewBox="0 0 64 64" role="img" aria-label="${esc(ex.nom)}">${s}</svg>`;
 }
 // Petite vignette (photo de départ, ou silhouette)
-const vignette = (ex) => ex.photo ? `<img src="${urlPhoto(ex.photo, 0)}" alt="" loading="lazy">` : svgSilhouette(ex);
+const vignette = (ex) => ex.photo ? `<img class="${classePhoto(ex)}" src="${urlPhoto(ex.photo, 0)}" alt="" loading="lazy">` : svgSilhouette(ex);
 // Les deux photos (départ / arrivée), qu'on peut agrandir
 function photosGrandes(ex) {
   if (!ex.photo) return svgSilhouette(ex, "grande");
-  return `<div class="photos" data-zoom="${esc(ex.nom)}">` + [0, 1].map(i =>
+  return `<div class="photos ${classePhoto(ex)}" data-zoom="${esc(ex.nom)}">` + [0, 1].map(i =>
     `<figure><img src="${urlPhoto(ex.photo, i)}" alt="${esc(ex.nom)} : ${i ? "arrivée" : "départ"}"><figcaption>${i ? "2 · Arrivée" : "1 · Départ"}</figcaption></figure>`).join("") + `</div>`;
 }
 // Le mouvement animé : la photo de départ et celle d'arrivée se fondent l'une dans l'autre, en boucle
 function animMouvement(ex) {
   if (!ex.photo) return svgSilhouette(ex, "grande");
-  return `<div class="anim" data-zoom="${esc(ex.nom)}" role="img" aria-label="${esc(ex.nom)} : le mouvement">
-    <img src="${urlPhoto(ex.photo, 0)}" alt=""><img class="b" src="${urlPhoto(ex.photo, 1)}" alt=""><span class="etiq">▶ Mouvement</span></div>`;
+  return `<div class="anim ${classePhoto(ex)}" data-zoom="${esc(ex.nom)}" role="img" aria-label="${esc(ex.nom)} : le mouvement">
+    <img src="${urlPhoto(ex.photo, 0)}" alt=""><img class="b" src="${urlPhoto(ex.photo, 1)}" alt=""><span class="etiq">▶ Mouvement</span>${ex.noteImage ? `<span class="note-image">${esc(ex.noteImage)}</span>` : ""}</div>`;
 }
 const lienVideo = (ex) => `https://www.youtube.com/results?search_query=${encodeURIComponent(ex.nom.replace(/\(.*?\)/g, "") + " exercice bien faire le mouvement")}`;
 function brancherZoom(racine, ex) {

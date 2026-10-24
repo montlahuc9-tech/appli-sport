@@ -566,3 +566,8 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 .dc-btn.jour b { font-size: 18px; } .dc-btn.jour small { font-size: 11px; }
 .dc-jour.aujourdhui { border-color: var(--travail); box-shadow: 0 0 0 1px var(--travail) inset; }
 #dc-changer-jours { margin-top: 8px; }
+/* illustrations maison (RepDB) : carrées, sur fond clair, jamais rognées */
+.anim.dessin, .photos.dessin img, img.dessin { background: #dcedf8; }
+.anim.dessin img, .photos.dessin img { object-fit: contain; }
+img.dessin { object-fit: contain; }
+.anim .note-image { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font: 600 12px var(--f-texte); padding: 5px 8px; border-radius: 8px; text-align: center; }

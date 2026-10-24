@@ -620,7 +620,7 @@
       </section>
       ${Compte.estAdmin ? `<section class="bloc" id="gestion"><h2>Gestion (vous seul)</h2><div id="gestion-corps" class="pile"><p class="total">Chargement…</p></div></section>` : ""}
       <button class="lien danger" type="button" id="deconnexion">Se déconnecter</button>
-      <p class="total">Photos des exercices : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
+      <p class="total">Illustrations des exercices à la maison : <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a>. Photos des exercices en salle : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
     $("pr-questionnaire").onclick = () => aller("decouverte");
     $("pr-poids-ok").onclick = () => { const w = parseFloat(String($("pr-poids").value).replace(",", ".")); if (!(w >= 30 && w <= 250)) return toast("Poids entre 30 et 250 kg");
       Decouverte.noterPoids(w); toast("Poids enregistré"); dessinerCourbePoids(); };
