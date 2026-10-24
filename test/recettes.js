@@ -7,6 +7,9 @@ window.Recettes = (() => {
   const TAGS = { vege: "Végétarien", "sans-cuisson": "Sans cuisson", budget: "Petit budget", rapide: "Rapide" };
   let filtre = "tout", ouvert = false;
   const manquants = (r, f) => r.ing.filter(([k]) => !INGREDIENTS[k].base && !f.has(k)).map(([k]) => k);
+  // Protéine en poudre : seulement pour ceux qui en prennent (par défaut : non)
+  const poudre = () => R().proteinePoudre === true;
+  const visible = (r) => !r.poudre || poudre();
 
   function dessiner() {
     const f = frigo(), z = $id("recettes-corps");
@@ -15,7 +18,7 @@ window.Recettes = (() => {
     const blocIng = Object.entries(CATS_INGREDIENTS).map(([c, nom]) => `<div class="cat-ing"><h3>${nom}</h3><div class="puces">${
       Object.entries(INGREDIENTS).filter(([, i]) => i.cat === c).map(([k, i]) => `<button type="button" data-ing="${k}" aria-pressed="${f.has(k)}">${esc(i.nom)}</button>`).join("")}</div></div>`).join("");
     // 2) Recettes
-    const liste = RECETTES.filter(r => filtre === "tout" || r.moments.includes(filtre));
+    const liste = RECETTES.filter(r => visible(r) && (filtre === "tout" || r.moments.includes(filtre)));
     const pret = [], presque = [];
     for (const r of liste) { const m = manquants(r, f); if (!m.length) pret.push(r); else if (m.length === 1) presque.push([r, m[0]]); }
     const carte = (r, manque) => { const n = nutritionRecette(r);
@@ -30,6 +33,8 @@ window.Recettes = (() => {
           <div class="ing-actions"><button class="lien" type="button" id="ing-vider">Tout décocher</button><button class="principal" type="button" id="ing-ok">Voir mes recettes</button></div>
         </div>
       </section>
+      <div class="poudre-choix"><span>Protéine en poudre :</span><div class="puces"><button type="button" data-poudre="non" aria-pressed="${!poudre()}">Je n'en prends pas</button><button type="button" data-poudre="oui" aria-pressed="${poudre()}">J'en prends</button></div></div>
+      <p class="total">Les protéines indiquées viennent des aliments (œufs, lait, viande, poisson, légumineuses)${poudre() ? ". Certaines recettes proposent en plus une version avec de la poudre." : ", pas de poudre."}</p>
       <div class="puces defilant" id="rec-moments">${Object.entries(MOMENTS).map(([k, t]) => `<button type="button" data-moment="${k}" aria-pressed="${filtre === k}">${t}</button>`).join("")}</div>
       ${nb ? `
         <h2 class="rec-titre">✅ Vous pouvez faire (${pret.length})</h2>
@@ -42,6 +47,7 @@ window.Recettes = (() => {
       b.setAttribute("aria-pressed", String(s.has(k))); const t = z.querySelector(".ing-tete span span"); if (t) t.textContent = `${s.size} ingrédient${s.size > 1 ? "s" : ""} coché${s.size > 1 ? "s" : ""}`; });
     if ($id("ing-vider")) $id("ing-vider").onclick = () => { R().frigo = []; Compte.sauver(); dessiner(); };
     if ($id("ing-ok")) $id("ing-ok").onclick = () => { ouvert = false; dessiner(); setTimeout(() => z.querySelector(".rec-titre")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); };
+    z.querySelectorAll("[data-poudre]").forEach(b => b.onclick = () => { R().proteinePoudre = b.dataset.poudre === "oui"; Compte.sauver(); dessiner(); });
     z.querySelectorAll("[data-moment]").forEach(b => b.onclick = () => { filtre = b.dataset.moment; dessiner(); });
     z.querySelectorAll("[data-recette]").forEach(b => b.onclick = () => ouvrirRecette(b.dataset.recette));
   }
@@ -63,6 +69,7 @@ window.Recettes = (() => {
       <h3>Préparation</h3>
       <ol class="rec-etapes">${r.etapes.map(e => `<li>${esc(e)}</li>`).join("")}</ol>
       ${r.astuce ? `<p class="astuce">💡 ${esc(r.astuce)}</p>` : ""}
+      ${r.boost && poudre() ? `<p class="astuce boost">💪 Version protéinée : ajoutez ${r.boost === 15 ? "½ dose" : "1 dose"} de protéine en poudre (${r.boost} g), soit environ +${Math.round(r.boost * 0.78)} g de protéines.</p>` : ""}
     </div>`);
   }
   return { dessiner };

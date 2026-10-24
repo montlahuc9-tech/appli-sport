@@ -79,7 +79,7 @@ const GUIDE = [
     "Autres télés : « Copier l'écran du téléphone » : l'appli vous dit le nom exact du bouton à toucher sur VOTRE téléphone (Smart View chez Samsung, Recopie de l'écran sur iPhone…), puis met le minuteur en grand."] },
   { titre: "23. Les recettes", img: "22-recettes", texte: [
     "Onglet « Recettes » en bas : touchez « Ce que j'ai chez moi » et cochez vos ingrédients (frigo, fruits et légumes, placard).",
-    "L'appli montre les recettes que vous pouvez faire tout de suite, puis celles où il ne manque qu'un ingrédient. Filtrez : avant le sport, après le sport, repas ou collation. Chaque recette indique le temps, les calories et les protéines."] },
+    "L'appli montre les recettes que vous pouvez faire tout de suite, puis celles où il ne manque qu'un ingrédient. Filtrez : avant le sport, après le sport, repas ou collation. Chaque recette indique le temps, les calories et les protéines, qui viennent des aliments. Vous prenez de la protéine en poudre ? Touchez « J'en prends » : vous verrez aussi les recettes et les versions avec poudre."] },
   { titre: "Une question, une idée ?", img: null, texte: [
     "L'appli est en test : vos retours sont précieux. Dites ce qui vous plaît, ce qui manque ou ce qui bloque. Bonnes séances ! 💪"] }
 ];

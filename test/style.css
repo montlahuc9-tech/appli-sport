@@ -572,3 +572,5 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 img.dessin { object-fit: contain; }
 .anim .note-image { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font: 600 12px var(--f-texte); padding: 5px 8px; border-radius: 8px; text-align: center; }
 .ou-course { margin: 6px 0 4px; }
+.poudre-choix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; } .poudre-choix > span { color: var(--doux); font-size: 14px; }
+.astuce.boost { background: #3a2f12; }
