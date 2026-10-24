@@ -571,3 +571,4 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 .anim.dessin img, .photos.dessin img { object-fit: contain; }
 img.dessin { object-fit: contain; }
 .anim .note-image { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font: 600 12px var(--f-texte); padding: 5px 8px; border-radius: 8px; text-align: center; }
+.ou-course { margin: 6px 0 4px; }

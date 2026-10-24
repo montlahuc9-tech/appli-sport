@@ -244,15 +244,28 @@
     const f = pool[Math.floor(Math.random() * pool.length)];
     toast("Votre séance du jour : " + f.titre); aller("fiche", f.id);
   }
+  // Course et marche : dehors, ou sur tapis à la salle (mêmes séances, exercices « sur tapis » avec leurs photos et la vitesse conseillée)
+  const VERS_TAPIS = { "Course rapide": "Course rapide sur tapis", "Footing lent (récupération)": "Footing lent sur tapis", "Footing (allure tranquille)": "Footing sur tapis",
+    "Marche normale": "Marche sur tapis", "Marche rapide": "Marche rapide sur tapis", "Marche très rapide": "Marche très rapide sur tapis" };
+  const surTapis = (u) => D().reglages["tapis_" + u] === true;
+  function variante(f) {
+    if (!f || !f.univers || !surTapis(f.univers) || !f.exos.some(e => VERS_TAPIS[e.nom])) return f;
+    return { ...f, lieu: "salle", titre: f.titre + " (sur tapis)", exos: f.exos.map(e => VERS_TAPIS[e.nom] ? { ...e, nom: VERS_TAPIS[e.nom] } : e) };
+  }
   function dessinerUnivers(u) {
-    const U = UNIVERS[u];
+    const U = UNIVERS[u], tapis = surTapis(u);
+    $("espace-materiel").innerHTML = `<div class="lieux ou-course" role="group" aria-label="Où">
+      <button type="button" data-ou="dehors" aria-pressed="${!tapis}">🌳 Dehors</button><button type="button" data-ou="tapis" aria-pressed="${tapis}">🏋️ Sur tapis (salle)</button></div>
+      ${tapis ? `<p class="total">Sur tapis : chaque exercice indique la vitesse conseillée (et l'inclinaison pour la marche). Réglez le tapis quand la voix annonce le changement.</p>` : ""}`;
+    $("espace-materiel").querySelectorAll("[data-ou]").forEach(b => b.onclick = () => { D().reglages["tapis_" + u] = b.dataset.ou === "tapis"; Compte.sauver(); dessinerUnivers(u); });
+    $("bloc-gps").hidden = tapis;
     const miennes = mesSeances().filter(f => f.univers === u);
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
     $("bloc-gps").innerHTML = `<button class="gps-lancer" type="button" data-gps>📍 <span><b>${GPS.actif() ? "Suivi GPS en cours : " + GPS.resumeTexte() : "Suivi GPS de mon parcours"}</b><span>Distance, temps, allure et tracé sur la carte</span></span><span class="fleche" aria-hidden="true">›</span></button>`;
     $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
       const fiches = FICHES.filter(f => f.univers === u && f.cat === cat).sort(triNiveau); if (!fiches.length) return "";
-      return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(carteFiche).join("")}</div></section>`; }).join("");
+      return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(f => carteFiche(variante(f))).join("")}</div></section>`; }).join("");
     $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelector("[data-gps]").onclick = () => aller("gps", u);
   }
@@ -260,7 +273,7 @@
 
   // ---------- Détail d'une fiche ----------
   function dessinerFiche(id) {
-    const f = trouverFiche(id), perso = estPerso(f);
+    const f0 = trouverFiche(id), perso = estPerso(f0), f = perso ? f0 : variante(f0);
     let h = `<div class="tete-fiche">
         <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>

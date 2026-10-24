@@ -66,7 +66,8 @@ const GUIDE = [
     "Pour ajouter votre playlist : dans Spotify, ⋮ → Partager → Copier le lien, puis collez-le dans « + Ajouter ou retirer une playlist »."] },
   { titre: "19. Course et Marche", img: "14-running", texte: [
     "Fractionné, footing, marche active, renforcement et étirements : la voix annonce chaque changement (« Course rapide ! », « Footing lent ! »).",
-    "Vous pouvez verrouiller votre téléphone et le mettre en poche : la séance continue (sur Android ; sur iPhone, gardez l'appli ouverte)."] },
+    "Vous pouvez verrouiller votre téléphone et le mettre en poche : la séance continue (sur Android ; sur iPhone, gardez l'appli ouverte).",
+    "Dehors ou à la salle ? En haut de l'espace Course (ou Marche), choisissez « 🌳 Dehors » ou « 🏋️ Sur tapis (salle) ». Sur tapis, les mêmes séances utilisent les exercices sur tapis, avec leurs photos et la vitesse conseillée (et l'inclinaison pour la marche)."] },
   { titre: "20. Le suivi GPS", img: "18-gps", texte: [
     "Course ou Marche → « 📍 Suivi GPS de mon parcours » → « Démarrer » : distance, durée, allure et tracé sur la carte, avec une annonce à chaque kilomètre.",
     "Gardez l'appli ouverte (l'écran reste allumé) ; « Écran noir » économise la batterie. À la fin : résumé, carte, temps au kilomètre et bouton Partager. Vos parcours sont gardés dans « Mes parcours »."] },
