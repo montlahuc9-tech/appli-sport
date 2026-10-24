@@ -12,8 +12,8 @@ const GUIDE = [
     "Indiquez votre prénom, si vous êtes un homme ou une femme, et votre e-mail.",
     "L'appli vous montre alors les séances faites pour vous. Vous pourrez changer ce choix dans le Profil."] },
   { titre: "3. Votre programme personnalisé", img: "23-programme", texte: [
-    "À la première ouverture, l'appli vous pose quelques questions : votre objectif (perdre du poids, prendre du muscle, être en forme, courir mieux, se remettre au sport), votre niveau, le nombre de séances par semaine, le temps, le lieu, le matériel et une éventuelle douleur à ménager. Le poids est facultatif : il sert à estimer les calories.",
-    "L'appli construit alors votre programme de la semaine, affiché en haut de l'accueil. Touchez une séance pour la lancer : elle se coche toute seule quand elle est faite. Pour changer : Profil → « Refaire le questionnaire »."] },
+    "À la première ouverture, l'appli vous pose quelques questions : votre objectif (perdre du poids, prendre du muscle, être en forme, courir mieux, se remettre au sport), votre niveau, les jours où vous voulez vous entraîner, le temps, le lieu, le matériel et une éventuelle douleur à ménager. Le poids est facultatif : il sert à estimer les calories.",
+    "L'appli construit alors votre programme de la semaine, affiché en haut de l'accueil. Touchez une séance pour la lancer : elle se coche toute seule quand elle est faite. La séance du jour est marquée « Aujourd'hui ». « 📅 Changer mes jours » réorganise le programme en un instant. Pour changer : Profil → « Refaire le questionnaire »."] },
   { titre: "4. Choisir où vous faites votre séance", img: "02-seances", texte: [
     "L'accueil a 4 grosses tuiles : 🏠 Maison, 🏋️ Salle, 🏃 Course et 🚶 Marche. Touchez celle qui vous correspond.",
     "En dessous, « Refaire votre dernière séance » la relance en un appui."] },

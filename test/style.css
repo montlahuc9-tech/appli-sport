@@ -560,3 +560,9 @@ details.studio summary { cursor: pointer; font-weight: 700; color: #ffd27a; padd
 .courbe { width: 100%; height: auto; margin-top: 10px; background: var(--sol); border-radius: 12px; }
 .gps-kcal { text-align: center; color: var(--doux); margin: 4px 0 12px; } .gps-kcal b { color: var(--texte); }
 .chiffres { grid-template-columns: repeat(2, 1fr) !important; }
+/* choix des jours */
+.dc-jours { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 6px; }
+.dc-btn.jour { flex-direction: column; justify-content: center; text-align: center; padding: 14px 6px; gap: 2px; }
+.dc-btn.jour b { font-size: 18px; } .dc-btn.jour small { font-size: 11px; }
+.dc-jour.aujourdhui { border-color: var(--travail); box-shadow: 0 0 0 1px var(--travail) inset; }
+#dc-changer-jours { margin-top: 8px; }

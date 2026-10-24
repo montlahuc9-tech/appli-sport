@@ -217,6 +217,7 @@
     $("programme").innerHTML = Decouverte.blocProgramme();
     $("programme").querySelectorAll("[data-prog]").forEach(b => b.onclick = () => aller("fiche", b.dataset.prog));
     if ($("dc-refaire-acc")) $("dc-refaire-acc").onclick = () => aller("decouverte");
+    if ($("dc-changer-jours")) $("dc-changer-jours").onclick = () => Decouverte.changerJours(dessinerAccueil);
     // reprendre la dernière séance faite
     const h = (D().historique || []).find(x => x.id && trouverFiche(x.id) && !trouverFiche(x.id).echauffement);
     $("derniere").innerHTML = h ? `<p class="question">Refaire votre dernière séance</p><div class="liste-fiches">${carteFiche(trouverFiche(h.id))}</div>` : "";

@@ -19,6 +19,7 @@ window.Decouverte = (() => {
     courir:  ["run:fractionne", "run:fractionne", "run:renfo", "abdos", "bas"],
     reprise: ["complet", "marche:marche", "abdos", "bas", "haut"]
   };
+  const SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
   const JOURS = { 2: ["Lundi", "Jeudi"], 3: ["Lundi", "Mercredi", "Vendredi"], 4: ["Lundi", "Mardi", "Jeudi", "Samedi"], 5: ["Lundi", "Mardi", "Mercredi", "Vendredi", "Samedi"] };
   const DOULEURS = { genoux: "Genoux", dos: "Dos", epaules: "Épaules" };
   // Exercices à éviter selon la douleur
@@ -42,7 +43,10 @@ window.Decouverte = (() => {
 
   // ---------- Construire le programme ----------
   function construire() {
-    const p = P(), n = p.frequence || 3, plan = PLANS[p.objectif || "forme"], jours = JOURS[n];
+    const p = P(), plan = PLANS[p.objectif || "forme"];
+    // les jours choisis par la personne (sinon, une répartition par défaut)
+    const jours = (p.jours && p.jours.length ? [...p.jours].sort((a, b) => a - b).map(i => SEMAINE[i]) : JOURS[p.frequence || 3]);
+    p.frequence = jours.length;
     const lieux = p.lieux && p.lieux.length ? p.lieux : ["maison"], dehors = lieux.includes("exterieur");
     const lieuxMuscu = lieux.filter(l => l !== "exterieur"); if (!lieuxMuscu.length) lieuxMuscu.push("maison");
     const niveau = p.objectif === "reprise" ? 1 : (+R().niveau || 1), duree = p.duree || 30;
@@ -70,8 +74,29 @@ window.Decouverte = (() => {
     return seances;
   }
 
+  // ---------- Choix des jours (questionnaire et « Changer mes jours ») ----------
+  const choixJours = (sel) => `<div class="dc-jours">${SEMAINE.map((j, i) => `<button type="button" class="dc-btn jour" data-jour="${i}" aria-pressed="${(sel || []).includes(i)}"><b>${j.slice(0, 3)}</b><small>${j}</small></button>`).join("")}</div>
+    <p class="total" id="dc-nb-jours">${(sel || []).length ? `${sel.length} séance${sel.length > 1 ? "s" : ""} par semaine${sel.length >= 6 ? " : pense à garder au moins un jour de repos !" : ""}` : "Aucun jour choisi"}</p>`;
+  function brancherJours(z, apres) {
+    z.querySelectorAll("[data-jour]").forEach(b => b.onclick = () => { const s = new Set(P().jours || []), i = +b.dataset.jour;
+      if (s.has(i)) s.delete(i); else { if (s.size >= 6) return toast("6 jours maximum : le repos fait aussi progresser"); s.add(i); }
+      P().jours = [...s].sort((a, b) => a - b); Compte.sauver(); apres(); });
+  }
+  // Depuis l'accueil : changer ses jours sans refaire tout le questionnaire
+  function changerJours(apres) {
+    const avant = [...(P().jours || [])];
+    const dessinerFeuille = () => window.ouvrirFeuilleRecette(`<div class="fiche-exo"><h2>📅 Mes jours d'entraînement</h2>
+      <p class="total">Touche les jours où tu veux t'entraîner. Ton programme se réorganise tout seul.</p>${choixJours(P().jours)}
+      <button class="principal" type="button" id="dc-jours-ok">Valider</button></div>`);
+    const brancher = () => { const fe = document.getElementById("feuille");
+      brancherJours(fe, () => { dessinerFeuille(); brancher(); });
+      fe.querySelector("#dc-jours-ok").onclick = () => { if (!(P().jours || []).length) { P().jours = avant; return toast("Choisis au moins un jour"); }
+        construire(); document.getElementById("feuille").hidden = true; toast("Programme mis à jour"); apres && apres(); }; };
+    dessinerFeuille(); brancher();
+  }
+
   // ---------- Le questionnaire ----------
-  const ETAPES = ["objectif", "niveau", "frequence", "duree", "lieux", "materiel", "douleurs", "corps", "fin"];
+  const ETAPES = ["objectif", "niveau", "jours", "duree", "lieux", "materiel", "douleurs", "corps", "fin"];
   let etape = 0, apresFin = null;
   function lancer(apres) { apresFin = apres; etape = 0; dessiner(); }
   function suivant() { do { etape++; } while (ETAPES[etape] === "materiel" && !(P().lieux || []).includes("maison")); dessiner(); }
@@ -86,7 +111,7 @@ window.Decouverte = (() => {
     let h = "", multi = false, cle = e;
     if (e === "objectif") h = tete(`${esc(Compte.utilisateur.prenom)}, quel est ton objectif ?`, "Ton programme sera construit pour ça.") + choix(Object.entries(OBJECTIFS).map(([k, o]) => [k, o.nom, o.detail, o.ico]), "objectif") + bas(!!p.objectif);
     if (e === "niveau") { cle = null; h = tete("Quel est ton niveau ?") + `<div class="dc-choix">${[[1, "Débutant", "Je commence ou je reprends"], [2, "Intermédiaire", "Je fais du sport de temps en temps"], [3, "Confirmé", "Je m'entraîne régulièrement"]].map(([k, t, s]) => `<button type="button" class="dc-btn" data-niv="${k}" aria-pressed="${+R().niveau === k}"><span><b>${t}</b><small>${s}</small></span></button>`).join("")}</div>` + bas(!!+R().niveau); }
-    if (e === "frequence") h = tete("Combien de séances par semaine ?", "Mieux vaut peu mais régulier.") + choix([[2, "2 séances"], [3, "3 séances", "Le bon rythme pour progresser"], [4, "4 séances"], [5, "5 séances"]], "frequence") + bas(!!p.frequence);
+    if (e === "jours") { cle = null; h = tete("Quels jours veux-tu t'entraîner ?", "Touche les jours qui t'arrangent. Conseil : 3 jours, avec un jour de repos entre deux.") + choixJours(p.jours) + bas((p.jours || []).length > 0); }
     if (e === "duree") h = tete("Combien de temps par séance ?") + choix([[15, "15 minutes", "Express"], [30, "30 minutes"], [45, "45 minutes et plus"]], "duree") + bas(!!p.duree);
     if (e === "lieux") { multi = true; h = tete("Où veux-tu t'entraîner ?", "Plusieurs choix possibles.") + choix(Object.entries(NOM_LIEUX).map(([k, t]) => [k, t]), "lieux", true) + bas((p.lieux || []).length > 0); }
     if (e === "materiel") { cle = null; const m = new Set(R().materiel || []);
@@ -98,7 +123,7 @@ window.Decouverte = (() => {
       <label class="champ">Poids<input id="dc-poids" type="text" inputmode="decimal" autocomplete="off" value="${String(poidsActuel() || "").replace(".", ",")}" placeholder="kg"></label></div>` + bas(true, "Créer mon programme"); }
     if (e === "fin") { const prog = construire();
       h = `<div class="dc-fin"><p class="dc-ico">${OBJECTIFS[p.objectif].ico}</p><h2 class="dc-question">Ton programme est prêt !</h2>
-        <p class="total">Objectif : <b>${OBJECTIFS[p.objectif].nom}</b> · ${p.frequence} séances par semaine · environ ${p.duree} min</p>
+        <p class="total">Objectif : <b>${OBJECTIFS[p.objectif].nom}</b> · ${p.frequence} séance${p.frequence > 1 ? "s" : ""} par semaine · environ ${p.duree} min</p>
         <div class="liste-fiches">${prog.map(s => { const f = FICHES.find(x => x.id === s.id); return `<div class="dc-jour"><b>${s.jour}</b><span>${esc(f.titre)}</span><small>≈ ${minutesFiche(f)} min</small></div>`; }).join("")}</div>
         <p class="total">Il s'affiche en haut de l'accueil. Coche tes séances au fil de la semaine. Tu peux refaire ce questionnaire dans le Profil.</p>
         <button class="principal" type="button" id="dc-go">C'est parti !</button></div>`; }
@@ -107,6 +132,7 @@ window.Decouverte = (() => {
     if (cle) z.querySelectorAll(".dc-btn[data-v]").forEach(b => b.onclick = () => { const v = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
       if (multi) { const s = new Set(p[cle] || []); s.has(v) ? s.delete(v) : s.add(v); p[cle] = [...s]; } else p[cle] = v;
       Compte.sauver(); if (!multi) setTimeout(suivant, 180); dessiner(); });
+    brancherJours(z, () => dessiner());
     z.querySelectorAll("[data-niv]").forEach(b => b.onclick = () => { R().niveau = +b.dataset.niv; Compte.sauver(); dessiner(); setTimeout(suivant, 180); });
     z.querySelectorAll("[data-mat]").forEach(b => b.onclick = () => { const s = new Set(R().materiel || []); s.has(b.dataset.mat) ? s.delete(b.dataset.mat) : s.add(b.dataset.mat); R().materiel = [...s]; Compte.sauver(); dessiner(); });
     if (e === "materiel" && !Array.isArray(R().materiel)) { R().materiel = []; Compte.sauver(); }
@@ -136,11 +162,12 @@ window.Decouverte = (() => {
     const reste = [...faites]; let n = 0;
     const lignes = p.programme.map(s => { const f = FICHES.find(x => x.id === s.id); if (!f) return "";
       const i = reste.indexOf(s.id), ok = i >= 0; if (ok) { reste.splice(i, 1); n++; }
-      return `<button type="button" class="dc-jour ${ok ? "fait" : ""}" data-prog="${s.id}"><b>${ok ? "✅" : "○"} ${s.jour}</b><span>${esc(f.titre)}</span><small>≈ ${minutesFiche(f)} min</small></button>`; }).join("");
+      const auj = s.jour === SEMAINE[(new Date().getDay() + 6) % 7];
+      return `<button type="button" class="dc-jour ${ok ? "fait" : ""} ${auj && !ok ? "aujourdhui" : ""}" data-prog="${s.id}"><b>${ok ? "✅" : "○"} ${auj ? "Aujourd'hui" : s.jour}</b><span>${esc(f.titre)}</span><small>≈ ${minutesFiche(f)} min</small></button>`; }).join("");
     return `<section class="bloc programme"><div class="prog-tete"><h2>${OBJECTIFS[p.objectif].ico} Mon programme de la semaine</h2><span>${n} / ${p.programme.length}</span></div>
       <div class="dc-progres"><i style="width:${Math.round(n / p.programme.length * 100)}%"></i></div>
-      <div class="liste-fiches">${lignes}</div>${n >= p.programme.length ? `<p class="total">🎉 Semaine terminée, bravo ! Le programme repart lundi.</p>` : ""}</section>`;
+      <div class="liste-fiches">${lignes}</div><button class="lien" type="button" id="dc-changer-jours">📅 Changer mes jours</button>${n >= p.programme.length ? `<p class="total">🎉 Semaine terminée, bravo ! Le programme repart lundi.</p>` : ""}</section>`;
   }
 
-  return { lancer, construire, blocProgramme, OBJECTIFS, DOULEURS, noterPoids, poidsActuel, poids, calories, minutesFiche, aFaire: () => !R().decouverteVue && !(P().programme || []).length };
+  return { lancer, construire, blocProgramme, changerJours, SEMAINE, OBJECTIFS, DOULEURS, noterPoids, poidsActuel, poids, calories, minutesFiche, aFaire: () => !R().decouverteVue && !(P().programme || []).length };
 })();
