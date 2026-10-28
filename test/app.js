@@ -416,12 +416,14 @@
       <div class="infos-fiche">${ex.libre ? "" : `<span class="badge ${ex.lieu}">${NOM_LIEU[ex.lieu] || "Maison"}</span>`}<span class="badge type">${GROUPES[groupeDuMuscle(ex.muscle)].nom}</span></div>
       <h2>${esc(ex.nom)}</h2>
       ${animMouvement(ex)}
+      ${blocExplication(ex)}
       ${ex.photo ? `<details class="deux-photos"><summary>Voir les 2 photos (départ / arrivée)</summary>${photosGrandes(ex)}</details>` : ""}
       <a class="secondaire video" href="${lienVideo(ex)}" target="_blank" rel="noopener">▶ Voir une vidéo du mouvement (YouTube)</a>
       <div class="corps-muscles">${CORPS_SVG}</div>
       <p class="total">Muscles : <b>${esc(nomMuscles(ex))}</b>${ex.materiel ? ` · Matériel : <b>${esc(ex.materiel)}</b>` : ""}${ex.libre ? "" : ` · Conseil : <b>${ex.series} × ${esc(ex.reps)}</b>, repos ${dureeTexte(ex.repos)}`}</p>
-    </div>`, (fe) => { colorerCorps(fe, ex); brancherZoom(fe, ex); });
+    </div>`, (fe) => { colorerCorps(fe, ex); brancherZoom(fe, ex); brancherExplication(fe); });
   }
+  window.ouvrirExo = ouvrirExo;
 
   // ---------- Bibliothèque d'exercices ----------
   function dessinerBiblio() {

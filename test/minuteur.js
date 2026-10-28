@@ -68,7 +68,8 @@ window.Minuteur = (() => {
     const ex = exoInfo(e);
     $("nom-exo").textContent = ex ? ex.nom : (mode === "intervalles" ? "Intervalles" : "");
     $("grp-exo").textContent = ex ? nomMuscles(ex) + materiel(ex) : "Effort / repos";
-    $("pose-exo").innerHTML = ex ? animMouvement(ex) : "";
+    $("pose-exo").innerHTML = ex ? animMouvement(ex) + (blocExplication(ex) ? `<button class="lien comment-btn" type="button" data-comment>📖 Comment faire</button>` : "") : "";
+    const cb = $("pose-exo").querySelector("[data-comment]"); if (cb) cb.onclick = () => window.ouvrirExo && window.ouvrirExo(ex);
     if (ex) brancherZoom($("pose-exo"), ex);
     colorerCorps($("corps-carte"), ex);
     $("carte-exo").style.opacity = attenue ? .8 : 1;

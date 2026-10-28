@@ -574,3 +574,15 @@ img.dessin { object-fit: contain; }
 .ou-course { margin: 6px 0 4px; }
 .poudre-choix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; } .poudre-choix > span { color: var(--doux); font-size: 14px; }
 .astuce.boost { background: #3a2f12; }
+
+/* Comment faire (explications des exercices) */
+.comment-faire { background: rgba(255,255,255,.05); border-radius: 14px; padding: 12px 14px; margin: 14px 0; line-height: 1.5; }
+.comment-faire h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.comment-faire p { margin: 8px 0; }
+.cf-etapes { margin: 8px 0; padding-left: 22px; }
+.cf-etapes li { margin: 5px 0; }
+.cf-mat { margin: 6px 0 10px; }
+.cf-t { font-weight: 600; margin: 0 0 6px !important; }
+.cf-v { background: rgba(255,92,43,.12); border-radius: 10px; padding: 8px 10px; }
+.cf-info, .cf-sans { background: #10352f; border-radius: 10px; padding: 8px 10px; }
+.comment-btn { display: block; margin: 6px auto 0; }

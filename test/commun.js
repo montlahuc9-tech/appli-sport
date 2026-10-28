@@ -94,3 +94,30 @@ function deuxClics(bouton, texte, action) {
   let arme = false; bouton.addEventListener("click", () => { if (arme) return action(); arme = true; const avant = bouton.textContent; bouton.textContent = texte;
     setTimeout(() => { arme = false; bouton.textContent = avant; }, 3000); });
 }
+
+// ---------- « Comment faire » : explications de l'exercice (explications.js) ----------
+const ONGLETS_MAT = { halteres: "🏋️ Haltères", bouteilles: "💧 Bouteilles d'eau", elastique: "➰ Élastique" };
+function blocExplication(ex) {
+  const x = typeof EXPLIC !== "undefined" && ex && EXPLIC[ex.nom]; if (!x) return "";
+  let ongl = "";
+  if (x.v) {
+    const mat = (typeof Compte !== "undefined" && Compte.donnees && Compte.donnees.reglages && Compte.donnees.reglages.materiel) || [];
+    const cles = Object.keys(ONGLETS_MAT).filter(k => x.v[k]);
+    const actif = cles.find(k => mat.includes(k)) || (cles.includes("bouteilles") && !mat.includes("halteres") ? "bouteilles" : cles[0]);
+    ongl = `<div class="cf-mat"><p class="cf-t">Avec quoi ?</p><div class="puces">${cles.map(k => `<button type="button" data-cf="${k}" aria-pressed="${k === actif}">${ONGLETS_MAT[k]}</button>`).join("")}</div>
+      ${cles.map(k => `<p class="cf-v" data-cfv="${k}" ${k === actif ? "" : "hidden"}>${esc(x.v[k])}</p>`).join("")}</div>`;
+  }
+  return `<section class="comment-faire"><h3>📖 Comment faire</h3>
+    ${x.lests ? `<p class="cf-info">🦶 ${esc(x.lests)}</p>` : ""}
+    ${ongl}
+    <p><b>Départ :</b> ${esc(x.d)}</p>
+    <ol class="cf-etapes">${x.m.map(e => `<li>${esc(e)}</li>`).join("")}</ol>
+    ${x.r ? `<p>🫁 <b>Respiration :</b> ${esc(x.r)}</p>` : ""}
+    ${x.e ? `<p>⚠️ <b>À éviter :</b> ${esc(x.e)}</p>` : ""}
+    ${x.sans ? `<p class="cf-sans">💡 ${esc(x.sans)}</p>` : ""}</section>`;
+}
+function brancherExplication(racine) {
+  racine.querySelectorAll("[data-cf]").forEach(b => b.onclick = () => {
+    racine.querySelectorAll("[data-cf]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+    racine.querySelectorAll("[data-cfv]").forEach(p => p.hidden = p.dataset.cfv !== b.dataset.cf); });
+}
