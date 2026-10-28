@@ -24,7 +24,7 @@ window.Recettes = (() => {
     const carte = (r, manque) => { const n = nutritionRecette(r);
       return `<button class="fiche recette" type="button" data-recette="${r.id}"><span class="rec-ico" aria-hidden="true">${icone(r)}</span>
         <span><b>${esc(r.titre)}</b><span class="res">${manque ? `<span class="badge manque">Il manque : ${esc(INGREDIENTS[manque].nom.toLowerCase())}</span> ` : ""}⏱ ${r.temps} min · <em class="prot">${n[1]} g de protéines</em> · ${n[0]} kcal</span></span><span class="fleche" aria-hidden="true">›</span></button>`; };
-    z.innerHTML = `
+    z.innerHTML = CoachNutrition.bloc() + `
       <section class="bloc mes-ingredients">
         <button class="ing-tete" type="button" id="ing-ouvrir"><span><b>🧺 Ce que j'ai chez moi</b><span>${nb ? `${nb} ingrédient${nb > 1 ? "s" : ""} coché${nb > 1 ? "s" : ""}` : "Touchez pour cocher vos ingrédients"}</span></span><span class="lien-txt">${ouvert ? "Fermer" : "Modifier"}</span></button>
         <div id="ing-liste" ${ouvert ? "" : "hidden"}>
@@ -44,12 +44,13 @@ window.Recettes = (() => {
       <p class="total">Valeurs nutritionnelles indicatives, pour 1 portion. Ce ne sont pas des conseils médicaux : en cas de régime particulier, demandez à un professionnel de santé.</p>`;
     $id("ing-ouvrir").onclick = () => { ouvert = !ouvert; dessiner(); };
     z.querySelectorAll("[data-ing]").forEach(b => b.onclick = () => { const s = frigo(), k = b.dataset.ing; s.has(k) ? s.delete(k) : s.add(k); R().frigo = [...s]; Compte.sauver();
-      b.setAttribute("aria-pressed", String(s.has(k))); const t = z.querySelector(".ing-tete span span"); if (t) t.textContent = `${s.size} ingrédient${s.size > 1 ? "s" : ""} coché${s.size > 1 ? "s" : ""}`; });
+      b.setAttribute("aria-pressed", String(s.has(k))); const t = z.querySelector(".mes-ingredients .ing-tete span span"); if (t) t.textContent = `${s.size} ingrédient${s.size > 1 ? "s" : ""} coché${s.size > 1 ? "s" : ""}`; });
     if ($id("ing-vider")) $id("ing-vider").onclick = () => { R().frigo = []; Compte.sauver(); dessiner(); };
     if ($id("ing-ok")) $id("ing-ok").onclick = () => { ouvert = false; dessiner(); setTimeout(() => z.querySelector(".rec-titre")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); };
     z.querySelectorAll("[data-poudre]").forEach(b => b.onclick = () => { R().proteinePoudre = b.dataset.poudre === "oui"; Compte.sauver(); dessiner(); });
     z.querySelectorAll("[data-moment]").forEach(b => b.onclick = () => { filtre = b.dataset.moment; dessiner(); });
     z.querySelectorAll("[data-recette]").forEach(b => b.onclick = () => ouvrirRecette(b.dataset.recette));
+    CoachNutrition.brancher(z, dessiner, ouvrirRecette);
   }
   function icone(r) {
     const k = r.ing.map(i => i[0]);

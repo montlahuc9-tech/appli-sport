@@ -601,3 +601,11 @@ img.dessin { object-fit: contain; }
 .defi-jour b { font-size: 18px; }
 .defi-jour.fait { opacity: .6; }
 .defi-jour.suivant { border-color: #ff5c2b; box-shadow: 0 0 0 2px rgba(255,92,43,.35); }
+
+/* Coach nutrition */
+.coach-nutri h3 { margin: 16px 0 6px; font-size: 1rem; }
+.cn-reperes { margin: 12px 0 4px; }
+.cn-conseils { margin: 0; padding-left: 20px; line-height: 1.5; }
+.cn-conseils li { margin: 4px 0; }
+.cn-form { margin: 8px 0; }
+.cn-avert { font-size: 12px; opacity: .8; }
