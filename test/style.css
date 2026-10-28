@@ -586,3 +586,18 @@ img.dessin { object-fit: contain; }
 .cf-v { background: rgba(255,92,43,.12); border-radius: 10px; padding: 8px 10px; }
 .cf-info, .cf-sans { background: #10352f; border-radius: 10px; padding: 8px 10px; }
 .comment-btn { display: block; margin: 6px auto 0; }
+
+/* Accueil : tuile Calisthenics et raccourci Fractionné */
+.tuile.cali { background: linear-gradient(150deg, #3d1a2e, #18121a); border-color: #7a2c5c; }
+.tuile.large { grid-column: 1 / -1; min-height: 96px; }
+.raccourci { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 14px 16px; border-radius: 16px; border: 1px solid #7a5c14; background: #1f1a0e; color: var(--texte); text-align: left; font: inherit; font-size: 22px; cursor: pointer; }
+.raccourci > span:not(.fleche) { flex: 1; display: grid; gap: 2px; }
+.raccourci b { font-size: 16px; }
+.raccourci span span { font-size: 13px; opacity: .75; }
+/* Défi 30 jours */
+.defi .principal { width: 100%; margin-top: 12px; }
+.defi-jours { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.defi-jour { display: grid; gap: 4px; text-align: left; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--trait); background: var(--carte, #171a1f); color: var(--texte); font: inherit; font-size: 13px; cursor: pointer; }
+.defi-jour b { font-size: 18px; }
+.defi-jour.fait { opacity: .6; }
+.defi-jour.suivant { border-color: #ff5c2b; box-shadow: 0 0 0 2px rgba(255,92,43,.35); }

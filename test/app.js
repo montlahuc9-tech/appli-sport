@@ -166,7 +166,7 @@
   // ---------- Accueil (4 tuiles) puis un espace : Maison, Salle, Course ou Marche ----------
   const pubChoisi = () => D().reglages.public === "femme" ? "femme" : "homme";
   const pourMoi = (f) => pubChoisi() === "femme" ? f.public === "femmes" : !f.public;
-  const NOM_ESPACE = { maison: "🏠 Maison", salle: "🏋️ Salle", running: "🏃 Course", marche: "🚶 Marche" };
+  const NOM_ESPACE = { maison: "🏠 Maison", salle: "🏋️ Salle", running: "🏃 Course", marche: "🚶 Marche", cali: "💪 Calisthenics" };
   const ficheEspace = (f, e) => !f.echauffement && (e === "running" || e === "marche" ? f.univers === e : !f.univers && f.lieu === e && pourMoi(f));
   // le niveau choisi (Profil) : les séances de ce niveau d'abord
   const triNiveau = (a, b) => { const n = niveauChoisi(); return n ? Math.abs(a.niveau - n) - Math.abs(b.niveau - n) : a.niveau - b.niveau; };
@@ -177,13 +177,16 @@
     $("accueil").hidden = true; $("espace").hidden = false;
     $("titre-seances").innerHTML = NOM_ESPACE[e].replace(/ (\S+)$/, " <span>$1</span>");
     // garde les anciens réglages à jour (création de séance, exercices…)
-    if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e;
+    window.LIEU_SALLE = e === "salle";
+    if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e === "cali" ? "fitness" : e;
     Compte.sauver();
     $("espace-retour").onclick = () => aller("seances");
     $("bloc-gps").hidden = e === "maison" || e === "salle";
     $("espace-materiel").innerHTML = ""; $("zones").innerHTML = "";
     $("pour-moi").onclick = () => seancePourMoi(e);
-    if (e === "running" || e === "marche") return dessinerUnivers(e);
+    $("pour-moi").hidden = e === "cali"; $("bloc-mes-seances").hidden = e === "cali";
+    if (e === "cali") return dessinerDefi();
+    if (e === "running" || e === "marche") return dessinerUnivers(e, zone);
     // Maison : le matériel qu'on a chez soi
     if (e === "maison") {
       const m = monMateriel();
@@ -252,7 +255,7 @@
     if (!f || !f.univers || !surTapis(f.univers) || !f.exos.some(e => VERS_TAPIS[e.nom])) return f;
     return { ...f, lieu: "salle", titre: f.titre + " (sur tapis)", exos: f.exos.map(e => VERS_TAPIS[e.nom] ? { ...e, nom: VERS_TAPIS[e.nom] } : e) };
   }
-  function dessinerUnivers(u) {
+  function dessinerUnivers(u, cible) {
     const U = UNIVERS[u], tapis = surTapis(u);
     $("espace-materiel").innerHTML = `<div class="lieux ou-course" role="group" aria-label="Où">
       <button type="button" data-ou="dehors" aria-pressed="${!tapis}">🌳 Dehors</button><button type="button" data-ou="tapis" aria-pressed="${tapis}">🏋️ Sur tapis (salle)</button></div>
@@ -265,15 +268,37 @@
     $("bloc-gps").innerHTML = `<button class="gps-lancer" type="button" data-gps>📍 <span><b>${GPS.actif() ? "Suivi GPS en cours : " + GPS.resumeTexte() : "Suivi GPS de mon parcours"}</b><span>Distance, temps, allure et tracé sur la carte</span></span><span class="fleche" aria-hidden="true">›</span></button>`;
     $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
       const fiches = FICHES.filter(f => f.univers === u && f.cat === cat).sort(triNiveau); if (!fiches.length) return "";
-      return `<section class="groupe"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(f => carteFiche(variante(f))).join("")}</div></section>`; }).join("");
+      return `<section class="groupe" data-cat="${cat}"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(f => carteFiche(variante(f))).join("")}</div></section>`; }).join("");
     $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelector("[data-gps]").onclick = () => aller("gps", u);
+    if (cible) setTimeout(() => $("groupes-fiches").querySelector(`[data-cat="${cible}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  }
+  // ---------- Défi Calisthenics 30 jours ----------
+  function dessinerDefi() {
+    const r = D().reglages, debut = r.defiCali && r.defiCali.debut;
+    const hist = (D().historique || []).filter(h => h.id && h.id.startsWith("cali-") && (!debut || new Date(h.date) >= new Date(debut)));
+    const faits = new Set(hist.map(h => h.id)), n = faits.size;
+    const prochain = DEFI_CALI.find(f => !faits.has(f.id));
+    const aujourdhui = hist.some(h => new Date(h.date).toDateString() === new Date().toDateString());
+    $("espace-materiel").innerHTML = `<section class="bloc defi">
+      <p class="total">30 jours au poids du corps : pompes, tractions, dips, squats et gainage. 6 jours d'entraînement, 1 jour de récupération, et ça monte un peu chaque semaine. Il suffit d'un tapis et d'une chaise. Une barre de traction, c'est mieux, mais pas obligatoire : chaque exercice a sa solution dans « Comment faire ».</p>
+      <div class="prog-tete"><h2>Ma progression</h2><span>${n} / 30</span></div><div class="dc-progres"><i style="width:${Math.round(n / 30 * 100)}%"></i></div>
+      ${prochain ? `<button class="principal" type="button" data-ouvrir="${prochain.id}">▶ ${esc(prochain.titre)}</button>
+        ${aujourdhui ? `<p class="total">✅ Séance du jour faite. Le corps progresse pendant le repos : la suite demain !</p>` : ""}`
+        : `<p class="total">🏆 Défi terminé, bravo ! Comparez votre test du jour 29 avec le jour 1.</p>`}
+      ${n ? `<button class="lien" type="button" id="defi-reset">↺ Recommencer le défi à zéro</button>` : ""}</section>`;
+    $("groupes-fiches").innerHTML = [1, 2, 3, 4, 5].map(s => `<section class="groupe"><div class="groupe-tete"><h2>${s < 5 ? "Semaine " + s : "Fin du défi"}</h2></div>
+      <div class="defi-jours">${DEFI_CALI.filter(f => f.semaine === s).map(f => `<button type="button" class="defi-jour ${faits.has(f.id) ? "fait" : ""} ${prochain === f ? "suivant" : ""}" data-ouvrir="${f.id}">
+        <b>${faits.has(f.id) ? "✅" : f.jour}</b><span>${esc(f.titre.replace(/^Jour \d+ · /, ""))}</span></button>`).join("")}</div></section>`).join("");
+    $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
+    if ($("defi-reset")) $("defi-reset").onclick = () => { if (!confirm("Recommencer le défi au jour 1 ?")) return; r.defiCali = { debut: new Date().toISOString() }; Compte.sauver(); dessinerDefi(); };
   }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
 
   // ---------- Détail d'une fiche ----------
   function dessinerFiche(id) {
     const f0 = trouverFiche(id), perso = estPerso(f0), f = perso ? f0 : variante(f0);
+    if (f && f.lieu !== "partout") window.LIEU_SALLE = f.lieu === "salle";
     let h = `<div class="tete-fiche">
         <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
         <h2>${esc(f.titre)}</h2>
@@ -438,13 +463,14 @@
     const lieuBiblio = D().reglages.lieuBiblio || lieu;
     $("v-exercices").querySelectorAll(".lieux button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.lieu === lieuBiblio));
       b.onclick = () => { D().reglages.lieuBiblio = b.dataset.lieu; if (b.dataset.lieu !== "exterieur") { lieu = b.dataset.lieu; D().reglages.lieu = lieu; } Compte.sauver(); dessinerBiblio(); }; });
+    window.LIEU_SALLE = lieuBiblio === "salle";
     const liste = EXERCICES.filter(e => (e.lieu === lieuBiblio || e.lieu === "partout") && (biblio.groupe === "tout" || groupeDuMuscle(e.muscle) === biblio.groupe) && (biblio.muscle === "tout" || e.muscle === biblio.muscle));
     let html = "";
     for (const [g, G] of Object.entries(GROUPES)) {
       if (biblio.groupe !== "tout" && g !== biblio.groupe) continue;
       for (const m of G.muscles) { const l = liste.filter(e => e.muscle === m); if (!l.length) continue;
         html += `<h3 class="sous-titre">${G.muscles.length > 1 ? `${G.nom} · ${MUSCLES[m]}` : G.nom}</h3>` + l.map(e =>
-          `<button class="exo-ligne" type="button" data-nom="${esc(e.nom)}">${vignette(e)}<span><b>${esc(e.nom)}</b><span>${esc(nomMuscles(e))} · ${e.series} × ${esc(e.reps)}${esc(materiel(e))}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`).join(""); }
+          `<button class="exo-ligne" type="button" data-nom="${esc(e.nom)}">${vignette(infoExo(e.nom))}<span><b>${esc(e.nom)}</b><span>${esc(nomMuscles(e))} · ${e.series} × ${esc(e.reps)}${esc(materiel(e))}</span></span><span class="fleche doux" aria-hidden="true">›</span></button>`).join(""); }
     }
     $("biblio-liste").innerHTML = html || '<div class="total">Aucun exercice ici.</div>';
     $("biblio-groupes").querySelectorAll("[data-g]").forEach(b => b.addEventListener("click", () => { biblio = { groupe: b.dataset.g, muscle: "tout" }; dessinerBiblio(); }));

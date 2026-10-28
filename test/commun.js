@@ -7,7 +7,13 @@ const dureeTexte = (s) => s >= 60 ? `${Math.floor(s / 60)} min${s % 60 ? " " + S
 
 const PAR_NOM = new Map(EXERCICES.map(e => [e.nom, e]));
 // Retrouve un exercice de la bibliothèque, même si le nom a été un peu modifié
+// Échauffements et étirements (communs maison / salle) : à la salle, photos du même style que les autres exercices de salle (Free Exercise DB)
+const PHOTO_SALLE = {"Cercles de chevilles": "Ankle_Circles", "Cercles de hanches": "Standing_Hip_Circles", "Talons-fesses": "Single_Leg_Butt_Kick", "Skipping (genoux hauts rapides)": "Fast_Skipping", "Pas croisés (carioca)": "Carioca_Quick_Step", "Marche des mains (inchworm)": "Inchworm", "Moulinets des bras": "Arm_Circles", "Cercles d'épaules": "Shoulder_Circles", "Torsion du dos (allongé)": "Side-Lying_Floor_Stretch", "Étirement des mollets (contre un mur)": "Calf_Stretch_Hands_Against_Wall", "Étirement des quadriceps (allongé sur le côté)": "On_Your_Side_Quad_Stretch", "Étirement des ischios (allongé, avec serviette)": "Hamstring_Stretch", "Étirement des hanches (fente au sol)": "Kneeling_Hip_Flexor", "Étirement papillon (intérieur des cuisses)": "Groin_and_Back_Stretch", "Posture de l'enfant (dos)": "Childs_Pose", "Dos rond, dos creux (chat)": "Cat_Stretch", "Genoux contre la poitrine": "One_Knee_To_Chest"};
 function infoExo(nom, muscleLibre) {
+  const e = infoExoBrut(nom, muscleLibre);
+  return e && window.LIEU_SALLE && PHOTO_SALLE[e.nom] ? { ...e, photo: PHOTO_SALLE[e.nom] } : e;
+}
+function infoExoBrut(nom, muscleLibre) {
   if (PAR_NOM.has(nom)) return PAR_NOM.get(nom);
   const n = sansAccent(nom).trim(); let meilleur = null, long = 0;
   for (const e of EXERCICES) {
@@ -71,7 +77,8 @@ function animMouvement(ex) {
   return `<div class="anim ${classePhoto(ex)}" data-zoom="${esc(ex.nom)}" role="img" aria-label="${esc(ex.nom)} : le mouvement">
     <img src="${urlPhoto(ex.photo, 0)}" alt=""><img class="b" src="${urlPhoto(ex.photo, 1)}" alt=""><span class="etiq">▶ Mouvement</span>${ex.noteImage ? `<span class="note-image">${esc(ex.noteImage)}</span>` : ""}</div>`;
 }
-const lienVideo = (ex) => `https://www.youtube.com/results?search_query=${encodeURIComponent(ex.nom.replace(/\(.*?\)/g, "") + " exercice bien faire le mouvement")}`;
+const lienVideo = (ex) => { const en = typeof YT !== "undefined" && YT[ex.nom];
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(en ? en + (/stretch|warm up|drill|walking|running|jog|posture|pose|treadmill/.test(en) ? "" : " exercise") + " proper form" : ex.nom.replace(/\(.*?\)/g, "") + " exercice bien faire le mouvement")}`; };
 function brancherZoom(racine, ex) {
   const z = racine.querySelector("[data-zoom]"); if (!z || !ex.photo) return;
   z.onclick = () => { const d = document.createElement("div"); d.className = "zoom-photo";

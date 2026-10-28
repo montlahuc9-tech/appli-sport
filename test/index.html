@@ -84,9 +84,11 @@
     <div class="tuiles">
       <button type="button" class="tuile maison" data-espace="maison"><span class="ico" aria-hidden="true">🏠</span><b>Maison</b><span>Sans matériel ou presque</span></button>
       <button type="button" class="tuile salle" data-espace="salle"><span class="ico" aria-hidden="true">🏋️</span><b>Salle</b><span>Machines, barres, haltères</span></button>
-      <button type="button" class="tuile course" data-espace="running"><span class="ico" aria-hidden="true">🏃</span><b>Course</b><span>Fractionné, footing, GPS</span></button>
+      <button type="button" class="tuile course" data-espace="running"><span class="ico" aria-hidden="true">🏃</span><b>Course</b><span>⚡ Fractionné, footing, GPS</span></button>
       <button type="button" class="tuile marche" data-espace="marche"><span class="ico" aria-hidden="true">🚶</span><b>Marche</b><span>Marche active, GPS</span></button>
+      <button type="button" class="tuile cali large" data-espace="cali"><span class="ico" aria-hidden="true">💪</span><b>Calisthenics</b><span>Défi 30 jours au poids du corps</span></button>
     </div>
+    <button class="raccourci" type="button" data-espace="running:fractionne">⚡ <span><b>Fractionné</b><span>Course rapide / lente en alternance, la voix annonce chaque changement</span></span><span class="fleche" aria-hidden="true">›</span></button>
     <div id="derniere"></div>
   </div>
   <!-- Un espace : Maison, Salle, Course ou Marche -->
@@ -97,7 +99,7 @@
     <section class="gps-bloc" id="bloc-gps" hidden></section>
     <div id="zones" class="zones"></div>
     <div id="groupes-fiches"></div>
-    <section class="bloc">
+    <section class="bloc" id="bloc-mes-seances">
       <h2>Mes séances</h2>
       <div id="mes-seances" class="liste-fiches"></div>
       <button class="ajout" type="button" id="creer-seance">+ Créer ma séance</button>
@@ -375,6 +377,7 @@
 <script src="voix.js"></script>
 <script src="guide.js"></script>
 <script src="fiches.js"></script>
+<script src="defi.js"></script>
 <script src="compte.js"></script>
 <script src="commun.js"></script>
 <script src="lib/leaflet/leaflet.js"></script>
