@@ -724,6 +724,8 @@
     if (uri) return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
     const url = t.match(/https?:\/\/(open\.)?spotify\.(com|link)\/[^\s]+/);
     if (url) return url[0];
+    const autre = t.match(/https?:\/\/(music\.apple\.com|(www\.)?deezer\.com|deezer\.page\.link|link\.deezer\.com|music\.youtube\.com|(www\.)?youtube\.com|youtu\.be|music\.amazon\.[a-z.]+)\/[^\s]+/i);
+    if (autre) return autre[0];
     return "https://open.spotify.com/search/" + encodeURIComponent(t);
   }
   function dessinerPlaylists() {
@@ -737,8 +739,8 @@
   $("gerer-playlists").addEventListener("toggle", dessinerPlaylists);
   $("pl-ajouter").addEventListener("click", () => {
     const lien = $("pl-lien").value.trim(); let nom = $("pl-nom").value.trim();
-    if (!lien) { toast("Collez un lien Spotify ou écrivez ce qu'il faut chercher"); return $("pl-lien").focus(); }
-    if (!nom) nom = /spotify/i.test(lien) ? "Ma playlist " + (mesPlaylists().length + 1) : lien.slice(0, 40);
+    if (!lien) { toast("Collez un lien (Spotify, Apple Music, Deezer, YouTube Music) ou écrivez ce qu'il faut chercher"); return $("pl-lien").focus(); }
+    if (!nom) nom = /spotify|apple|deezer|youtu|amazon/i.test(lien) ? "Ma playlist " + (mesPlaylists().length + 1) : lien.slice(0, 40);
     mesPlaylists().push({ nom, lien }); Compte.sauver(); $("pl-nom").value = ""; $("pl-lien").value = ""; dessinerPlaylists(); toast("Playlist ajoutée");
   });
 
