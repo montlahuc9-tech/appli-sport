@@ -86,7 +86,7 @@ window.CoachNutrition = (() => {
           <span><b>${nom} : ${esc(x.titre)}</b><span class="res">${n[0]} kcal · ${n[1]} g de protéines</span></span><span class="fleche" aria-hidden="true">›</span></button>`; }).join("")}</div>
       <p class="total">Ces ${plan.length} recettes : ≈ ${tot[0]} kcal et ${tot[1]} g de protéines. Ajoutez votre petit-déjeuner, du pain, des fruits ou un laitage selon votre faim${r.kcal ? ` pour approcher vos ${r.kcal} kcal` : ""}.</p>
       <button class="lien" type="button" id="cn-autre">🔄 Une autre idée</button>
-      <p class="total cn-avert">Repères indicatifs, calculés à partir de votre profil. Ce n'est pas un régime ni un avis médical : en cas de maladie, de grossesse, de régime particulier ou de troubles alimentaires, parlez-en à un médecin ou un diététicien.</p>
+      <p class="total cn-avert">Repères indicatifs, calculés à partir de votre profil. Rythmo Sport n'est pas un diététicien : ce n'est pas un régime ni un avis médical : en cas de maladie, de grossesse, de régime particulier ou de troubles alimentaires, parlez-en à un médecin ou un diététicien.</p>
       </div></section>`;
   }
   function brancher(z, redessiner, ouvrirRecette) {

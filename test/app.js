@@ -46,7 +46,7 @@
     document.querySelectorAll("[data-auth-public]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); }));
   function majAuth() {
     document.querySelectorAll("#auth-onglets button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.auth === modeAuth)));
-    $("auth-l-prenom").hidden = modeAuth !== "inscription"; $("auth-l-public").hidden = modeAuth !== "inscription";
+    $("auth-l-prenom").hidden = modeAuth !== "inscription"; $("auth-l-public").hidden = modeAuth !== "inscription"; $("auth-l-avert").hidden = modeAuth !== "inscription";
     $("auth-l-mdp").hidden = !Compte.enLigne;
     $("auth-mdp").autocomplete = modeAuth === "inscription" ? "new-password" : "current-password";
     $("auth-ok").textContent = modeAuth === "inscription" ? "Créer mon compte" : "Me connecter";
@@ -60,6 +60,7 @@
   document.querySelectorAll("#auth-onglets button").forEach(b => b.addEventListener("click", () => { modeAuth = b.dataset.auth; majAuth(); }));
   $("auth-form").addEventListener("submit", async (e) => {
     e.preventDefault(); const bouton = $("auth-ok"), avant = bouton.textContent; $("auth-erreur").textContent = "";
+    if (modeAuth === "inscription" && !$("auth-avert").checked) { $("auth-erreur").textContent = "Lisez l'avertissement santé et cochez la case pour créer votre compte."; return; }
     bouton.disabled = true; bouton.textContent = "Un instant…";
     try {
       const r = modeAuth === "inscription"
@@ -67,6 +68,7 @@
         : await Compte.connecter({ email: $("auth-email").value, mdp: $("auth-mdp").value });
       if (r.confirmer) { $("auth-erreur").textContent = ""; $("auth-info").textContent = "Presque fini : ouvrez le mail reçu pour confirmer votre adresse, puis revenez ici et connectez-vous."; modeAuth = "connexion"; majAuth(); return; }
       if (modeAuth === "inscription" && !D().reglages.public) { D().reglages.public = authPublic; Compte.sauver(); }
+      if (modeAuth === "inscription") { D().reglages.avertissement = new Date().toISOString(); Compte.sauver(); }
       entrer(true);
     } catch (err) { $("auth-erreur").textContent = err.message || "Ça n'a pas marché. Réessayez."; }
     finally { bouton.disabled = false; if (bouton.textContent === "Un instant…") bouton.textContent = avant; }
@@ -110,7 +112,17 @@
     if (Decouverte.aFaire() && !(D().encours && !D().encours.terminee)) aller("decouverte", null, true);
     else aller(D().encours && !D().encours.terminee ? "minuteur" : "seances", null, true);
     if (nouveau) toast(`Bienvenue ${Compte.utilisateur.prenom} !`);
+    if (!D().reglages.avertissement) setTimeout(() => montrerAvertissement(true), 400);
   }
+  // Avertissement santé : obligatoire une fois (comptes créés avant), puis consultable dans le Profil
+  function montrerAvertissement(obligatoire) {
+    ouvrirFeuille(htmlAvertissement() + (obligatoire ? `<button class="principal" type="button" data-avert-ok>J'ai lu et j'accepte</button>` : ""), (fe) => {
+      if (!obligatoire) return;
+      fe.onclick = null; const f = fe.querySelector(".feuille-boite > [data-fermer]"); if (f) f.hidden = true;
+      fe.querySelector("[data-avert-ok]").onclick = () => { D().reglages.avertissement = new Date().toISOString(); Compte.sauver(); fermerFeuille(); };
+    });
+  }
+  $("auth-lire-avert").addEventListener("click", () => montrerAvertissement(false));
 
   // ---------- Choix Maison / Salle (partagé entre les écrans) ----------
   function brancherLieux(racine, apres) {
@@ -181,7 +193,7 @@
     if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e === "cali" ? "fitness" : e;
     Compte.sauver();
     $("espace-retour").onclick = () => aller("seances");
-    $("bloc-gps").hidden = e === "maison" || e === "salle";
+    $("bloc-gps").hidden = e !== "running" && e !== "marche";
     $("espace-materiel").innerHTML = ""; $("zones").innerHTML = "";
     $("pour-moi").onclick = () => seancePourMoi(e);
     $("pour-moi").hidden = e === "cali"; $("bloc-mes-seances").hidden = e === "cali";
@@ -659,10 +671,13 @@
         <h2>Un avis sur l'appli ?</h2>
         <p class="total">C'est une version de test : dites à Alex ce qui marche, ce qui manque ou ce qui bloque.</p>
       </section>
+      <section class="bloc"><h2>⚠️ Santé et sécurité</h2><p class="total">Rythmo Sport n'est pas un coach diplômé, ni un médecin, ni un diététicien. Lisez l'avertissement avant de vous entraîner.</p>
+        <button class="ajout" type="button" id="pr-avert">Lire l'avertissement santé</button></section>
       ${Compte.estAdmin ? `<section class="bloc" id="gestion"><h2>Gestion (vous seul)</h2><div id="gestion-corps" class="pile"><p class="total">Chargement…</p></div></section>` : ""}
       <button class="lien danger" type="button" id="deconnexion">Se déconnecter</button>
       <p class="total">Illustrations des exercices à la maison : <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a>. Photos des exercices en salle : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
     $("pr-questionnaire").onclick = () => aller("decouverte");
+    if ($("pr-avert")) $("pr-avert").onclick = () => montrerAvertissement(false);
     $("pr-poids-ok").onclick = () => { const w = parseFloat(String($("pr-poids").value).replace(",", ".")); if (!(w >= 30 && w <= 250)) return toast("Poids entre 30 et 250 kg");
       Decouverte.noterPoids(w); toast("Poids enregistré"); dessinerCourbePoids(); };
     dessinerCourbePoids();

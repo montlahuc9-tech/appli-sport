@@ -609,3 +609,12 @@ img.dessin { object-fit: contain; }
 .cn-conseils li { margin: 4px 0; }
 .cn-form { margin: 8px 0; }
 .cn-avert { font-size: 12px; opacity: .8; }
+
+/* Avertissement santé */
+.avert h2 { margin: 0 0 10px; }
+.avert h3 { margin: 14px 0 4px; font-size: 1rem; }
+.avert p { margin: 4px 0; line-height: 1.5; }
+.avert-fin { margin-top: 14px !important; padding: 10px 12px; border-radius: 10px; background: rgba(255,92,43,.14); }
+.avert-case { display: grid; gap: 4px; text-align: left; font-size: 14px; }
+.avert-case .case { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+.avert-case input { margin-top: 3px; flex: none; width: 20px; height: 20px; }

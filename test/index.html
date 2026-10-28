@@ -42,6 +42,8 @@
         </div></div>
       <label class="champ">E-mail<input id="auth-email" type="email" autocomplete="email" inputmode="email" required></label>
       <label class="champ" id="auth-l-mdp">Mot de passe<input id="auth-mdp" type="password" autocomplete="new-password" minlength="6"></label>
+      <div class="avert-case" id="auth-l-avert"><label class="case"><input type="checkbox" id="auth-avert"> J'ai lu l'avertissement santé et je l'accepte : l'appli n'est pas un coach diplômé ni un médecin.</label>
+        <button class="lien" type="button" id="auth-lire-avert">⚠️ Lire l'avertissement</button></div>
       <p class="erreur" id="auth-erreur" role="alert"></p>
       <button class="gros go" type="submit" id="auth-ok">Créer mon compte</button>
     </form>
@@ -372,6 +374,7 @@
 <script src="config.js"></script>
 <script src="lib/supabase.js"></script>
 <script src="lib/qrcode.js"></script>
+<script src="avertissement.js"></script>
 <script src="exercices.js"></script>
 <script src="explications.js"></script>
 <script src="voix.js"></script>
