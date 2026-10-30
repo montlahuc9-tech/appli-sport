@@ -618,3 +618,4 @@ img.dessin { object-fit: contain; }
 .avert-case { display: grid; gap: 4px; text-align: left; font-size: 14px; }
 .avert-case .case { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
 .avert-case input { margin-top: 3px; flex: none; width: 20px; height: 20px; }
+.lieux button[aria-pressed="true"][data-niv-defi] { border-color: #ff5c2b; color: var(--texte); background: rgba(255, 92, 43, .14); }

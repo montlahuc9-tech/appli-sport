@@ -287,29 +287,43 @@
   }
   // ---------- Défi Calisthenics 30 jours ----------
   function dessinerDefi() {
-    const r = D().reglages, debut = r.defiCali && r.defiCali.debut;
-    const hist = (D().historique || []).filter(h => h.id && h.id.startsWith("cali-") && (!debut || new Date(h.date) >= new Date(debut)));
-    const faits = new Set(hist.map(h => h.id)), n = faits.size;
-    const prochain = DEFI_CALI.find(f => !faits.has(f.id));
-    const aujourdhui = hist.some(h => new Date(h.date).toDateString() === new Date().toDateString());
-    $("espace-materiel").innerHTML = `<section class="bloc defi">
-      <p class="total">30 jours au poids du corps : pompes, tractions, dips, squats et gainage. 6 jours d'entraînement, 1 jour de récupération, et ça monte un peu chaque semaine. Il suffit d'un tapis et d'une chaise. Une barre de traction, c'est mieux, mais pas obligatoire : chaque exercice a sa solution dans « Comment faire ».</p>
+    const r = D().reglages, e1 = etatDefi(1), e2 = etatDefi(2);
+    let niv = r.defiNiveau === 2 ? 2 : 1; const e = niv === 1 ? e1 : e2, n = e.faits.size;
+    const onglets = `<div class="lieux" role="group" aria-label="Niveau"><button type="button" data-niv-defi="1" aria-pressed="${niv === 1}">Niveau 1${e1.fini ? " ✅" : ""}</button>
+      <button type="button" data-niv-defi="2" aria-pressed="${niv === 2}">${e2.ouvert ? "" : "🔒 "}Niveau 2${e2.fini ? " ✅" : ""}</button></div>`;
+    const intro = niv === 1 ? "30 jours au poids du corps : pompes, tractions, dips, squats et gainage. 6 jours d'entraînement, 1 jour de récupération, et ça monte un peu chaque semaine. Il suffit d'un tapis et d'une chaise. Une barre de traction, c'est mieux, mais pas obligatoire : chaque exercice a sa solution dans « Comment faire »."
+      : "Le niveau 2 : plus de séries, plus de répétitions, moins de repos, et des descentes lentes en 3 secondes. Toujours au poids du corps.";
+    $("espace-materiel").innerHTML = `${onglets}<section class="bloc defi"><p class="total">${intro}</p>
       <div class="prog-tete"><h2>Ma progression</h2><span>${n} / 30</span></div><div class="dc-progres"><i style="width:${Math.round(n / 30 * 100)}%"></i></div>
-      ${prochain ? `<button class="principal" type="button" data-ouvrir="${prochain.id}">▶ ${esc(prochain.titre)}</button>
-        ${aujourdhui ? `<p class="total">✅ Séance du jour faite. Le corps progresse pendant le repos : la suite demain !</p>` : ""}`
-        : `<p class="total">🏆 Défi terminé, bravo ! Comparez votre test du jour 29 avec le jour 1.</p>`}
-      ${n ? `<button class="lien" type="button" id="defi-reset">↺ Recommencer le défi à zéro</button>` : ""}</section>`;
-    $("groupes-fiches").innerHTML = [1, 2, 3, 4, 5].map(s => `<section class="groupe"><div class="groupe-tete"><h2>${s < 5 ? "Semaine " + s : "Fin du défi"}</h2></div>
-      <div class="defi-jours">${DEFI_CALI.filter(f => f.semaine === s).map(f => `<button type="button" class="defi-jour ${faits.has(f.id) ? "fait" : ""} ${prochain === f ? "suivant" : ""}" data-ouvrir="${f.id}">
-        <b>${faits.has(f.id) ? "✅" : f.jour}</b><span>${esc(f.titre.replace(/^Jour \d+ · /, ""))}</span></button>`).join("")}</div></section>`).join("");
+      ${e.prochain ? `<button class="principal" type="button" data-ouvrir="${e.prochain.id}">▶ ${esc(e.prochain.titre)}</button>
+        ${e.aujourdhui ? `<p class="total">✅ Séance du jour faite. Le corps progresse pendant le repos : la suite demain !</p>` : ""}`
+        : niv === 1 ? `<p class="total">🏆 Niveau 1 terminé, bravo ! Le niveau 2 est ouvert : touchez « Niveau 2 » en haut.</p>` : `<p class="total">🏆 Les 2 niveaux sont terminés, bravo ! Continuez à votre rythme pour garder vos progrès.</p>`}
+      ${n ? `<button class="lien" type="button" id="defi-reset">↺ Recommencer ce niveau à zéro</button>` : ""}</section>
+      <section class="bloc"><h2>🍽️ Repas et collations pendant le défi</h2>
+      <ul class="cn-conseils"><li><b>3 repas par jour</b>, avec des protéines à chaque repas (œufs, viande, poisson, laitages, légumineuses) et des légumes.</li>
+        <li><b>Avant la séance</b> : un repas 2 à 3 heures avant, ou une petite collation 1 heure avant si vous avez faim (une banane, une tartine).</li>
+        <li><b>Après la séance</b> : une collation ou un repas avec des protéines dans les 2 heures (yaourt + fruit, œufs, un verre de lait…).</li>
+        <li><b>Les jours de récupération</b> : on mange normalement, le corps répare les muscles.</li>
+        <li><b>Buvez de l'eau</b> tout au long de la journée, et un grand verre après la séance.</li></ul>
+      <p class="total">Vos repères (calories, protéines, eau) et des idées de repas sont dans le coach nutrition, en haut de l'onglet Recettes. Ce sont des repères, pas un régime.</p>
+      <button class="ajout" type="button" id="defi-repas">🥗 Voir mes repères et mes idées de repas</button></section>`;
+    $("groupes-fiches").innerHTML = !e.ouvert ? `<section class="bloc"><p class="total">🔒 Le niveau 2 s'ouvre quand les 30 jours du niveau 1 sont faits. Pour l'instant : <b>${e1.faits.size} / 30</b>. Courage !</p></section>`
+      : [1, 2, 3, 4, 5].map(s => `<section class="groupe"><div class="groupe-tete"><h2>${s < 5 ? "Semaine " + s : "Fin du défi"}</h2></div>
+      <div class="defi-jours">${e.liste.filter(f => f.semaine === s).map(f => `<button type="button" class="defi-jour ${e.faits.has(f.id) ? "fait" : ""} ${e.prochain === f ? "suivant" : ""}" data-ouvrir="${f.id}">
+        <b>${e.faits.has(f.id) ? "✅" : f.jour}</b><span>${esc(f.titre.replace(/^Jour \d+ · /, ""))}</span></button>`).join("")}</div></section>`).join("");
+    if (!e.ouvert) $("espace-materiel").querySelector(".defi").hidden = true;
     $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
-    if ($("defi-reset")) $("defi-reset").onclick = () => { if (!confirm("Recommencer le défi au jour 1 ?")) return; r.defiCali = { debut: new Date().toISOString() }; Compte.sauver(); dessinerDefi(); };
+    $("espace-materiel").querySelectorAll("[data-niv-defi]").forEach(b => b.onclick = () => { r.defiNiveau = +b.dataset.nivDefi; Compte.sauver(); dessinerDefi(); });
+    $("defi-repas").onclick = () => aller("recettes");
+    if ($("defi-reset")) $("defi-reset").onclick = () => { if (!confirm(`Recommencer le niveau ${niv} au jour 1 ?`)) return;
+      const cle = niv === 1 ? "defiCali" : "defiCali2"; r[cle] = { ...(r[cle] || {}), debut: new Date().toISOString() }; Compte.sauver(); dessinerDefi(); };
   }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
 
   // ---------- Détail d'une fiche ----------
   function dessinerFiche(id) {
     const f0 = trouverFiche(id), perso = estPerso(f0), f = perso ? f0 : variante(f0);
+    if (f0 && f0.defi === 2 && !etatDefi(2).ouvert) { toast("Le niveau 2 s'ouvre quand le niveau 1 est terminé"); return aller("seances", "cali", true); }
     if (f && f.lieu !== "partout") window.LIEU_SALLE = f.lieu === "salle";
     let h = `<div class="tete-fiche">
         <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>

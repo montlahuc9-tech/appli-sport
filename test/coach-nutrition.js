@@ -41,7 +41,12 @@ window.CoachNutrition = (() => {
   function jourDeSport() {
     const p = P(), auj = Decouverte.SEMAINE[(new Date().getDay() + 6) % 7];
     const s = (p.programme || []).find(x => x.jour === auj);
-    return s ? FICHES.find(f => f.id === s.id) : null;
+    if (s) return FICHES.find(f => f.id === s.id);
+    // défi Calisthenics en cours : la séance du jour (sauf jour de récupération)
+    const d = typeof defiEnCours === "function" ? defiEnCours() : null;
+    if (d && d.aujourdhui) return { titre: `Défi Calisthenics niveau ${d.niveau} (séance faite)` };
+    if (d && d.prochain && !d.prochain.recup) return d.prochain;
+    return null;
   }
   // Journée type avec les recettes de l'appli (en priorité celles qu'on peut faire avec son frigo)
   let graine = 0;
