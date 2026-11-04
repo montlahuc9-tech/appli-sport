@@ -5,7 +5,7 @@ window.GPS = (() => {
   const parcours = () => D().parcours || (D().parcours = []);
   let suivi = null;        // { type, debut, points: [[lat, lng, t]], distance, duree, enPause, depuis, kms: [] }
   let veille = null, carte = null, trace = null, point = null, minuterie = null, idGeo = null;
-  let parler = true;
+  let parler = true, onglet = "parcours";
   const CLE_ENCOURS = ((window.CONFIG && CONFIG.environnement === "test") ? "ms-test" : "ms") + "-gps-encours";
 
   // ---------- Calculs ----------
@@ -100,7 +100,9 @@ window.GPS = (() => {
     if (pas > 1) pts = pts.filter((_, i) => i % pas === 0 || i === pts.length - 1);
     const r = { id: "p" + s.debut, type: s.type, debut: s.debut, duree: Math.round(s.duree), distance: Math.round(s.distance), kms: s.kms.map(Math.round), points: pts };
     parcours().unshift(r); D().parcours = parcours().slice(0, 20); Compte.sauver();
-    dire(`Terminé ! ${km(r.distance).replace(",", " virgule ")} kilomètres.`);
+    const nouveaux = window.Entrainement ? Entrainement.ajouterSortie(r) : [];
+    dire(`Terminé ! ${km(r.distance).replace(",", " virgule ")} kilomètres.` + (nouveaux.length ? ` Nouveau record : ${nouveaux.join(", ")} !` : ""));
+    r.records = nouveaux; Compte.sauver();
     resume(r.id);
   }
 
@@ -119,18 +121,22 @@ window.GPS = (() => {
     const z = $z(); if (!z) return;
     if (!suivi) {
       const t = type || (D().reglages.univers === "marche" ? "marche" : "running");
-      const liste = parcours();
+      const liste = parcours().filter(r => r.type === t);
       z.innerHTML = `<div class="gps-choix lieux" role="group" aria-label="Activité">
           <button type="button" data-gps-type="running" aria-pressed="${t === "running"}">🏃 Course</button>
           <button type="button" data-gps-type="marche" aria-pressed="${t === "marche"}">🚶 Marche</button></div>
         <div class="gps-carte" id="gps-carte"></div>
         <button class="principal" type="button" id="gps-go">▶ Démarrer le suivi GPS</button>
+        <div class="lieux trois gps-onglets" role="group" aria-label="Afficher"><button type="button" data-gps-ong="parcours" aria-pressed="${onglet === "parcours"}">Parcours</button><button type="button" data-gps-ong="stats" aria-pressed="${onglet === "stats"}">📊 Stats</button><button type="button" data-gps-ong="records" aria-pressed="${onglet === "records"}">🏆 Records</button></div>
         <p class="total">Distance, temps, allure et tracé de votre parcours, avec une annonce à chaque kilomètre. Gardez l'appli ouverte : l'écran reste allumé tout seul (touchez « Écran noir » pour économiser la batterie).</p>
         <p class="gps-alerte" id="gps-alerte" hidden></p>
-        ${liste.length ? `<h2>Mes parcours</h2><div class="liste-fiches">${liste.map(r => `<button class="fiche" type="button" data-parcours="${r.id}">
+        ${onglet === "stats" && window.Entrainement ? `<h2>Mes statistiques · ${NOM[t]}</h2>${Entrainement.blocStats(t)}`
+          : onglet === "records" && window.Entrainement ? `<h2>Mes records · ${NOM[t]}</h2>${Entrainement.blocRecords(t)}`
+          : liste.length ? `<h2>Mes parcours</h2><div class="liste-fiches">${liste.map(r => `<button class="fiche" type="button" data-parcours="${r.id}">
           <span class="gps-ico" aria-hidden="true">${r.type === "marche" ? "🚶" : "🏃"}</span>
           <span><b>${km(r.distance)} km · ${duree(r.duree)}</b><span class="res">${new Date(r.debut).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })} · ${allure(r.duree, r.distance)} min/km</span></span><span class="fleche" aria-hidden="true">›</span></button>`).join("")}</div>` : ""}`;
       z.querySelectorAll("[data-gps-type]").forEach(b => b.onclick = () => dessiner(b.dataset.gpsType));
+      z.querySelectorAll("[data-gps-ong]").forEach(b => b.onclick = () => { onglet = b.dataset.gpsOng; dessiner(t); });
       z.querySelector("#gps-go").onclick = () => demarrer(t);
       z.querySelectorAll("[data-parcours]").forEach(b => b.onclick = () => resume(b.dataset.parcours));
       const m = nouvelleCarte(z.querySelector("#gps-carte"));
@@ -175,6 +181,7 @@ window.GPS = (() => {
         <p class="doux">${NOM[r.type] || "Parcours"} · ${date}</p>
         <div class="gps-carte grande" id="gps-carte"></div>
         <div class="gps-gros"><span>${km(r.distance)}</span><small>km</small></div>
+        ${r.records && r.records.length ? `<p class="gps-record">🏆 Nouveau record : ${r.records.join(" · ")}</p>` : ""}
         <div class="gps-stats"><div><b>${duree(r.duree)}</b><small>Durée</small></div><div><b>${allure(r.duree, r.distance)}</b><small>min/km</small></div><div><b>${(r.distance / 1000 / (r.duree / 3600 || 1)).toFixed(1).replace(".", ",")}</b><small>km/h</small></div></div>
         <p class="gps-kcal">≈ <b>${Math.round((r.type === "marche" ? 0.55 : 1) * (window.Decouverte && Decouverte.poidsActuel() || 70) * r.distance / 1000)}</b> kcal dépensées${window.Decouverte && Decouverte.poidsActuel() ? "" : " (estimation pour 70 kg : indiquez votre poids dans le Profil)"}</p>
         ${r.kms && r.kms.length ? `<h2>Temps au kilomètre</h2><div class="gps-kms">${r.kms.map((s, i) => { const max = Math.max(...r.kms);
@@ -190,7 +197,7 @@ window.GPS = (() => {
     z.querySelector("#gps-partager").onclick = async () => {
       const t = `${r.type === "marche" ? "🚶 Marche" : "🏃 Course"} : ${km(r.distance)} km en ${duree(r.duree)} (${allure(r.duree, r.distance)} min/km) avec Rythmo Sport 💪`;
       try { if (navigator.share) await navigator.share({ text: t }); else { await navigator.clipboard.writeText(t); toast("Texte copié"); } } catch {} };
-    deuxClics(z.querySelector("#gps-suppr"), "Sûr ? Touchez encore", () => { D().parcours = parcours().filter(x => x.id !== id); Compte.sauver(); dessiner(r.type); });
+    deuxClics(z.querySelector("#gps-suppr"), "Sûr ? Touchez encore", () => { D().parcours = parcours().filter(x => x.id !== id); if (window.Entrainement) Entrainement.supprimerSortie(id); Compte.sauver(); dessiner(r.type); });
   }
 
   return {

@@ -619,3 +619,22 @@ img.dessin { object-fit: contain; }
 .avert-case .case { display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
 .avert-case input { margin-top: 3px; flex: none; width: 20px; height: 20px; }
 .lieux button[aria-pressed="true"][data-niv-defi] { border-color: #ff5c2b; color: var(--texte); background: rgba(255, 92, 43, .14); }
+
+/* Stats, records et plans (comme Strava) */
+.gps-onglets { margin: 14px 0 4px; }
+.lieux button[aria-pressed="true"][data-gps-ong] { border-color: #ff5c2b; color: var(--texte); background: rgba(255, 92, 43, .14); }
+.st-totaux, .st-records { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 8px 0 12px; }
+.st-totaux > div, .st-records > div { display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: var(--panneau, #171a1f); border: 1px solid var(--trait); }
+.st-totaux span, .st-records span { font-size: 13px; color: var(--doux); }
+.st-totaux b, .st-records b { font-size: 22px; }
+.st-totaux small, .st-records small { font-size: 12px; color: var(--doux); }
+.st-barres { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 130px; margin: 8px 0; }
+.st-barres > div { display: grid; grid-template-rows: 1fr auto; height: 100%; align-items: end; text-align: center; }
+.st-barres i { display: block; background: #ff5c2b; border-radius: 4px 4px 0 0; min-height: 2px; }
+.st-barres small { font-size: 9px; color: var(--doux); margin-top: 3px; }
+.gps-record { text-align: center; font-weight: 700; background: rgba(255, 196, 0, .15); border-radius: 12px; padding: 8px; }
+.plan-seance { display: grid; gap: 2px; }
+.plan-seance .lien { justify-self: end; font-size: 13px; }
+.plan-seance.fait .fiche { opacity: .7; }
+.plan-tout summary { cursor: pointer; margin: 10px 0 6px; }
+.plan-tout p { font-size: 13px; margin: 4px 0; }

@@ -250,7 +250,7 @@
   }
   // « Une séance pour moi » : adaptée au public, au niveau et au matériel, en variant les zones
   function seancePourMoi(e) {
-    let c = FICHES.filter(f => ficheEspace(f, e) && jaiLeMateriel(f) && f.cat !== "etirements" && f.cat !== "echauffement");
+    let c = FICHES.filter(f => ficheEspace(f, e) && jaiLeMateriel(f) && f.cat !== "etirements" && f.cat !== "echauffement" && f.cat !== "plan");
     if (!c.length) return toast("Aucune séance trouvée");
     const n = niveauChoisi(); if (n && c.some(f => f.niveau === n)) c = c.filter(f => f.niveau === n);
     const recentes = (D().historique || []).slice(0, 4).map(h => h.id), zonesRecentes = recentes.map(id => trouverFiche(id)).filter(Boolean).map(zoneDe);
@@ -278,11 +278,14 @@
     $("mes-seances").innerHTML = miennes.map(carteFiche).join("")
       || `<div class="total">Créez votre propre séance de ${u === "running" ? "course" : "marche"} : choisissez les exercices et les durées.</div>`;
     $("bloc-gps").innerHTML = `<button class="gps-lancer" type="button" data-gps>📍 <span><b>${GPS.actif() ? "Suivi GPS en cours : " + GPS.resumeTexte() : "Suivi GPS de mon parcours"}</b><span>Distance, temps, allure et tracé sur la carte</span></span><span class="fleche" aria-hidden="true">›</span></button>`;
-    $("groupes-fiches").innerHTML = U.categories.map(([cat, nom]) => {
+    $("groupes-fiches").innerHTML = (tapis ? "" : `<section class="bloc plan-bloc" id="plan-bloc"><h2>🎯 Mon plan d'entraînement</h2>${Entrainement.blocPlan(u)}</section>
+      <button class="lien" type="button" data-voir-stats>📊 Mes statistiques et mes records →</button>`) + U.categories.map(([cat, nom]) => {
       const fiches = FICHES.filter(f => f.univers === u && f.cat === cat).sort(triNiveau); if (!fiches.length) return "";
       return `<section class="groupe" data-cat="${cat}"><div class="groupe-tete"><h2>${nom}</h2></div><div class="liste-fiches">${fiches.map(f => carteFiche(variante(f))).join("")}</div></section>`; }).join("");
     $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
     $("v-seances").querySelector("[data-gps]").onclick = () => aller("gps", u);
+    const pb = $("plan-bloc"); if (pb) { Entrainement.brancherPlan(pb, () => dessinerUnivers(u), aller); }
+    const vs = $("v-seances").querySelector("[data-voir-stats]"); if (vs) vs.onclick = () => aller("gps", u);
     if (cible) setTimeout(() => $("groupes-fiches").querySelector(`[data-cat="${cible}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   }
   // ---------- Défi Calisthenics 30 jours ----------
