@@ -638,3 +638,9 @@ img.dessin { object-fit: contain; }
 .plan-seance.fait .fiche { opacity: .7; }
 .plan-tout summary { cursor: pointer; margin: 10px 0 6px; }
 .plan-tout p { font-size: 13px; margin: 4px 0; }
+.lieux.quatre { grid-template-columns: repeat(4, 1fr); }
+.lieux.quatre button { padding: 12px 4px; font-size: 13px; }
+.lieux button[aria-pressed="true"][data-gps-ong] { border-color: #ff5c2b; color: var(--texte); background: rgba(255, 92, 43, .14); }
+.gps-import { display: block; text-align: center; cursor: pointer; margin: 8px 0 12px; }
+.gps-route-choisie { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(38, 198, 176, .12); border: 1px solid #26c6b0; font-size: 14px; }
+.gps-route-etat { text-align: center; font-weight: 600; margin: 6px 0; }
