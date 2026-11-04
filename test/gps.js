@@ -96,7 +96,7 @@ window.GPS = (() => {
     const s = suivi; suivi = null; try { localStorage.removeItem(CLE_ENCOURS); } catch {}
     if (s.distance < 50 && s.duree < 60) { toast("Parcours trop court : rien n'est enregistré"); return dessiner(); }
     // on allège le tracé pour ne pas remplir le téléphone (600 points maximum)
-    let pts = s.points.map(p => [+p[0].toFixed(5), +p[1].toFixed(5)]); const pas = Math.ceil(pts.length / 600);
+    let pts = s.points.map(p => [+p[0].toFixed(5), +p[1].toFixed(5), Math.max(0, Math.round((p[2] - s.debut) / 1000))]); const pas = Math.ceil(pts.length / 600);
     if (pas > 1) pts = pts.filter((_, i) => i % pas === 0 || i === pts.length - 1);
     const r = { id: "p" + s.debut, type: s.type, debut: s.debut, duree: Math.round(s.duree), distance: Math.round(s.distance), kms: s.kms.map(Math.round), points: pts };
     parcours().unshift(r); D().parcours = parcours().slice(0, 20); Compte.sauver();
@@ -187,6 +187,8 @@ window.GPS = (() => {
         ${r.kms && r.kms.length ? `<h2>Temps au kilomètre</h2><div class="gps-kms">${r.kms.map((s, i) => { const max = Math.max(...r.kms);
           return `<div><span>${i + 1}</span><i style="width:${Math.round(s / max * 100)}%"></i><b>${duree(s)}</b></div>`; }).join("")}</div>` : ""}
         <button class="principal" type="button" id="gps-partager">Partager</button>
+        ${r.points && r.points.length > 1 ? `<button class="ajout" type="button" id="gps-gpx">📤 Exporter la trace (fichier GPX)</button>
+        <p class="total">Le fichier GPX s'ouvre dans Strava, Garmin Connect, Suunto, Coros, Komoot… ou se garde dans vos fichiers. Avec une montre : importez-le dans l'appli de la montre (Garmin Connect, Suunto…) pour l'envoyer dessus.</p>` : ""}
         <button class="lien" type="button" id="gps-retour">← Mes parcours</button>
         <button class="lien danger" type="button" id="gps-suppr">Supprimer ce parcours</button></div>`;
     const m = nouvelleCarte(z.querySelector("#gps-carte"), r.points);
@@ -194,13 +196,43 @@ window.GPS = (() => {
       L.circleMarker(r.points[0], { radius: 7, color: "#fff", weight: 3, fillColor: "#26c6b0", fillOpacity: 1 }).addTo(m);
       L.circleMarker(r.points[r.points.length - 1], { radius: 7, color: "#fff", weight: 3, fillColor: "#ff4b2b", fillOpacity: 1 }).addTo(m); }
     z.querySelector("#gps-retour").onclick = () => dessiner(r.type);
+    const bg = z.querySelector("#gps-gpx"); if (bg) bg.onclick = () => exporterGpx(r);
     z.querySelector("#gps-partager").onclick = async () => {
       const t = `${r.type === "marche" ? "🚶 Marche" : "🏃 Course"} : ${km(r.distance)} km en ${duree(r.duree)} (${allure(r.duree, r.distance)} min/km) avec Rythmo Sport 💪`;
       try { if (navigator.share) await navigator.share({ text: t }); else { await navigator.clipboard.writeText(t); toast("Texte copié"); } } catch {} };
     deuxClics(z.querySelector("#gps-suppr"), "Sûr ? Touchez encore", () => { D().parcours = parcours().filter(x => x.id !== id); if (window.Entrainement) Entrainement.supprimerSortie(id); Compte.sauver(); dessiner(r.type); });
   }
 
+  // ---------- Export GPX (format standard des traces GPS) ----------
+  function texteGpx(r) {
+    const nom = `${r.type === "marche" ? "Marche" : "Course"} Rythmo Sport ${new Date(r.debut).toLocaleDateString("fr-FR")}`;
+    const avecHeure = r.points.some(p => p.length > 2);
+    const pts = r.points.map((p, i) => {
+      // anciens parcours sans l'heure : on la répartit sur la durée (pour que Strava accepte le fichier)
+      const t = avecHeure ? p[2] : Math.round(r.duree * i / Math.max(1, r.points.length - 1));
+      return `      <trkpt lat="${p[0]}" lon="${p[1]}"><time>${new Date(r.debut + t * 1000).toISOString()}</time></trkpt>`; }).join("\n");
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Rythmo Sport" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>${nom}</name><time>${new Date(r.debut).toISOString()}</time></metadata>
+  <trk><name>${nom}</name><type>${r.type === "marche" ? "walking" : "running"}</type>
+    <trkseg>
+${pts}
+    </trkseg>
+  </trk>
+</gpx>
+`;
+  }
+  async function exporterGpx(r) {
+    const d = new Date(r.debut), nomFichier = `rythmo-${r.type === "marche" ? "marche" : "course"}-${d.toISOString().slice(0, 10)}-${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}.gpx`;
+    const blob = new Blob([texteGpx(r)], { type: "application/gpx+xml" });
+    try { const f = new File([blob], nomFichier, { type: "application/gpx+xml" });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: nomFichier }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomFichier; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast("Fichier GPX enregistré dans vos téléchargements");
+  }
+
   return {
+    texteGpx,
     actif: () => !!suivi,
     afficher(type) { dessiner(type); },
     resume,
