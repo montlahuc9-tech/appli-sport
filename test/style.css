@@ -644,3 +644,7 @@ img.dessin { object-fit: contain; }
 .gps-import { display: block; text-align: center; cursor: pointer; margin: 8px 0 12px; }
 .gps-route-choisie { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(38, 198, 176, .12); border: 1px solid #26c6b0; font-size: 14px; }
 .gps-route-etat { text-align: center; font-weight: 600; margin: 6px 0; }
+
+/* Exercices sans image (maison, course, marche) */
+.vignette-vide { display: grid; place-items: center; flex: none; width: 64px; height: 64px; border-radius: 12px; background: var(--panneau); font-size: 28px; }
+.exo-ligne .vignette-vide { width: 72px; height: 72px; background: var(--sol); }

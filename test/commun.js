@@ -5,6 +5,10 @@ const sansAccent = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toL
 const fmt = (s) => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s / 60); return String(m).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
 const dureeTexte = (s) => s >= 60 ? `${Math.floor(s / 60)} min${s % 60 ? " " + String(s % 60).padStart(2, "0") : ""}` : `${s} s`;
 
+// Maison, course et marche : plus aucune photo ni vidéo pour l'instant (seule la salle garde les siennes)
+const SANS_IMAGE = (e) => e.lieu !== "salle" || /sur tapis/i.test(e.nom);
+EXERCICES.forEach(e => { if (SANS_IMAGE(e)) { e.photo = null; e.sansImage = true; } });
+const ICONE_LIEU = (e) => /course|footing|sprint/i.test(e.nom) ? "🏃" : /marche/i.test(e.nom) ? "🚶" : e.lieu === "partout" ? "🤸" : "🏠";
 const PAR_NOM = new Map(EXERCICES.map(e => [e.nom, e]));
 // Retrouve un exercice de la bibliothèque, même si le nom a été un peu modifié
 // Échauffements et étirements (communs maison / salle) : à la salle, photos du même style que les autres exercices de salle (Free Exercise DB)
@@ -64,16 +68,16 @@ function svgSilhouette(ex, classe = "") {
   return `<svg class="pose ${classe}" viewBox="0 0 64 64" role="img" aria-label="${esc(ex.nom)}">${s}</svg>`;
 }
 // Petite vignette (photo de départ, ou silhouette)
-const vignette = (ex) => ex.photo ? `<img class="${classePhoto(ex)}" src="${urlPhoto(ex.photo, 0)}" alt="" loading="lazy">` : svgSilhouette(ex);
+const vignette = (ex) => ex.photo ? `<img class="${classePhoto(ex)}" src="${urlPhoto(ex.photo, 0)}" alt="" loading="lazy">` : ex.sansImage ? `<span class="vignette-vide" aria-hidden="true">${ICONE_LIEU(ex)}</span>` : svgSilhouette(ex);
 // Les deux photos (départ / arrivée), qu'on peut agrandir
 function photosGrandes(ex) {
-  if (!ex.photo) return svgSilhouette(ex, "grande");
+  if (!ex.photo) return ex.sansImage ? "" : svgSilhouette(ex, "grande");
   return `<div class="photos ${classePhoto(ex)}" data-zoom="${esc(ex.nom)}">` + [0, 1].map(i =>
     `<figure><img src="${urlPhoto(ex.photo, i)}" alt="${esc(ex.nom)} : ${i ? "arrivée" : "départ"}"><figcaption>${i ? "2 · Arrivée" : "1 · Départ"}</figcaption></figure>`).join("") + `</div>`;
 }
 // Le mouvement animé : la photo de départ et celle d'arrivée se fondent l'une dans l'autre, en boucle
 function animMouvement(ex) {
-  if (!ex.photo) return svgSilhouette(ex, "grande");
+  if (!ex.photo) return ex.sansImage ? "" : svgSilhouette(ex, "grande");
   return `<div class="anim ${classePhoto(ex)}" data-zoom="${esc(ex.nom)}" role="img" aria-label="${esc(ex.nom)} : le mouvement">
     <img src="${urlPhoto(ex.photo, 0)}" alt=""><img class="b" src="${urlPhoto(ex.photo, 1)}" alt=""><span class="etiq">▶ Mouvement</span>${ex.noteImage ? `<span class="note-image">${esc(ex.noteImage)}</span>` : ""}</div>`;
 }

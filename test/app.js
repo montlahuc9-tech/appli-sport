@@ -178,7 +178,7 @@
   // ---------- Accueil (4 tuiles) puis un espace : Maison, Salle, Course ou Marche ----------
   const pubChoisi = () => D().reglages.public === "femme" ? "femme" : "homme";
   const pourMoi = (f) => pubChoisi() === "femme" ? f.public === "femmes" : !f.public;
-  const NOM_ESPACE = { maison: "🏠 Maison", salle: "🏋️ Salle", running: "🏃 Course", marche: "🚶 Marche", cali: "💪 Calisthenics" };
+  const NOM_ESPACE = { maison: "🏠 Maison", salle: "🏋️ Salle", running: "🏃 Course", marche: "🚶 Marche" };
   const ficheEspace = (f, e) => !f.echauffement && (e === "running" || e === "marche" ? f.univers === e : !f.univers && f.lieu === e && pourMoi(f));
   // le niveau choisi (Profil) : les séances de ce niveau d'abord
   const triNiveau = (a, b) => { const n = niveauChoisi(); return n ? Math.abs(a.niveau - n) - Math.abs(b.niveau - n) : a.niveau - b.niveau; };
@@ -190,14 +190,12 @@
     $("titre-seances").innerHTML = NOM_ESPACE[e].replace(/ (\S+)$/, " <span>$1</span>");
     // garde les anciens réglages à jour (création de séance, exercices…)
     window.LIEU_SALLE = e === "salle";
-    if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e === "cali" ? "fitness" : e;
+    if (e === "maison" || e === "salle") { lieu = e; D().reglages.lieu = e; D().reglages.univers = "fitness"; } else D().reglages.univers = e;
     Compte.sauver();
     $("espace-retour").onclick = () => aller("seances");
     $("bloc-gps").hidden = e !== "running" && e !== "marche";
     $("espace-materiel").innerHTML = ""; $("zones").innerHTML = "";
     $("pour-moi").onclick = () => seancePourMoi(e);
-    $("pour-moi").hidden = e === "cali"; $("bloc-mes-seances").hidden = e === "cali";
-    if (e === "cali") return dessinerDefi();
     if (e === "running" || e === "marche") return dessinerUnivers(e, zone);
     // Maison : le matériel qu'on a chez soi
     if (e === "maison") {
@@ -288,45 +286,11 @@
     const vs = $("v-seances").querySelector("[data-voir-stats]"); if (vs) vs.onclick = () => aller("gps", u);
     if (cible) setTimeout(() => $("groupes-fiches").querySelector(`[data-cat="${cible}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
   }
-  // ---------- Défi Calisthenics 30 jours ----------
-  function dessinerDefi() {
-    const r = D().reglages, e1 = etatDefi(1), e2 = etatDefi(2);
-    let niv = r.defiNiveau === 2 ? 2 : 1; const e = niv === 1 ? e1 : e2, n = e.faits.size;
-    const onglets = `<div class="lieux" role="group" aria-label="Niveau"><button type="button" data-niv-defi="1" aria-pressed="${niv === 1}">Niveau 1${e1.fini ? " ✅" : ""}</button>
-      <button type="button" data-niv-defi="2" aria-pressed="${niv === 2}">${e2.ouvert ? "" : "🔒 "}Niveau 2${e2.fini ? " ✅" : ""}</button></div>`;
-    const intro = niv === 1 ? "30 jours au poids du corps : pompes, tractions, dips, squats et gainage. 6 jours d'entraînement, 1 jour de récupération, et ça monte un peu chaque semaine. Il suffit d'un tapis et d'une chaise. Une barre de traction, c'est mieux, mais pas obligatoire : chaque exercice a sa solution dans « Comment faire »."
-      : "Le niveau 2 : plus de séries, plus de répétitions, moins de repos, et des descentes lentes en 3 secondes. Toujours au poids du corps.";
-    $("espace-materiel").innerHTML = `${onglets}<section class="bloc defi"><p class="total">${intro}</p>
-      <div class="prog-tete"><h2>Ma progression</h2><span>${n} / 30</span></div><div class="dc-progres"><i style="width:${Math.round(n / 30 * 100)}%"></i></div>
-      ${e.prochain ? `<button class="principal" type="button" data-ouvrir="${e.prochain.id}">▶ ${esc(e.prochain.titre)}</button>
-        ${e.aujourdhui ? `<p class="total">✅ Séance du jour faite. Le corps progresse pendant le repos : la suite demain !</p>` : ""}`
-        : niv === 1 ? `<p class="total">🏆 Niveau 1 terminé, bravo ! Le niveau 2 est ouvert : touchez « Niveau 2 » en haut.</p>` : `<p class="total">🏆 Les 2 niveaux sont terminés, bravo ! Continuez à votre rythme pour garder vos progrès.</p>`}
-      ${n ? `<button class="lien" type="button" id="defi-reset">↺ Recommencer ce niveau à zéro</button>` : ""}</section>
-      <section class="bloc"><h2>🍽️ Repas et collations pendant le défi</h2>
-      <ul class="cn-conseils"><li><b>3 repas par jour</b>, avec des protéines à chaque repas (œufs, viande, poisson, laitages, légumineuses) et des légumes.</li>
-        <li><b>Avant la séance</b> : un repas 2 à 3 heures avant, ou une petite collation 1 heure avant si vous avez faim (une banane, une tartine).</li>
-        <li><b>Après la séance</b> : une collation ou un repas avec des protéines dans les 2 heures (yaourt + fruit, œufs, un verre de lait…).</li>
-        <li><b>Les jours de récupération</b> : on mange normalement, le corps répare les muscles.</li>
-        <li><b>Buvez de l'eau</b> tout au long de la journée, et un grand verre après la séance.</li></ul>
-      <p class="total">Vos repères (calories, protéines, eau) et des idées de repas sont dans le coach nutrition, en haut de l'onglet Recettes. Ce sont des repères, pas un régime.</p>
-      <button class="ajout" type="button" id="defi-repas">🥗 Voir mes repères et mes idées de repas</button></section>`;
-    $("groupes-fiches").innerHTML = !e.ouvert ? `<section class="bloc"><p class="total">🔒 Le niveau 2 s'ouvre quand les 30 jours du niveau 1 sont faits. Pour l'instant : <b>${e1.faits.size} / 30</b>. Courage !</p></section>`
-      : [1, 2, 3, 4, 5].map(s => `<section class="groupe"><div class="groupe-tete"><h2>${s < 5 ? "Semaine " + s : "Fin du défi"}</h2></div>
-      <div class="defi-jours">${e.liste.filter(f => f.semaine === s).map(f => `<button type="button" class="defi-jour ${e.faits.has(f.id) ? "fait" : ""} ${e.prochain === f ? "suivant" : ""}" data-ouvrir="${f.id}">
-        <b>${e.faits.has(f.id) ? "✅" : f.jour}</b><span>${esc(f.titre.replace(/^Jour \d+ · /, ""))}</span></button>`).join("")}</div></section>`).join("");
-    if (!e.ouvert) $("espace-materiel").querySelector(".defi").hidden = true;
-    $("v-seances").querySelectorAll("#espace [data-ouvrir]").forEach(b => b.addEventListener("click", () => aller("fiche", b.dataset.ouvrir)));
-    $("espace-materiel").querySelectorAll("[data-niv-defi]").forEach(b => b.onclick = () => { r.defiNiveau = +b.dataset.nivDefi; Compte.sauver(); dessinerDefi(); });
-    $("defi-repas").onclick = () => aller("recettes");
-    if ($("defi-reset")) $("defi-reset").onclick = () => { if (!confirm(`Recommencer le niveau ${niv} au jour 1 ?`)) return;
-      const cle = niv === 1 ? "defiCali" : "defiCali2"; r[cle] = { ...(r[cle] || {}), debut: new Date().toISOString() }; Compte.sauver(); dessinerDefi(); };
-  }
   $("creer-seance").addEventListener("click", () => ouvrirEdition(null));
 
   // ---------- Détail d'une fiche ----------
   function dessinerFiche(id) {
     const f0 = trouverFiche(id), perso = estPerso(f0), f = perso ? f0 : variante(f0);
-    if (f0 && f0.defi === 2 && !etatDefi(2).ouvert) { toast("Le niveau 2 s'ouvre quand le niveau 1 est terminé"); return aller("seances", "cali", true); }
     if (f && f.lieu !== "partout") window.LIEU_SALLE = f.lieu === "salle";
     let h = `<div class="tete-fiche">
         <div class="infos-fiche">${f.univers ? `<span class="badge univers">${UNIVERS[f.univers].nom}</span>` : ""}<span class="badge ${f.lieu}">${NOM_LIEU[f.lieu] || "Maison"}</span><span class="badge type">${f.type === "circuit" ? "Circuit chrono" : "Séries (muscu)"}</span>${f.niveau ? `<span class="badge type">${badgeNiveau(f.niveau)}</span>` : ""}${f.groupe ? `<span class="badge type">${GROUPES[f.groupe].nom}</span>` : ""}</div>
@@ -472,7 +436,7 @@
       ${animMouvement(ex)}
       ${blocExplication(ex)}
       ${ex.photo ? `<details class="deux-photos"><summary>Voir les 2 photos (départ / arrivée)</summary>${photosGrandes(ex)}</details>` : ""}
-      <a class="secondaire video" href="${lienVideo(ex)}" target="_blank" rel="noopener">▶ Voir une vidéo du mouvement (YouTube)</a>
+      ${ex.sansImage && !ex.photo ? "" : `<a class="secondaire video" href="${lienVideo(ex)}" target="_blank" rel="noopener">▶ Voir une vidéo du mouvement (YouTube)</a>`}
       <div class="corps-muscles">${CORPS_SVG}</div>
       <p class="total">Muscles : <b>${esc(nomMuscles(ex))}</b>${ex.materiel ? ` · Matériel : <b>${esc(ex.materiel)}</b>` : ""}${ex.libre ? "" : ` · Conseil : <b>${ex.series} × ${esc(ex.reps)}</b>, repos ${dureeTexte(ex.repos)}`}</p>
     </div>`, (fe) => { colorerCorps(fe, ex); brancherZoom(fe, ex); brancherExplication(fe); });
@@ -692,7 +656,7 @@
         <button class="ajout" type="button" id="pr-avert">Lire l'avertissement santé</button></section>
       ${Compte.estAdmin ? `<section class="bloc" id="gestion"><h2>Gestion (vous seul)</h2><div id="gestion-corps" class="pile"><p class="total">Chargement…</p></div></section>` : ""}
       <button class="lien danger" type="button" id="deconnexion">Se déconnecter</button>
-      <p class="total">Illustrations des exercices à la maison : <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a>. Photos des exercices en salle : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
+      <p class="total">Photos des exercices en salle : Free Exercise DB (domaine public). Dessin des muscles : react-body-highlighter (licence MIT). Cartes : © OpenStreetMap.</p>`;
     $("pr-questionnaire").onclick = () => aller("decouverte");
     if ($("pr-avert")) $("pr-avert").onclick = () => montrerAvertissement(false);
     $("pr-poids-ok").onclick = () => { const w = parseFloat(String($("pr-poids").value).replace(",", ".")); if (!(w >= 30 && w <= 250)) return toast("Poids entre 30 et 250 kg");

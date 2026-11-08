@@ -3,7 +3,7 @@
 const GUIDE = [
   { titre: "Bienvenue !", img: null, texte: [
     "Rythmo Sport vous aide pendant vos séances : un minuteur qui parle, un coup de sifflet, les images de chaque exercice avec l'explication du mouvement, et les muscles travaillés.",
-    "Maison, salle, course, marche, défi Calisthenics 30 jours, recettes et repères de nutrition : tout est dans l'appli. Commencez par lire l'avertissement santé, puis voici comment vous en servir."] },
+    "Maison, salle, course, marche, recettes et repères de nutrition : tout est dans l'appli. Commencez par lire l'avertissement santé, puis voici comment vous en servir."] },
   { titre: "1. À lire avant de commencer", img: "27-avertissement", avert: true, texte: [
     "Rythmo Sport est une application d'aide à l'entraînement. Ce n'est pas un coach sportif diplômé, ni un médecin, ni un diététicien. Son créateur n'est pas coach sportif. La « voix du coach » est une voix de synthèse : elle ne vous voit pas et ne corrige pas vos mouvements.",
     "Demandez l'avis de votre médecin avant de commencer, surtout après une longue pause, en cas de problème de santé, de blessure ou de grossesse. Arrêtez-vous tout de suite en cas de douleur, de vertige ou de malaise (urgence : 15 ou 112).",
@@ -21,7 +21,7 @@ const GUIDE = [
     "À la première ouverture, l'appli vous pose quelques questions : votre objectif (perdre du poids, prendre du muscle, être en forme, courir mieux, se remettre au sport), votre niveau, les jours où vous voulez vous entraîner, le temps, le lieu, le matériel et une éventuelle douleur à ménager. L'âge, la taille et le poids sont facultatifs : ils servent aux calories et aux repères de nutrition.",
     "L'appli construit alors votre programme de la semaine, en haut de l'accueil. Touchez une séance pour la lancer : elle se coche toute seule quand elle est faite. La séance du jour est marquée « Aujourd'hui ». « 📅 Changer mes jours » réorganise le programme. Pour tout changer : Profil → « Refaire le questionnaire »."] },
   { titre: "5. Choisir où vous faites votre séance", img: "02-seances", texte: [
-    "L'accueil a 5 grosses tuiles : 🏠 Maison, 🏋️ Salle, 🏃 Course, 🚶 Marche et 💪 Calisthenics (le défi 30 jours). Touchez celle qui vous correspond.",
+    "L'accueil a 4 grosses tuiles : 🏠 Maison, 🏋️ Salle, 🏃 Course et 🚶 Marche. Touchez celle qui vous correspond.",
     "Juste en dessous, le bouton « ⚡ Fractionné » ouvre directement les séances de fractionné en course. Plus bas, « Refaire votre dernière séance » la relance en un appui."] },
   { titre: "6. À la maison : votre matériel", img: "19-materiel", texte: [
     "La première fois, l'appli vous demande ce que vous avez chez vous : élastique, lests de chevilles, haltères ou bouteilles d'eau, barre de porte, corde à sauter… Rien du tout ? Ne cochez rien : il y a plein de séances sans matériel.",
@@ -34,7 +34,7 @@ const GUIDE = [
     "Déjà échauffé(e) ? Touchez « ⏭ Passer l'échauffement », dans la question ou pendant l'échauffement. Vous pouvez aussi ne plus le proposer, dans le Profil."] },
   { titre: "9. Voir une séance", img: "04-fiche", texte: [
     "Chaque séance indique le lieu, le niveau, la durée et la liste des exercices.",
-    "Touchez un exercice pour voir le mouvement (animé), l'explication « Comment faire », les muscles travaillés dessinés sur le corps (rouge vif = principal, rouge pâle = secondaire) et le matériel nécessaire.",
+    "Touchez un exercice pour voir l'explication « Comment faire », les muscles travaillés dessinés sur le corps (rouge vif = principal, rouge pâle = secondaire) et le matériel nécessaire.",
     "Touchez « Lancer la séance » quand vous êtes prêt."] },
   { titre: "10. « Comment faire » : chaque exercice expliqué", img: "24-comment-faire", texte: [
     "Pour chaque exercice : la position de départ, le mouvement étape par étape, la respiration et l'erreur à éviter.",
@@ -57,7 +57,7 @@ const GUIDE = [
     "Réglez les séries, répétitions et repos (ou l'effort, le repos et les rounds pour un circuit).",
     "⇄ remplace un exercice, ↑ le remonte, × le retire. Touchez « Enregistrer » : votre séance apparaît dans « Mes séances »."] },
   { titre: "16. Les exercices", img: "11-exercice", texte: [
-    "L'onglet Exercices montre tous les exercices, classés par lieu (Maison, Salle, Dehors), par groupe et par muscle. À la maison ce sont des dessins, à la salle des photos.",
+    "L'onglet Exercices montre tous les exercices, classés par lieu (Maison, Salle, Dehors), par groupe et par muscle. Les exercices de salle ont des photos ; ceux de la maison, de la course et de la marche n'en ont pas pour l'instant.",
     "Touchez un exercice pour voir « Comment faire », les muscles travaillés et la vidéo."] },
   { titre: "17. La musique", img: "12-musique", texte: [
     "Vos propres musiques : dans le Minuteur, touchez « + Ajouter mes musiques du téléphone » et choisissez vos MP3. Ils restent dans l'appli (rien n'est envoyé) et se lancent avec « Démarrer ».",
@@ -81,20 +81,16 @@ const GUIDE = [
     "Course ou Marche → « 📍 Suivi GPS de mon parcours » → « Démarrer » : distance, durée, allure et tracé sur la carte, avec une annonce à chaque kilomètre.",
     "Important : gardez l'appli ouverte. L'écran reste allumé tout seul et vous pouvez mettre le téléphone dans la poche. Si vous verrouillez l'écran ou passez à une autre appli, le GPS s'arrête. « Écran noir » économise la batterie sans arrêter le suivi.",
     "À la fin : résumé, carte, temps au kilomètre et bouton Partager. Vos parcours sont gardés dans « Mes parcours ». Distances et allures sont des estimations."] },
-  { titre: "23. Le défi Calisthenics 30 jours", img: "25-defi", texte: [
-    "Tuile 💪 Calisthenics sur l'accueil : 30 jours au poids du corps (pompes, tractions, dips, squats, gainage). Chaque semaine : 6 jours d'entraînement et 1 jour de récupération, et ça monte un peu chaque semaine. Jour 29 : test de votre maximum, à comparer avec le jour 1. Jour 30 : grand final.",
-    "Il suffit d'un tapis et d'une chaise. Une barre de porte, c'est mieux, mais pas obligatoire : « Comment faire » donne une solution sans barre. Les jours faits se cochent tout seuls, et le prochain jour s'affiche en grand. « Recommencer le défi à zéro » repart au jour 1.",
-    "Trop dur ? Prenez les versions plus faciles (genoux au sol, mains sur une table) et ne forcez jamais sur une douleur."] },
-  { titre: "24. Progresser", img: "15-progression", texte: [
+  { titre: "23. Progresser", img: "15-progression", texte: [
     "Après 3 séances réussies, l'appli vous propose une version plus dure ou la séance du niveau supérieur. Votre niveau se règle dans le Profil.",
     "En musculation, quand vous réussissez 2 fois le même poids, elle vous propose d'en ajouter un peu."] },
-  { titre: "25. Sur la télé", img: "17-tele", texte: [
+  { titre: "24. Sur la télé", img: "17-tele", texte: [
     "Minuteur → « 📺 Afficher sur la télé ». Avec une clé Chromecast ou une Google TV : un seul appui, le minuteur s'affiche en grand sur la télé.",
     "Autres télés : « Copier l'écran du téléphone » : l'appli vous dit le nom exact du bouton à toucher sur VOTRE téléphone (Smart View chez Samsung, Recopie de l'écran sur iPhone…)."] },
-  { titre: "26. Les recettes", img: "22-recettes", texte: [
+  { titre: "25. Les recettes", img: "22-recettes", texte: [
     "Onglet « Recettes » en bas : touchez « Ce que j'ai chez moi » et cochez vos ingrédients (frigo, fruits et légumes, placard).",
     "L'appli montre les recettes que vous pouvez faire tout de suite, puis celles où il ne manque qu'un ingrédient. Filtrez : avant le sport, après le sport, repas ou collation. Chaque recette indique le temps, les calories et les protéines. Vous prenez de la protéine en poudre ? Touchez « J'en prends » pour voir aussi les versions avec poudre."] },
-  { titre: "27. Le coach nutrition", img: "26-coach-nutrition", texte: [
+  { titre: "26. Le coach nutrition", img: "26-coach-nutrition", texte: [
     "En haut de l'onglet Recettes, « 🥗 Mon coach nutrition » donne des repères pour la journée : calories, protéines et eau, calculés avec votre âge, votre taille, votre poids, votre objectif et vos séances. Il manque une info ? Remplissez-la directement dans le bloc.",
     "Vous y trouvez aussi 5 conseils selon votre objectif, un rappel les jours de sport (quoi manger avant et après), et une idée de journée (midi, collation, soir) avec les recettes de l'appli. « 🔄 Une autre idée » en propose d'autres.",
     "Ce sont des repères, pas un régime : Rythmo Sport n'est pas un diététicien. Pas de calcul de calories avant 18 ans. En cas de maladie, de grossesse, de régime particulier ou de troubles alimentaires, parlez-en à un médecin ou à un diététicien."] },
